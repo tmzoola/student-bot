@@ -267,15 +267,16 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-402 · docker-compose port va domain sozlash
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-401
 - **Acceptance:**
-  - [ ] `app` porti `8000:8000` → `8002:8000`
-  - [ ] Grafana `GF_SERVER_ROOT_URL` → `https://student-13-140-165-210.sslip.io/grafana`
-  - [ ] Barcha container_name'lar `student_*` prefiks bilan
-  - [ ] `depends_on` va `healthcheck` audit qilindi
-  - [ ] Loki/Promtail/Grafana/Dozzle konfiguratsiyasi tekshirildi
-  - [ ] `docker compose config` xatosiz
+  - [x] `app` porti `8000:8000` → `8002:8000`
+  - [x] Grafana `GF_SERVER_ROOT_URL` → `https://student-13-140-165-210.sslip.io/grafana`
+  - [x] Barcha container_name'lar `student_*` prefiks bilan (audit tasdiqladi)
+  - [x] `depends_on` va `healthcheck` audit qilindi
+  - [x] Dozzle healthcheck `/dozzle healthcheck` ga o'zgartirildi (distroless image)
+  - [x] Dozzle/Grafana host loopback binding qo'shildi (nginx uchun)
+  - [x] `docker compose config` xatosiz
 
 ### T-403 · `.env.example` ni deploy uchun to'liq yangilash
 - **Owner:** devops

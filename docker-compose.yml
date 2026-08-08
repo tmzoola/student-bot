@@ -58,7 +58,9 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      # Tashqi 8002 (edu-bot 8001, samandar_market 8000 bilan konflikt yo'q).
+      # Ichida uvicorn 8000 da tinglaydi. Nginx `127.0.0.1:8002` ga proxy qiladi.
+      - "8002:8000"
     env_file:
       - .env
     environment:
@@ -106,8 +108,8 @@ services:
   # ─────────────────────────────────────────────────────────────────
   # Log kuzatuv stack: Dozzle (real-vaqt UI) + Loki + Promtail + Grafana
   # (tarix + qidiruv + alerting). Nginx tarafda subpath'ga proxy:
-  #   ob-student.timv.uz/logs      → dozzle:8080
-  #   ob-student.timv.uz/grafana   → grafana:3000
+  #   student-13-140-165-210.sslip.io/logs      → dozzle:8080
+  #   student-13-140-165-210.sslip.io/grafana   → grafana:3000
   # ─────────────────────────────────────────────────────────────────
 
   # Dozzle — real-vaqt log ko'rish uchun engil UI (~30 MB RAM).
@@ -123,10 +125,13 @@ services:
       DOZZLE_NO_ANALYTICS: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    expose:
-      - "8080"
+    ports:
+      # Nginx host tomonda ishlaydi — `expose` faqat compose ichida ochadi,
+      # host'ga chiqmaydi. Loopback (127.0.0.1) — tashqi trafik olmaydi.
+      - "127.0.0.1:8080:8080"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/logs/healthcheck"]
+      # Dozzle image distroless — wget yo'q, o'z healthcheck sub-buyrug'ini ishlatamiz.
+      test: ["CMD", "/dozzle", "healthcheck"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -172,7 +177,7 @@ services:
     restart: always
     logging: *default-logging
     environment:
-      GF_SERVER_ROOT_URL: "https://ob-student.timv.uz/grafana"
+      GF_SERVER_ROOT_URL: "https://student-13-140-165-210.sslip.io/grafana"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
@@ -183,8 +188,10 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
-    expose:
-      - "3000"
+    ports:
+      # Loopback binding — nginx host'da ishlaydi. Serverda 3000 band bo'lsa
+      # (masalan boshqa PM2 ilova), 3001:3000 ga o'zgartiring.
+      - "127.0.0.1:3000:3000"
     depends_on:
       - loki
     healthcheck:
