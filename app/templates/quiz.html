@@ -84,10 +84,9 @@ let timeLeft = 0;
 let timerHandle = null;
 
 async function init(){
-    await MK.ensureAuth();
-    const r = await fetch(`/api/v1/webapp/quiz/${QUIZ_ID}`);
+    const r = await fetch(`/api/v1/quiz/${QUIZ_ID}`, { headers: {'X-Init-Data': MK.initData }});
     if (!r.ok) {
-        document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi</div>';
+        document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi yoki ruxsat yo\'q</div>';
         return;
     }
     quiz = await r.json();
@@ -178,14 +177,15 @@ async function finish(auto=false){
     btn.textContent = 'Yuborilmoqda…';
     const timeTaken = Math.round((Date.now() - startedAt) / 1000);
     try {
-        const r = await fetch(`/api/v1/webapp/quiz/${QUIZ_ID}/submit`, {
+        const r = await fetch(`/api/v1/quiz/${QUIZ_ID}/submit`, {
             method: 'POST',
-            headers: {'Content-Type':'application/json', ...MK.authHeaders()},
+            headers: {'Content-Type':'application/json', 'X-Init-Data': MK.initData },
             body: JSON.stringify({ answers, time_taken_seconds: timeTaken }),
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || 'Xatolik');
-        window.location.replace(`/webapp/results/${data.attempt_id}`);
+        alert(`Natija: ${data.score} / ${data.total} (${data.percentage}%)`);
+        window.location.replace(`/profile`);
     } catch (e) {
         alert(e.message);
         btn.disabled = false;

@@ -209,13 +209,13 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-207 · Test yechish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-206
 - **Acceptance:**
-  - [ ] `GET /quiz/{id}` HTML (`quiz.html` qayta ishlatildi)
-  - [ ] `GET /api/v1/quiz/{id}` JSON (correct_option qaytmaydi)
-  - [ ] `POST /api/v1/quiz/{id}/submit` — QuizAttempt yaratiladi, score hisoblanadi
-  - [ ] Fan foydalanuvchi profiliga mosligi tekshiriladi
+  - [x] `GET /quiz/{id}` HTML (`quiz.html` qayta ishlatildi)
+  - [x] `GET /api/v1/quiz/{id}` JSON (correct_option qaytmaydi)
+  - [x] `POST /api/v1/quiz/{id}/submit` — QuizAttempt yaratiladi, score hisoblanadi
+  - [x] Fan foydalanuvchi profiliga mosligi tekshiriladi
 
 ### T-208 · Profil sahifasi
 - **Owner:** solutions-architect
