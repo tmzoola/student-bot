@@ -1,22 +1,18 @@
-from models.base import Base
-from models.module import Module
-from models.topic import Topic
-from models.quiz import Quiz
-from models.question import Question, CorrectOption
-from models.telegram_user import TelegramUser
 from models.attempt import QuizAttempt
-from models.book import Book
-from models.contest import Contest, ContestQuestion, ContestAttempt
-from models.quote import MotivationalQuote
-from models.landing import LandingContent
-from models.guard import JoinEvent, FlaggedUser
-from models.referral import TrackedChat, InviteLink, InviteJoin
+from models.base import Base
+from models.contest import Contest, ContestAttempt, ContestQuestion
+from models.guard import FlaggedUser, JoinEvent
+from models.module import Module
+from models.question import CorrectOption, Question
+from models.quiz import Quiz
+from models.referral import InviteJoin, InviteLink, TrackedChat
 from models.referral_event import (
     EventReferral,
     ReferralEvent,
     ReferralEventParticipant,
 )
-from models.menu import MenuSettings
+from models.telegram_user import TelegramUser
+from models.topic import Topic
 
 __all__ = [
     "Base",
@@ -27,12 +23,9 @@ __all__ = [
     "CorrectOption",
     "TelegramUser",
     "QuizAttempt",
-    "Book",
     "Contest",
     "ContestQuestion",
     "ContestAttempt",
-    "MotivationalQuote",
-    "LandingContent",
     "JoinEvent",
     "FlaggedUser",
     "TrackedChat",
@@ -41,5 +34,4 @@ __all__ = [
     "ReferralEvent",
     "ReferralEventParticipant",
     "EventReferral",
-    "MenuSettings",
 ]

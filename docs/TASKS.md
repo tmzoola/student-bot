@@ -33,14 +33,14 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-102 · Kontent modellarini o'chirish (book/shop/landing/quote/menu/rewards)
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-101
 - **Acceptance:**
-  - [ ] `app/models/` dan: `book.py`, `shop.py`, `landing.py`, `quote.py`, `menu.py`, `rewards.py` o'chirildi
-  - [ ] `app/models/__init__.py` yangilangan
-  - [ ] Tegishli admin view (`app/admin/views/`), handler (`app/bot/handlers/`, `app/api/v1/`), template (`app/templates/`), repository, schema tozalandi
-  - [ ] `python -c "import app.main"` xatosiz o'tadi
-- **Notes:** Migratsiyalar shu bosqichda tegilmaydi (T-111 da squash qilinadi).
+  - [x] `app/models/` dan: `book.py`, `shop.py`, `landing.py`, `quote.py`, `menu.py`, `rewards.py` o'chirildi
+  - [x] `app/models/__init__.py` yangilangan
+  - [x] Tegishli admin view (`app/admin/views/`), handler (`app/bot/handlers/`, `app/api/v1/`), template (`app/templates/`), repository, schema tozalandi
+  - [x] `python -c "import app.main"` xatosiz o'tadi
+- **Notes:** Migratsiyalar shu bosqichda tegilmaydi (T-111 da squash qilinadi). `router.py`, `webapp.py`, `admin_tools.py`, `admin/__init__.py` legacy kod bilan chuqur bog'langani uchun minimal stub'ga aylantirildi — kelajakda student-bot uchun qayta yoziladi.
 
 ### T-103 · Guard modulini o'chirish
 - **Owner:** solutions-architect
