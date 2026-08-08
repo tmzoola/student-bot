@@ -1,8 +1,8 @@
 """Asosiy bot router — minimal `/start` handler.
 
-Refaktor bosqichi: T-102 doirasida kitob/do'kon/quote/menu/referral bilan
-bog'liq FSM va handler'lar olib tashlandi. Student-bot uchun to'liq
-student ID + admin approve flow keyingi bosqichlarda yoziladi.
+Refaktor bosqichi: T-102–T-105 doirasida legacy FSM va handler'lar olib
+tashlandi. Student-bot uchun to'liq student ID + admin approve flow keyingi
+bosqichlarda yoziladi.
 """
 import logging
 from datetime import datetime

@@ -1,1 +1,0 @@
-"""Referral (taklif) tizimi servislari."""

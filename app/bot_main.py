@@ -1,9 +1,10 @@
-"""Bot polling + fon xizmatlari (reengagement, pending joins) uchun alohida
-process. WebApp uvicorn worker'larida polling ishlamaydi — bu yerda bitta
-markaziy process ishga tushiradi. Shu bilan uvicorn `--workers N` bilan
-ishlaganda `TelegramConflictError` yuz bermaydi.
+"""Bot polling + fon xizmatlari uchun alohida process.
 
-Docker: `docker-compose.yml`da alohida `bot` xizmati bu modulni ishga tushiradi.
+WebApp uvicorn worker'larida polling ishlamaydi — bu yerda bitta markaziy
+process ishga tushiradi. Shu bilan `--workers N` bilan ishlaganda
+`TelegramConflictError` yuz bermaydi.
+
+Docker: `docker-compose.yml` da alohida `bot` xizmati bu modulni ishga tushiradi.
 """
 from __future__ import annotations
 
@@ -43,16 +44,6 @@ async def _reengagement_loop() -> None:
 async def main() -> None:
     setup_logging()
 
-    # Bot username'ini aniqlab, referral deep-linklari uchun keshlaymiz.
-    from services.referral.events import set_bot_username
-
-    try:
-        me = await bot.get_me()
-        set_bot_username(me.username)
-        logger.info("✅ Bot username aniqlandi: @%s", me.username)
-    except Exception:
-        logger.exception("get_me failed — deep-link uchun settings.BOT_USERNAME ishlatiladi")
-
     from aiogram.types import BotCommand, BotCommandScopeDefault
 
     try:
@@ -65,15 +56,12 @@ async def main() -> None:
 
     logger.info("▶ Bot polling + workers starting")
 
-    from services.referral.pending_joins_worker import pending_joins_loop
-
     tasks = [
         asyncio.create_task(
             dp.start_polling(bot, skip_updates=True, allowed_updates=ALLOWED_UPDATES),
             name="polling",
         ),
         asyncio.create_task(_reengagement_loop(), name="reengagement"),
-        asyncio.create_task(pending_joins_loop(), name="pending-joins"),
     ]
 
     try:

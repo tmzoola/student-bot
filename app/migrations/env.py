@@ -10,12 +10,6 @@ from models.quiz import Quiz  # noqa: F401
 from models.question import Question  # noqa: F401
 from models.telegram_user import TelegramUser  # noqa: F401
 from models.attempt import QuizAttempt  # noqa: F401
-from models.referral import InviteJoin, InviteLink, TrackedChat  # noqa: F401
-from models.referral_event import (  # noqa: F401
-    EventReferral,
-    ReferralEvent,
-    ReferralEventParticipant,
-)
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config

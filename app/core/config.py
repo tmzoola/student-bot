@@ -53,14 +53,6 @@ class Settings(BaseSettings):
     # Multi-worker umumiy kesh (subscription state va h.k.) — Redis URL.
     REDIS_URL: str = "redis://redis:6379/0"
 
-    # --- T-022 · Referral anti-fraud ---
-    # Yangi a'zo shu daqiqadan kamroq turib chiqib ketsa, join hisoblanmaydi.
-    # Grace period tugagach background worker `is_counted=True` qiladi.
-    MIN_STAY_MINUTES: int = 10
-    # Belgilangan qiymatdan yuqori Telegram user ID'lari (juda yaqinda yaratilgan
-    # akkauntlar) invite qilinganida hisoblanmaydi. `None` = qoida o'chirilgan.
-    MIN_TG_USER_ID_FOR_INVITE: int | None = None
-
     @property
     def DATABASE_URL(self) -> str:
         return (

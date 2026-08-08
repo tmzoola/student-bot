@@ -63,13 +63,13 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-105 · Referral modulini o'chirish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-104
 - **Acceptance:**
-  - [ ] `app/models/referral.py`, `referral_event.py` o'chirildi
-  - [ ] `app/services/referral/` o'chirildi
-  - [ ] Admin view, bot handler, `chat_member`/`my_chat_member` bog'liqliklari olib tashlandi
-  - [ ] `app.main` import xatosiz
+  - [x] `app/models/referral.py`, `referral_event.py` o'chirildi
+  - [x] `app/services/referral/` o'chirildi
+  - [x] Admin view, bot handler, `chat_member`/`my_chat_member` bog'liqliklari olib tashlandi
+  - [x] `app.main` import xatosiz
 
 ### T-106 · `Faculty` modeli + migratsiya
 - **Owner:** solutions-architect
