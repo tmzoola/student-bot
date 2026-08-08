@@ -73,13 +73,13 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-106 · `Faculty` modeli + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-105
 - **Acceptance:**
-  - [ ] `app/models/faculty.py`: `Faculty(id, name, code unique, is_active, created_at, updated_at)`
-  - [ ] `models/__init__.py` da registratsiya
-  - [ ] Alembic autogenerate migratsiya yaratildi
-  - [ ] `make migrate` xatosiz
+  - [x] `app/models/faculty.py`: `Faculty(id, name, code unique, is_active, created_at, updated_at)`
+  - [x] `models/__init__.py` da registratsiya
+  - [ ] ~~Alembic autogenerate migratsiya~~ — T-111 da bitta initial'ga squash qilinadi
+  - [ ] ~~`make migrate`~~ — T-111 da tekshiriladi
 
 ### T-107 · `Subject` modeli (`course_number`, `semester`) + migratsiya
 - **Owner:** solutions-architect

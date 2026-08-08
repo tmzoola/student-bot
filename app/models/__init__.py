@@ -1,5 +1,6 @@
 from models.attempt import QuizAttempt
 from models.base import Base
+from models.faculty import Faculty
 from models.module import Module
 from models.question import CorrectOption, Question
 from models.quiz import Quiz
@@ -8,6 +9,7 @@ from models.topic import Topic
 
 __all__ = [
     "Base",
+    "Faculty",
     "Module",
     "Topic",
     "Quiz",
