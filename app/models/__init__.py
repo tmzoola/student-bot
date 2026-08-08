@@ -1,6 +1,5 @@
 from models.attempt import QuizAttempt
 from models.base import Base
-from models.contest import Contest, ContestAttempt, ContestQuestion
 from models.module import Module
 from models.question import CorrectOption, Question
 from models.quiz import Quiz
@@ -22,9 +21,6 @@ __all__ = [
     "CorrectOption",
     "TelegramUser",
     "QuizAttempt",
-    "Contest",
-    "ContestQuestion",
-    "ContestAttempt",
     "TrackedChat",
     "InviteLink",
     "InviteJoin",

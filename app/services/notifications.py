@@ -138,34 +138,6 @@ async def broadcast(
     return {"total": len(user_ids), "sent": sent, "blocked": blocked, "failed": failed}
 
 
-async def notify_new_contest(
-    contest_id: int,
-    title: str,
-    prize: str | None,
-    start_at_iso: str,
-    webapp_base: str,
-) -> dict[str, int]:
-    lines = [
-        "🏆 <b>Yangi yutuqli test!</b>",
-        "",
-        f"📝 <b>{title}</b>",
-    ]
-    if prize:
-        lines.append(f"🎁 Sovg'a: <b>{prize}</b>")
-    lines.append(f"⏰ Boshlanadi: <b>{start_at_iso}</b>")
-    lines += ["", "Ishtirok etish uchun quyidagi tugmani bosing 👇"]
-    text = "\n".join(lines)
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[[
-            InlineKeyboardButton(
-                text="🏆 Yutuqli testga o'tish",
-                web_app=WebAppInfo(url=f"{webapp_base}/webapp/contests/{contest_id}"),
-            )
-        ]]
-    )
-    return await broadcast(text, reply_markup=kb)
-
-
 async def notify_new_quiz(quiz_id: int, quiz_title: str, webapp_base: str) -> dict[str, int]:
     text = (
         "🆕 <b>Yangi test qo'shildi!</b>\n\n"

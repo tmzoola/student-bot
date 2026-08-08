@@ -55,11 +55,11 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-104 · Contest modulini o'chirish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-103
 - **Acceptance:**
-  - [ ] `app/models/contest.py` va bog'liq handler/admin/template/schema o'chirildi
-  - [ ] `app.main` import xatosiz
+  - [x] `app/models/contest.py` va bog'liq handler/admin/template/schema o'chirildi
+  - [x] `app.main` import xatosiz
 
 ### T-105 · Referral modulini o'chirish
 - **Owner:** solutions-architect
