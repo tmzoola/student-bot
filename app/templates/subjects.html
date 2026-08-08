@@ -19,7 +19,7 @@
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 async function load(){
-    const r = await fetch('/api/v1/subjects', { headers: { 'X-Init-Data': MK.initData } });
+    const r = await fetch('/api/v1/subjects', { headers: MK.authHeaders() });
     const list = document.getElementById('list');
     if (r.status === 403 || r.status === 401) {
         list.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div>'

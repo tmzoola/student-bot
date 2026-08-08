@@ -22,7 +22,7 @@ const SUBJECT_ID = {{ subject_id }};
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 async function load(){
-    const r = await fetch(`/api/v1/subjects/${SUBJECT_ID}`, { headers: {'X-Init-Data': MK.initData }});
+    const r = await fetch(`/api/v1/subjects/${SUBJECT_ID}`, { headers: MK.authHeaders()});
     const box = document.getElementById('topics');
     if (r.status === 403 || r.status === 401) {
         box.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div></div>';

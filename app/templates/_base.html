@@ -188,6 +188,13 @@ img,svg{display:block}
     window.MK = {
         user: null,
         initData: tg?.initData || '',
+        tgUserId: tgUserId,
+        authHeaders(){
+            const h = {};
+            if (this.initData) h['X-Init-Data'] = this.initData;
+            if (this.tgUserId) h['X-Tg-User-Id'] = String(this.tgUserId);
+            return h;
+        },
 
         async ensureAuth(){
             if (this.user) return this.user;

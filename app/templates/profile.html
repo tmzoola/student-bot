@@ -48,8 +48,8 @@ function fmtDate(iso){
 
 async function load(){
     const [pr, ar] = await Promise.all([
-        fetch('/api/v1/profile', { headers: {'X-Init-Data': MK.initData }}),
-        fetch('/api/v1/profile/attempts', { headers: {'X-Init-Data': MK.initData }}),
+        fetch('/api/v1/profile', { headers: MK.authHeaders()}),
+        fetch('/api/v1/profile/attempts', { headers: MK.authHeaders()}),
     ]);
     const pbox = document.getElementById('profile');
     if (pr.status === 403 || pr.status === 401) {

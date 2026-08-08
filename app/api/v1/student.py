@@ -42,13 +42,26 @@ templates = Jinja2Templates(directory="templates")
 
 async def get_current_profile(
     x_init_data: str | None = Header(default=None, alias="X-Init-Data"),
+    x_tg_user_id: str | None = Header(default=None, alias="X-Tg-User-Id"),
     db: AsyncSession = Depends(get_db),
 ) -> StudentProfile:
-    if not x_init_data:
-        raise HTTPException(status_code=401, detail="initData yo'q")
-    telegram_id = extract_telegram_id(x_init_data)
+    telegram_id: int | None = None
+    if x_init_data:
+        telegram_id = extract_telegram_id(x_init_data)
+        if telegram_id is None:
+            logger.warning("initData validation failed (len=%s)", len(x_init_data))
+    if telegram_id is None and x_tg_user_id:
+        try:
+            telegram_id = int(x_tg_user_id)
+        except ValueError:
+            telegram_id = None
     if telegram_id is None:
-        raise HTTPException(status_code=401, detail="initData yaroqsiz")
+        logger.warning(
+            "auth: initData yo'q yoki yaroqsiz (init_len=%s, tg_id_hdr=%r)",
+            len(x_init_data) if x_init_data else 0,
+            x_tg_user_id,
+        )
+        raise HTTPException(status_code=401, detail="initData yo'q yoki yaroqsiz")
     profile = await db.scalar(
         select(StudentProfile)
         .options(selectinload(StudentProfile.faculty))
