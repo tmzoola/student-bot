@@ -6,6 +6,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.handlers.admin_approval import router as admin_approval_router
+from bot.handlers.menu import router as menu_router
 from bot.handlers.registration import router as registration_router
 from bot.middlewares import BlacklistMiddleware
 from core.config import settings
@@ -30,6 +31,7 @@ _blacklist = BlacklistMiddleware()
 dp.message.outer_middleware(_blacklist)
 dp.callback_query.outer_middleware(_blacklist)
 dp.include_router(admin_approval_router)
+dp.include_router(menu_router)
 dp.include_router(registration_router)
 
 # Refaktor bosqichi: referral bilan bog'liq router'lar (chat_member, join

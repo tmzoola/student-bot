@@ -169,16 +169,16 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 - **Status:** done
 - **Depends on:** T-202
 - **Acceptance:**
-  - [ ] `app/bot/handlers/menu.py` yaratildi
-  - [ ] Tasdiqlangan foydalanuvchi uchun reply keyboard `[📚 Fanlar (WebApp)] [👤 Profil] [📊 Statistika]`
-  - [ ] `📚 Fanlar` — WebApp tugmasi (`web_app=WebAppInfo(url=WEBAPP_URL+'/subjects')`)
-  - [ ] `👤 Profil` — F.I.Sh, ID, fakultet, kurs, semestr
-  - [ ] `📊 Statistika` — urinishlar soni, umumiy ball, o'rtacha foiz
-  - [ ] Tasdiqlanmagan/ro'yxatdan o'tmagan foydalanuvchilarga menyu ko'rinmaydi
+  - [x] `app/bot/handlers/menu.py` yaratildi
+  - [x] Tasdiqlangan foydalanuvchi uchun reply keyboard `[📚 Fanlar (WebApp)] [👤 Profil] [📊 Statistika]`
+  - [x] `📚 Fanlar` — WebApp tugmasi (`web_app=WebAppInfo(url=WEBAPP_URL+'/subjects')`)
+  - [x] `👤 Profil` — F.I.Sh, ID, fakultet, kurs, semestr
+  - [x] `📊 Statistika` — urinishlar soni, umumiy ball, o'rtacha foiz
+  - [x] Tasdiqlanmagan/ro'yxatdan o'tmagan foydalanuvchilarga menyu ko'rinmaydi
 
 ### T-204 · Reg-gate middleware
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-203
 - **Acceptance:**
   - [ ] `RegistrationGateMiddleware` `bot/middlewares.py` ga qo'shildi
@@ -188,7 +188,7 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-205 · WebApp /subjects endpoint + sahifa
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-204
 - **Acceptance:**
   - [ ] `GET /subjects` HTML — foydalanuvchi profiliga mos fanlar
@@ -199,7 +199,7 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-206 · WebApp fan detail (mavzular va testlar)
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-205
 - **Acceptance:**
   - [ ] `GET /subjects/{id}` HTML — mavzular + har birida testlar
@@ -209,7 +209,7 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-207 · Test yechish
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-206
 - **Acceptance:**
   - [ ] `GET /quiz/{id}` HTML (`quiz.html` qayta ishlatildi)
@@ -219,7 +219,7 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-208 · Profil sahifasi
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-207
 - **Acceptance:**
   - [ ] `GET /profile` HTML
@@ -229,7 +229,7 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-209 · Smoke testlar
 - **Owner:** solutions-architect
-- **Status:** done
+- **Status:** todo
 - **Depends on:** T-208
 - **Acceptance:**
   - [ ] `requirements-dev.txt` yaratildi
