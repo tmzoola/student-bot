@@ -1,98 +1,101 @@
 {% extends "_base.html" %}
-{% set nav_active = 'me' %}
-{% block title %}Men — Muslima Darmonova{% endblock %}
-
-{% block head %}
-<style>
-.prof{background:#fff;border-radius:20px;padding:24px 22px;text-align:center;box-shadow:var(--shadow);margin-bottom:16px}
-.avatar{width:80px;height:80px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.9rem}
-.prof-n{font-size:1.15rem;font-weight:800;color:#111;margin-bottom:2px}
-.prof-u{font-size:.85rem;color:var(--muted);margin-bottom:16px}
-.prof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.ps{background:#F4F5F2;border-radius:12px;padding:12px 8px}
-.ps .v{font-size:1.4rem;font-weight:800;color:var(--green-dark)}
-.ps.blue .v{color:var(--blue)}
-.ps .l{font-size:.7rem;color:var(--muted);font-weight:600}
-
-.rec-row{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--shadow)}
-.rec-ic{width:38px;height:38px;border-radius:10px;background:#F4F5F2;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem;font-weight:800}
-.rec-pass{background:#E4F3EB;color:var(--green-dark)}
-.rec-fail{background:#FDE8E8;color:#c0392b}
-.rec-body{flex:1;min-width:0}
-.rec-t{font-size:.88rem;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rec-s{font-size:.72rem;color:var(--muted)}
-.rec-p{font-size:.9rem;font-weight:800;color:var(--green-dark);flex-shrink:0}
-</style>
-{% endblock %}
+{% block title %}Profil{% endblock %}
+{% block bottom_nav %}{% endblock %}
 
 {% block header %}
 <header class="hdr">
-  <div style="width:38px"></div>
-  <div class="hdr-title">Mening profilim</div>
-  <a href="/webapp/settings" class="hdr-back" title="Sozlamalar">⚙</a>
+  <a href="/subjects" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="hdr-title" style="flex:1;padding:0 12px">Profil</div>
+  <div class="hdr-right"></div>
 </header>
 {% endblock %}
 
+{% block head %}
+<style>
+.p-card{background:#fff;border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.p-name{font-size:1.15rem;font-weight:800;margin-bottom:4px}
+.p-id{font-size:.8rem;color:var(--muted);margin-bottom:12px}
+.p-row{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #f0f0f0;font-size:.88rem}
+.p-row:first-of-type{border-top:none}
+.p-row .k{color:var(--muted)}
+.p-row .v{font-weight:600}
+.att{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.att-t{font-size:.9rem;font-weight:600;margin-bottom:2px}
+.att-d{font-size:.75rem;color:var(--muted)}
+.att-p{font-weight:800;font-size:1rem}
+.att-p.good{color:var(--green)}
+.att-p.bad{color:var(--pink)}
+</style>
+{% endblock %}
+
 {% block content %}
-<div id="content">
-    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
-</div>
+<div id="profile"><div class="empty"><div class="empty-t">Yuklanmoqda…</div></div></div>
+
+<div class="section-t big" style="margin-top:8px">So'nggi urinishlar</div>
+<div id="attempts"><div class="card-sub">…</div></div>
 {% endblock %}
 
 {% block script %}
 <script>
-(async function(){
-    await MK.ensureAuth();
-    const r = await fetch('/api/v1/webapp/me/progress', { headers: MK.authHeaders() });
-    if (!r.ok) {
-        document.getElementById('content').innerHTML = '<div class="empty">Ma\'lumot topilmadi</div>';
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmtDate(iso){
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleString('uz-UZ', {dateStyle:'short', timeStyle:'short'}); }
+    catch(e){ return iso; }
+}
+
+async function load(){
+    const [pr, ar] = await Promise.all([
+        fetch('/api/v1/profile', { headers: {'X-Init-Data': MK.initData }}),
+        fetch('/api/v1/profile/attempts', { headers: {'X-Init-Data': MK.initData }}),
+    ]);
+    const pbox = document.getElementById('profile');
+    if (pr.status === 403 || pr.status === 401) {
+        pbox.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div></div>';
         return;
     }
-    const d = await r.json();
-
-    const initial = (d.user.name || '?').charAt(0).toUpperCase();
-
-    let html = `
-        <div class="prof">
-            <div class="avatar">${initial}</div>
-            <div class="prof-n">${esc(d.user.name)}</div>
-            <div class="prof-u">${d.user.username ? '@' + esc(d.user.username) : 'Foydalanuvchi'}</div>
-            <div class="prof-stats">
-                <div class="ps"><div class="v">${d.total_points}</div><div class="l">Ballar</div></div>
-                <div class="ps blue"><div class="v">${d.total_attempts}</div><div class="l">Yechilgan test</div></div>
-            </div>
+    if (!pr.ok) {
+        pbox.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        return;
+    }
+    const p = await pr.json();
+    pbox.innerHTML = `
+        <div class="p-card">
+          <div class="p-name">${esc(p.full_name)}</div>
+          <div class="p-id">🆔 ${esc(p.student_id_number)}</div>
+          <div class="p-row"><span class="k">Fakultet</span><span class="v">${esc(p.faculty_name)}</span></div>
+          <div class="p-row"><span class="k">Kurs</span><span class="v">${p.course_number}</span></div>
+          <div class="p-row"><span class="k">Semestr</span><span class="v">${p.semester}</span></div>
+        </div>
+        <div class="stats">
+          <div class="stat-c stat-green"><div class="v">${p.attempts_count}</div><div class="l">Urinish</div></div>
+          <div class="stat-c stat-blue"><div class="v">${p.average_percentage}%</div><div class="l">O'rtacha</div></div>
+          <div class="stat-c stat-amber"><div class="v">${p.attempts_count > 0 ? '⭐' : '—'}</div><div class="l">Faol</div></div>
         </div>
     `;
 
-    html += `<a href="/webapp/my-orders" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:14px;box-shadow:var(--shadow);margin-bottom:12px;color:#111;text-decoration:none;font-weight:600;font-size:.9rem">
-        <span style="font-size:1.3rem">📦</span> Mening buyurtmalarim
-        <span style="margin-left:auto;color:var(--muted)">→</span>
-    </a>`;
-
-    if (d.recent.length) {
-        html += '<div class="section-t">SO\'NGGI URINISHLAR</div>';
-        html += d.recent.map(a => `
-            <div class="rec-row">
-                <div class="rec-ic ${a.percentage>=60?'rec-pass':'rec-fail'}">${a.percentage}%</div>
-                <div class="rec-body">
-                    <div class="rec-t">${esc(a.quiz_title)}</div>
-                    <div class="rec-s">${a.score}/${a.total} · ${MK.fmtTime(a.time_taken_seconds)} · ${a.date}</div>
-                </div>
-                <div class="rec-p">+${a.points}</div>
-            </div>
-        `).join('');
-    } else {
-        html += `
-            <div class="empty">
-                <div class="empty-ic">📝</div>
-                <div class="empty-t">Hali test yechmagansiz</div>
-                <div class="empty-d">Modulni tanlab, birinchi testni yeching</div>
-            </div>`;
+    const abox = document.getElementById('attempts');
+    if (!ar.ok) {
+        abox.innerHTML = '<div class="card-sub">Urinishlar yuklanmadi</div>';
+        return;
     }
-
-    document.getElementById('content').innerHTML = html;
-})();
-
-function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+    const attempts = await ar.json();
+    if (!attempts.length) {
+        abox.innerHTML = '<div class="card-sub">Hali urinishlar yo\'q</div>';
+        return;
+    }
+    abox.innerHTML = attempts.map(a => `
+        <div class="att">
+          <div style="min-width:0;flex:1">
+            <div class="att-t">${esc(a.quiz_title)}</div>
+            <div class="att-d">${a.score}/${a.total} · ${fmtDate(a.completed_at)}</div>
+          </div>
+          <div class="att-p ${a.percentage >= 60 ? 'good':'bad'}">${a.percentage}%</div>
+        </div>
+    `).join('');
+}
+load();
 </script>
 {% endblock %}

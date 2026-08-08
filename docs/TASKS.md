@@ -219,13 +219,13 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-208 · Profil sahifasi
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-207
 - **Acceptance:**
-  - [ ] `GET /profile` HTML
-  - [ ] `GET /api/v1/profile` JSON (profil + statistika)
-  - [ ] `GET /api/v1/profile/attempts` JSON (so'nggi 20)
-  - [ ] Template'da urinishlar tarixi
+  - [x] `GET /profile` HTML
+  - [x] `GET /api/v1/profile` JSON (profil + statistika)
+  - [x] `GET /api/v1/profile/attempts` JSON (so'nggi 20)
+  - [x] Template'da urinishlar tarixi
 
 ### T-209 · Smoke testlar
 - **Owner:** solutions-architect
