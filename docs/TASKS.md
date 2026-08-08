@@ -229,15 +229,15 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-209 · Smoke testlar
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-208
 - **Acceptance:**
-  - [ ] `requirements-dev.txt` yaratildi
-  - [ ] `tests/conftest.py` (async SQLite fixture)
-  - [ ] `tests/test_registration.py`
-  - [ ] `tests/test_quiz_submit.py`
-  - [ ] `Makefile` da `test:` target
-  - [ ] `pytest -q` yashil
+  - [x] `requirements-dev.txt` yaratildi
+  - [x] `tests/conftest.py` (async SQLite fixture)
+  - [x] `tests/test_registration.py`
+  - [x] `tests/test_quiz_submit.py`
+  - [x] `Makefile` da `test:` target
+  - [x] `pytest -q` yashil (4 passed)
 
 ## Bosqich 3 — AI taxlil (kelajakda)
 

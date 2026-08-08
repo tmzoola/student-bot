@@ -26,6 +26,12 @@ makemigrations:
 install:
 	pip install -r requirements.txt
 
+install-dev:
+	pip install -r requirements-dev.txt
+
+test:
+	pytest -q
+
 run:
 	cd app && uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
