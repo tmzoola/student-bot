@@ -1,333 +1,285 @@
-# Deploy va monitoring — DevOps uchun qo'llanma
+# Student-bot — Deploy va monitoring qo'llanmasi
 
-Bu dokument log/monitoring stack'ini production'ga tushirish bo'yicha aniq
-qadamlar. `main` branch'idagi kod deploy'ga tayyor.
+Server: **13.140.165.210** (Contabo VPS, Ubuntu)
+Domen: **student-13-140-165-210.sslip.io** (sslip.io IP'ga avtomatik ishora qiladi — DNS sozlash shart emas)
+Tashqi port: **8002** (edu-bot 8001, samandar_market 8000 bilan konflikt yo'q)
+Loyiha yo'li: `/opt/student-bot` (tavsiya)
 
-Domain: **ob-malaka.timv.uz**
-
----
-
-## 1. Yangi konteynerlar
-
-`docker-compose.yml` da yangi 4 ta xizmat qo'shildi:
-
-| Servis | Port (ichki) | Vazifasi | RAM |
-|--------|--------------|----------|-----|
-| `dozzle` | 8080 | Real-vaqt log UI | ~30 MB |
-| `loki` | 3100 | Log ma'lumotlar bazasi | ~200 MB |
-| `promtail` | — | Konteyner log'larini Loki'ga uzatuvchi | ~50 MB |
-| `grafana` | 3000 | Dashboard + tarixiy tahlil + alerting | ~150 MB |
-
-Barcha yangi portlar **`expose`** orqali faqat compose ichida. Tashqariga faqat
-Nginx orqali chiqadi. Loki'ni to'g'ridan-to'g'ri ochmang.
-
-Barcha eski (`db`, `redis`, `app`, `bot`, `guard`) xizmatlarga **log rotation**
-qo'shildi: har konteyner max 250 MB log ushlaydi (50 MB × 5 fayl, gzip
-siqilgan). Disk to'lish xavfi endi yo'q.
+Ushbu hujjatning tartibi — birinchi marta serverni ko'targaningizda yuqoridan
+pastga bajaring. Keyingi safar faqat "8. Yangilanish" va zarur bo'lsa "9.
+Rollback" bo'limlari kerak bo'ladi.
 
 ---
 
-## 2. `.env` ga qo'shiladigan o'zgaruvchilar
+## 1. Server tayyorlash (bir marta)
 
-Production `.env` faylida quyidagi qatorlar bo'lishi shart (agar yo'q bo'lsa
-qo'shing):
-
-```env
-# Redis (Docker Compose ichidagi service)
-REDIS_URL=redis://redis:6379/0
-
-# Grafana admin
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin123
-```
-
-**Grafana parolini keyinchalik almashtiring** (kuchli parol qo'ying), keyin
-`docker compose up -d grafana` bilan qayta ishga tushiring.
-
----
-
-## 3. Nginx sozlamasi
-
-`ob-malaka.timv.uz` konfiguratsiyasiga quyidagi bloklarni qo'shing:
-
-```nginx
-# ── Dozzle: real-vaqt log UI ────────────────────────────────────
-# Nginx basic auth bilan himoyalanadi (Dozzle o'z auth'i yo'q).
-location /logs/ {
-    auth_basic "Log viewer";
-    auth_basic_user_file /etc/nginx/.htpasswd_logs;
-
-    proxy_pass http://127.0.0.1:8080/logs/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    # Dozzle real-vaqt log streaming uchun WebSocket
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_read_timeout 3600;
-    proxy_buffering off;
-}
-
-# ── Grafana: dashboard, tarix, alerting ────────────────────────
-# Grafana o'z login'i bor (admin/admin123), qo'shimcha basic auth kerak emas.
-location /grafana/ {
-    proxy_pass http://127.0.0.1:3000/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    # Grafana Live features (real-vaqt dashboard yangilanishi)
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_read_timeout 3600;
-}
-```
-
-Basic auth fayl yaratish:
-```bash
-# apache2-utils o'rnatilmagan bo'lsa: apt install apache2-utils
-htpasswd -c /etc/nginx/.htpasswd_logs admin
-# Parol so'raydi — masalan: admin123
-```
-
-Sozlagach:
-```bash
-nginx -t                # sintaksis tekshirish
-systemctl reload nginx  # yangilash
-```
-
----
-
-## 4. Ishga tushirish qadamlari
-
-Bir marta bajarish:
+### 1.1. Asosiy paketlar
 
 ```bash
-# 1. Kodni yangilash
-cd /path/to/edu-bot
-git pull
-
-# 2. Yangi xizmatlarni ko'tarish (jami ~450 MB RAM ishlatadi)
-docker compose up -d --build
-
-# 3. Barchasi ishga tushganini tekshirish (30-60 sek kutish kerak)
-docker compose ps
-# Kutilayotgan xizmatlar (Status: healthy):
-#   malaka_db, malaka_redis, malaka_app, malaka_bot,
-#   malaka_dozzle, malaka_loki, malaka_promtail, malaka_grafana
-
-# 4. Health tekshirish
-curl -s http://localhost:8000/health | python3 -m json.tool
-# Kutilgan: db.ok=true, redis.ok=true, pool.size=20
-
-# 5. Loki log qabul qilyaptimi
-curl -s "http://localhost:3100/loki/api/v1/labels" | jq
-# Kutilgan: {"status":"success","data":["container","filename",...]}
-
-# 6. Nginx sozlash (yuqoridagi bo'lim)
-
-# 7. Brauzerda tekshirish
-# https://ob-malaka.timv.uz/logs      → Dozzle (basic auth admin)
-# https://ob-malaka.timv.uz/grafana   → Grafana login (admin/admin123)
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y \
+    docker.io docker-compose-plugin \
+    nginx certbot python3-certbot-nginx \
+    apache2-utils git curl ufw
+sudo systemctl enable --now docker nginx
+sudo usermod -aG docker "$USER"   # sessiya qayta boshlansin
 ```
 
----
+> Compose komandasi: `docker compose ...` (plugin, v2). Agar serverda faqat
+> `docker-compose` (v1) o'rnatilgan bo'lsa — barcha buyruqlarda `docker
+> compose` ni `docker-compose` bilan almashtiring.
 
-## 5. Grafana birinchi kirishdan keyin
-
-1. `https://ob-malaka.timv.uz/grafana` — login: `admin`/`admin123`.
-2. **Explore** (chap panelda kompas ikonasi) → Datasource: **Loki** → Query:
-   ```
-   {container="malaka_app"}
-   ```
-   Log oqim ko'rinishi kerak.
-3. **Dashboards** → **New** → **Import** → ID `13639` (Loki Metrics) yoki
-   `15140` (Docker Container Logs). Datasource: Loki.
-4. **Alerting** (soat ikonasi) → **Notification channels** → **New channel**
-   → Type: Telegram. Bot token va chat_id kiriting. Test qiling.
-5. Alert qoidalari (misol):
-   - "Har 5 daqiqada `error` yoki `timeout` matni > 20 ta" → Telegram xabar.
-   - "`/health` endpoint 3 marta ketma-ket 5xx qaytarsa" → Telegram xabar.
-
----
-
-## 6. Yaqin muddatli tekshiruv (ishga tushirilgan zahoti)
+### 1.2. Firewall
 
 ```bash
-# Barcha konteyner UP
-make logs-all
-
-# Xatolar yo'qmi
-make logs-errors
-make logs-timeouts
-make logs-conflict
-
-# DB va Redis holati
-make db-connections
-make redis-info
-
-# App health
-make health
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'    # 80, 443
+sudo ufw enable
 ```
 
-Xatolar ro'yxati:
+**8002-portni tashqariga ochmang** — u faqat nginx orqali kirilishi kerak.
 
-- `logs-conflict` bo'sh bo'lishi kerak — aks holda ikkita bot polling ishlayapti
-  (eski `app` konteyner to'xtamagan).
-- `db-connections` da active > 100 bo'lsa — connection leak yoki juda katta
-  yuklama, pool sozlamalarini qayta ko'rish.
-- `redis-info` da `keyspace_hits/keyspace_misses` nisbat > 5 bo'lsa yaxshi
-  (subscription kesh ishlayapti).
+### 1.3. Deploy foydalanuvchi + SSH kaliti
+
+```bash
+# GitHub Actions uchun deploy foydalanuvchisi (yoki mavjudni qo'llang).
+sudo adduser --disabled-password --gecos '' deploy
+sudo usermod -aG docker deploy
+
+# Lokal mashinada:  ssh-keygen -t ed25519 -f ~/.ssh/student-bot-deploy
+# Public key'ni serverga qo'shing:
+sudo -u deploy mkdir -p /home/deploy/.ssh
+echo "<lokal public key>" | sudo -u deploy tee -a /home/deploy/.ssh/authorized_keys
+sudo -u deploy chmod 600 /home/deploy/.ssh/authorized_keys
+```
+
+Private key GitHub secrets `SSH_KEY` ga yoziladi (5.1-bo'lim).
 
 ---
 
-## 7. Ma'lumot yo'qolish xavfi va rollback
+## 2. Loyihani klon qilish va `.env` to'ldirish
 
-**Ma'lumot yo'qolmaydi:**
-- Postgres volume o'zgarmadi (`postgres_data`).
-- Media volume o'zgarmadi (`media_data`).
-- Yangi Loki/Grafana volumelar bo'sh — birinchi marta ma'lumot yig'iladi.
-
-**Rollback (agar biror narsa noto'g'ri bo'lsa):**
 ```bash
-git log --oneline -5     # oxirgi commit'lardan biriga
-git revert HEAD          # yoki git checkout <old-commit>
-docker compose down
-docker compose up -d --build
+sudo mkdir -p /opt/student-bot
+sudo chown deploy:deploy /opt/student-bot
+sudo -u deploy git clone https://github.com/<org>/student-bot.git /opt/student-bot
+cd /opt/student-bot
+sudo -u deploy cp .env.example .env
+sudo -u deploy nano .env
 ```
 
-Log xizmatlarini alohida o'chirish (asosiy stack ta'sirlanmaydi):
+Majburiy o'zgaruvchilar (`.env.example` da `# REQUIRED` bilan belgilangan):
+
+- `SECRET_KEY` — `openssl rand -hex 32`
+- `POSTGRES_USER`, `POSTGRES_PASSWORD` — kuchli parol
+- `ADMIN_USERNAME`, `ADMIN_PASSWORD` — admin panel uchun
+- `BOT_TOKEN`, `BOT_USERNAME` — @BotFather'dan
+- `WEBAPP_URL=https://student-13-140-165-210.sslip.io`
+- `ADMIN_CHAT_ID` — talaba arizasi keladigan chat (@userinfobot)
+- `GRAFANA_ADMIN_PASSWORD` — kuchli parol
+
+**Diqqat:** `.env` ni hech qachon git'ga commit qilmang. `.env` fayli
+faqat serverda tahrirlanadi.
+
+---
+
+## 3. Dastlabki `docker compose up`
+
+```bash
+cd /opt/student-bot
+sudo -u deploy docker compose up -d --build
+sudo -u deploy docker compose ps
+```
+
+Kutilgan xizmatlar (barchasi `healthy` yoki `running`):
+
+```
+student_db, student_redis, student_app, student_bot,
+student_dozzle, student_loki, student_promtail, student_grafana
+```
+
+Migratsiya avtomatik ishlaydi (`entrypoint.sh` ichida `alembic upgrade head`).
+Qo'lda qilish kerak emas.
+
+Health smoke:
+
+```bash
+curl -sf http://127.0.0.1:8002/health && echo OK
+docker compose logs --since 60s app bot | grep -iE 'error|traceback' || echo "log toza"
+```
+
+---
+
+## 4. Nginx + TLS
+
+```bash
+# Config'ni joyiga qo'ying va yoqing
+sudo cp /opt/student-bot/deploy/nginx/student-bot.conf \
+        /etc/nginx/sites-available/student-bot.conf
+sudo ln -sf /etc/nginx/sites-available/student-bot.conf \
+            /etc/nginx/sites-enabled/student-bot.conf
+sudo nginx -t && sudo systemctl reload nginx
+
+# Dozzle uchun basic auth
+sudo htpasswd -c /etc/nginx/.htpasswd_student_logs admin
+
+# TLS sertifikat (Let's Encrypt, avtomatik yangilanadi)
+sudo certbot --nginx -d student-13-140-165-210.sslip.io
+```
+
+Certbot config faylni tahrirlab `ssl_certificate` yo'llarini yozadi.
+
+Tekshirish:
+
+```bash
+curl -I https://student-13-140-165-210.sslip.io/health
+# HTTP/2 200
+```
+
+---
+
+## 5. GitHub Actions (avtomatik deploy)
+
+### 5.1. Talab qilinadigan secretslar
+
+Repo → Settings → Secrets and variables → Actions → **New repository secret**:
+
+| Secret | Qiymat namunasi |
+|--------|-----------------|
+| `SSH_HOST` | `13.140.165.210` |
+| `SSH_USER` | `deploy` |
+| `SSH_KEY` | Private ed25519 kalit (butun matn `-----BEGIN...-----END-----`) |
+| `DEPLOY_PATH` | `/opt/student-bot` |
+
+### 5.2. Deploy trigger
+
+- `main` branch'iga har `push` — avtomatik deploy.
+- Qo'lda: Actions → **Deploy student-bot to Contabo** → **Run workflow**.
+
+Workflow SSH orqali serverga kiradi, `git reset --hard origin/main` qiladi,
+`docker compose up -d --build --remove-orphans` ishga tushiradi, oxirida 60
+soniyalik log'ni xatolarga tekshiradi.
+
+---
+
+## 6. Kunlik backup
+
+`deploy/scripts/backup.sh` — Postgres dump + media volume tar. 7 kunlik retention.
+
+O'rnatish:
+
+```bash
+sudo mkdir -p /var/backups/student-bot
+sudo chown deploy:deploy /var/backups/student-bot
+
+# Cron (deploy foydalanuvchisi ostida):
+sudo -u deploy crontab -e
+# Qo'shing:
+0 3 * * * /opt/student-bot/deploy/scripts/backup.sh >> /var/log/student-bot-backup.log 2>&1
+```
+
+Test:
+
+```bash
+sudo -u deploy /opt/student-bot/deploy/scripts/backup.sh
+ls -lh /var/backups/student-bot/
+```
+
+Batafsil — `deploy/scripts/backup.sh` ichidagi izohlar.
+
+---
+
+## 7. Monitoring
+
+| URL | Nima |
+|-----|------|
+| `https://student-13-140-165-210.sslip.io/logs/` | Dozzle — real-vaqt log (basic auth) |
+| `https://student-13-140-165-210.sslip.io/grafana/` | Grafana — dashboard + tarix + alert |
+
+Grafana birinchi kirishdan keyin:
+
+1. Login: `admin` / `.env` dagi `GRAFANA_ADMIN_PASSWORD`.
+2. **Explore** → Loki → `{container="student_app"}` — log oqim ko'rinishi kerak.
+3. **Dashboards** → **New** → **Import** → `13639` (Loki Metrics) yoki `15140`
+   (Docker Container Logs).
+4. **Alerting** — Telegram notification channel (bot token + chat_id) qo'shing.
+
+**Grafana parol volume mavjud bo'lsa `.env` dan qayta o'qilmaydi.** Almashtirish:
+
+```bash
+docker exec student_grafana grafana cli \
+    --homepath /usr/share/grafana admin reset-admin-password '<yangi>'
+```
+
+Foydali `make` targetlari (agar lokal Makefile bilan bir xil bo'lsa):
+
+```bash
+make health          # /health
+make logs-errors     # xatolar
+make db-connections  # Postgres active
+```
+
+---
+
+## 8. Yangilanish flow
+
+Standart: `git push origin main` → GitHub Actions o'zi deploy qiladi.
+
+Qo'lda deploy kerak bo'lsa:
+
+```bash
+cd /opt/student-bot
+sudo -u deploy git pull
+sudo -u deploy docker compose up -d --build
+```
+
+Migratsiya (alembic upgrade head) entrypoint ichida avtomatik.
+
+**Diqqat — polling/bot xizmati:** `bot` konteyner qayta ishga tushayotganda
+Telegram polling to'xtaydi. Deploy odatda 30-60 soniya. Konfliktdan qochish
+uchun kompozitsiyada `app` konteyner polling qilmaydi — faqat `bot` qiladi.
+
+---
+
+## 9. Rollback
+
+Agar deploy'dan keyin xatolik chiqsa:
+
+```bash
+cd /opt/student-bot
+git log --oneline -5
+sudo -u deploy git checkout <old-sha>
+sudo -u deploy docker compose up -d --build
+```
+
+Migratsiya ORQAGA — agar oxirgi commit'da yangi migratsiya bo'lsa:
+
+```bash
+sudo -u deploy docker compose exec app alembic downgrade -1
+```
+
+Volume'lar (Postgres, media) tegilmaydi.
+
+Faqat log stack'ni to'xtatish (asosiy ilova ishlab tursin):
+
 ```bash
 docker compose stop dozzle loki promtail grafana
-docker compose rm -f dozzle loki promtail grafana
 ```
 
 ---
 
-## 8. Kelajakda sozlash arziydigan narsalar
+## 10. Xavfsizlik eslatmalari
 
-- **Grafana parolini almashtirish** (birinchi kirishdan so'ng).
-- **Loki retention** — hozir 30 kun. Disk tez to'ladigan bo'lsa
-  `observability/loki-config.yaml` da `retention_period: 168h` (7 kun) qiling.
-- **Dashboard'lar** — dastlab tayyor template'lardan foydalaning, keyinchalik
-  loyihaga xos panellar qo'shing (contest paytida savol yechish tezligi,
-  xatolar chastotasi, va h.k.).
-- **Alert qoidalari** — event kunidan oldin sinab ko'ring.
-- **Backup** — Grafana dashboard'larni JSON'ga eksport qilib repositoriyga
-  saqlang.
+- `.env` faylini hech qachon commit qilmang (`.gitignore` da bor).
+- `POSTGRES_PASSWORD`, `GRAFANA_ADMIN_PASSWORD`, `ADMIN_PASSWORD` — kuchli
+  parollar. Almashtirilganda ular `.env` da qoladi, git'ga tushmaydi.
+- `docker compose down -v` **hech qachon** avtomatik ishlatilmasin — `-v`
+  volume'larni o'chiradi va butun DB yo'qoladi.
+- Backup faqat serverda, `/var/backups/student-bot/` da. Off-site ko'chirish
+  (S3 yoki boshqa server) — kelajakdagi vazifa.
 
 ---
 
 ## Aloqa
 
-Savol bo'lsa: `docs/TASKS.md` ga T-xxx sifatida qo'shing yoki chatda ayting.
-
----
-
-## 9. Haqiqiy deploy holati (2026-07-27, ob-malaka.timv.uz serveri)
-
-Deploy bajarildi. Quyida yuqoridagi ko'rsatmalardan **farq qilgan** joylar —
-keyingi safar shu bo'limga tayaning, 3-bo'limdagi nginx snippet'i bu serverda
-to'g'ridan-to'g'ri ishlamaydi.
-
-### 9.1. Portlar: `expose` yetarli emas edi
-
-1-bo'limda "barcha yangi portlar `expose` orqali" deyilgan, lekin nginx host'da
-(konteynerda emas) ishlaydi — `expose` host'ning `127.0.0.1` iga port ochmaydi,
-shuning uchun `proxy_pass http://127.0.0.1:8080` hech qayerga bormasdi.
-
-Yechim — `docker-compose.yml` da loopback binding qo'shildi (tashqariga baribir
-ochilmaydi, faqat host ichidan):
-
-```yaml
-dozzle:
-  ports:
-    - "127.0.0.1:8080:8080"
-grafana:
-  ports:
-    - "127.0.0.1:3001:3000"
-```
-
-> **Grafana 3000 EMAS, 3001.** Host'ning 3000-porti PM2 ostidagi boshqa ilova
-> tomonidan band. 3-bo'limdagidek `127.0.0.1:3000` ga proxy qilinsa, Grafana
-> o'rniga o'sha begona ilova ochiladi.
-
-### 9.2. Grafana `proxy_pass` da oxirgi slash BO'LMASLIGI kerak
-
-Compose'da `GF_SERVER_SERVE_FROM_SUB_PATH: "true"` turibdi — ya'ni Grafana
-`/grafana` prefiksini o'zi kutadi. 3-bo'limdagi `proxy_pass http://...:3000/;`
-(slash bilan) prefiksni kesib tashlaydi, natijada Grafana `/grafana/` ga qayta
-yo'naltiradi va **redirect loop** hosil bo'ladi.
-
-To'g'risi — slashsiz:
-
-```nginx
-location /grafana/ {
-    proxy_pass http://127.0.0.1:3001;   # oxirida / YO'Q
-    ...
-}
-```
-
-### 9.3. `Connection "upgrade"` o'rniga map
-
-Har bir so'rovda qat'iy `Connection: upgrade` yuborish websocket bo'lmagan
-so'rovlarni buzishi mumkin. `/etc/nginx/conf.d/websocket_upgrade.conf` da umumiy
-map yaratildi va ikkala blokda `proxy_set_header Connection $connection_upgrade;`
-ishlatiladi.
-
-### 9.4. `/logs` va `/grafana` (slashsiz) uchun redirect
-
-`location /logs/` slashsiz `/logs` so'rovini ushlamaydi — u `location /` ga
-tushib app'dan 404 olardi. Qo'shildi:
-
-```nginx
-location = /logs    { return 301 /logs/; }
-location = /grafana { return 301 /grafana/; }
-```
-
-### 9.5. Dozzle healthcheck tuzatildi
-
-Compose'dagi `wget`-ga asoslangan healthcheck ishlamasdi (Dozzle image'i
-distroless, ichida `wget` yo'q) — konteyner doim `unhealthy` turardi.
-Endi Dozzle'ning o'z buyrug'i:
-
-```yaml
-healthcheck:
-  test: ["CMD", "/dozzle", "healthcheck"]
-```
-
-### 9.6. Parollar — `admin123` EMAS
-
-Ochiq domendagi Grafana uchun `admin123` xavfli, shuning uchun kuchli parollar
-qo'yildi (`.env` va `/etc/nginx/.htpasswd_logs` da). Parollarni serverdan
-qarang, bu faylga yozmang:
-
-```bash
-grep GRAFANA_ADMIN /opt/bot/edu-bot/.env
-```
-
-> Diqqat: `GF_SECURITY_ADMIN_PASSWORD` faqat Grafana bazasi **birinchi marta**
-> yaratilganda qo'llanadi. Volume mavjud bo'lsa `.env` ni o'zgartirish yetarli
-> emas — parolni shunday almashtiring:
-> ```bash
-> docker exec malaka_grafana grafana cli --homepath /usr/share/grafana \
->     admin reset-admin-password '<yangi-parol>'
-> ```
-
-### 9.7. Bu serverda `docker compose` emas, `docker-compose`
-
-O'rnatilgan versiya Compose v1.29.0 (Docker 20.10.12). Yuqoridagi barcha
-`docker compose ...` buyruqlarini `docker-compose ...` deb yozing.
-
-### 9.8. Hali bajarilmagan (qo'lda talab qiladi)
-
-- **5-bo'lim: dashboard import** (ID `13639` / `15140`) — Grafana'dan
-  grafana.com ga chiqish kerak, brauzerdan qilinadi.
-- **5-bo'lim: Telegram alerting** — bot token va chat_id kerak, ular yo'q edi.
-- **Disk**: `/` 81% to'lgan (13 GB bo'sh). Loki retention 30 kun — agar disk
-  siqilsa `observability/loki-config.yaml` da `retention_period: 168h` qiling.
+Muammo bo'lsa `docs/TASKS.md` ga T-4xx sifatida qo'shing.

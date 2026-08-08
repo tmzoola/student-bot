@@ -313,11 +313,11 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-406 · `docs/DEPLOY_NOTES.md` qayta yozish
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-405
 - **Acceptance:**
-  - [ ] Server sozlash, klonlash, `.env`, dastlabki up, Nginx+TLS, Actions, backup, monitoring, yangilash, rollback bo'limlari
-  - [ ] Barcha domain/IP student-bot uchun (`13.140.165.210`, `student-13-140-165-210.sslip.io`)
+  - [x] Server sozlash, klonlash, `.env`, dastlabki up, Nginx+TLS, Actions, backup, monitoring, yangilash, rollback bo'limlari
+  - [x] Barcha domain/IP student-bot uchun (`13.140.165.210`, `student-13-140-165-210.sslip.io`)
 
 ### T-407 · Kunlik backup skripti
 - **Owner:** devops
