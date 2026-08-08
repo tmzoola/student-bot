@@ -188,14 +188,14 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-205 · WebApp /subjects endpoint + sahifa
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-204
 - **Acceptance:**
-  - [ ] `GET /subjects` HTML — foydalanuvchi profiliga mos fanlar
-  - [ ] `GET /api/v1/subjects` JSON
-  - [ ] WebApp initData HMAC-SHA256 validation (`app/utils/webapp_auth.py`)
-  - [ ] Template `subjects.html`
-  - [ ] Profil topilmasa/tasdiqlanmasa 403
+  - [x] `GET /subjects` HTML — foydalanuvchi profiliga mos fanlar
+  - [x] `GET /api/v1/subjects` JSON
+  - [x] WebApp initData HMAC-SHA256 validation (`app/utils/webapp_auth.py`)
+  - [x] Template `subjects.html`
+  - [x] Profil topilmasa/tasdiqlanmasa 403
 
 ### T-206 · WebApp fan detail (mavzular va testlar)
 - **Owner:** solutions-architect

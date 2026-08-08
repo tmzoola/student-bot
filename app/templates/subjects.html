@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+{% block title %}Fanlar{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-tx">📚 Fanlar</div>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="list"><div class="empty"><div class="empty-t">Yuklanmoqda…</div></div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function load(){
+    const r = await fetch('/api/v1/subjects', { headers: { 'X-Init-Data': MK.initData } });
+    const list = document.getElementById('list');
+    if (r.status === 403 || r.status === 401) {
+        list.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div>'
+            + '<div class="empty-d">Profilingiz tasdiqlanmagan yoki topilmadi.</div></div>';
+        return;
+    }
+    if (!r.ok) {
+        list.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        return;
+    }
+    const items = await r.json();
+    if (!items.length) {
+        list.innerHTML = '<div class="empty">'
+            + '<div class="empty-t">Fan topilmadi</div>'
+            + '<div class="empty-d">Sizning fakultet/kurs/semestringiz uchun hali fanlar qo\'shilmagan.</div></div>';
+        return;
+    }
+    list.innerHTML = items.map(s => `
+        <a href="/subjects/${s.id}" class="card" style="margin-bottom:10px">
+          <div class="card-row">
+            <div class="card-ic" style="background:var(--blue-lt);color:var(--blue)">📖</div>
+            <div class="card-body">
+              <div class="card-title">${esc(s.name)}</div>
+              <div class="card-sub">${s.topics_count} mavzu · ${s.quizzes_count} test</div>
+            </div>
+            <div class="card-arrow">›</div>
+          </div>
+        </a>
+    `).join('');
+}
+load();
+</script>
+{% endblock %}

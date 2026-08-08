@@ -5,6 +5,8 @@ from pathlib import Path
 import uvicorn
 from admin import setup_admin
 from api.v1.admin_tools import router as admin_tools_router
+from api.v1.student import api as student_api
+from api.v1.student import pages as student_pages
 from api.v1.webapp import api as webapp_api
 from api.v1.webapp import pages as webapp_pages
 from core.config import MEDIA_ROOT, settings
@@ -143,6 +145,14 @@ async def https_proxy_middleware(request: Request, call_next):
 app.include_router(webapp_pages)
 app.include_router(webapp_api)
 app.include_router(admin_tools_router)
+# Student router'i webapp_pages'dan keyin ulanadi — /quiz/{id} kabi yo'llar
+# aynan bir xil, lekin student versiyasi yangi (initData validation bilan).
+# FastAPI birinchi ro'yxatga olingan route'ni tanlaydi — shuning uchun
+# webapp_pages'da /quiz mavjud emasligiga ishonch hosil qildik (T-102
+# refaktorida u ham qoldirilgan). Ikkinchi ro'yxatdan qat'i nazar
+# /subjects, /profile yangi.
+app.include_router(student_pages)
+app.include_router(student_api)
 
 # User-uploaded media (book files served via endpoint; question images via /media).
 MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
