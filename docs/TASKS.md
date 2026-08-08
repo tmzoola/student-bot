@@ -178,13 +178,13 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-204 · Reg-gate middleware
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-203
 - **Acceptance:**
-  - [ ] `RegistrationGateMiddleware` `bot/middlewares.py` ga qo'shildi
-  - [ ] `StudentProfile` yo'q → faqat `/start` va FSM update'lari o'tadi
-  - [ ] `is_approved=False` → faqat `/start` o'tadi
-  - [ ] `setup.py` da middleware register qilindi
+  - [x] `RegistrationGateMiddleware` `bot/middlewares.py` ga qo'shildi
+  - [x] `StudentProfile` yo'q → faqat `/start` va FSM update'lari o'tadi
+  - [x] `is_approved=False` → faqat `/start` o'tadi
+  - [x] `setup.py` da middleware register qilindi
 
 ### T-205 · WebApp /subjects endpoint + sahifa
 - **Owner:** solutions-architect
