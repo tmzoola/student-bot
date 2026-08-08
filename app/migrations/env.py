@@ -4,7 +4,8 @@ from logging.config import fileConfig
 from alembic import context
 from core.config import settings
 from models.base import Base
-from models.module import Module  # noqa: F401
+from models.faculty import Faculty  # noqa: F401
+from models.subject import Subject  # noqa: F401
 from models.topic import Topic  # noqa: F401
 from models.quiz import Quiz  # noqa: F401
 from models.question import Question  # noqa: F401

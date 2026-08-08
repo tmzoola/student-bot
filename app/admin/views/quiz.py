@@ -9,13 +9,13 @@ class QuizAdminView(BaseAdminView):
 
     fields = [
         "id",
-        HasOne("module", label="Modul", identity="modul"),
+        HasOne("topic", label="Mavzu", identity="mavzu"),
         StringField("title", label="Sarlavha", required=True),
         TextAreaField("description", label="Tavsif"),
         IntegerField("time_limit_seconds", label="Vaqt chegarasi (soniya)"),
         BooleanField("is_active", label="Faol"),
     ]
 
-    column_list = ["id", "title", "module", "time_limit_seconds", "is_active", "createdAt"]
+    column_list = ["id", "title", "topic", "time_limit_seconds", "is_active", "createdAt"]
     column_searchable_list = ["title"]
     column_sortable_list = ["is_active", "createdAt"]

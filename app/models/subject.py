@@ -30,6 +30,12 @@ class Subject(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
 
     faculty: Mapped["Faculty"] = relationship(back_populates="subjects")  # noqa: F821
+    topics: Mapped[list["Topic"]] = relationship(  # noqa: F821
+        "Topic",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+        order_by="Topic.order",
+    )
 
     def __str__(self) -> str:
         return f"{self.name} ({self.course_number}-kurs, {self.semester}-semestr)"

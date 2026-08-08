@@ -9,13 +9,13 @@ class TopicAdminView(BaseAdminView):
 
     fields = [
         "id",
-        HasOne("module", label="Modul", identity="modul"),
+        HasOne("subject", label="Fan", identity="fan"),
         StringField("title", label="Sarlavha", required=True),
         TextAreaField("description", label="Tavsif"),
         IntegerField("order", label="Tartib"),
         BooleanField("is_active", label="Faol"),
     ]
 
-    column_list = ["id", "title", "module", "order", "is_active", "createdAt"]
+    column_list = ["id", "title", "subject", "order", "is_active", "createdAt"]
     column_searchable_list = ["title"]
     column_sortable_list = ["order", "is_active", "createdAt"]

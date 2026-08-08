@@ -94,14 +94,15 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-108 · `Topic` va `Quiz` ni Subject ga moslash + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-107
 - **Acceptance:**
-  - [ ] `Topic` da `module_id` → `subject_id` (FK Subject)
-  - [ ] `Quiz` da `module_id` olib tashlanadi, faqat `topic_id` qoladi
-  - [ ] `app/models/module.py` o'chirildi
-  - [ ] Bog'liq admin view, handler, schema, repository yangilandi
-  - [ ] Alembic migratsiya
+  - [x] `Topic` da `module_id` → `subject_id` (FK Subject, CASCADE)
+  - [x] `Quiz` da `module_id` olib tashlanadi, faqat `topic_id` qoladi (CASCADE)
+  - [x] `app/models/module.py` va `app/admin/views/module.py` o'chirildi
+  - [x] Admin: `Faculty`/`Subject`/`Topic`/`Quiz` view'lari yangilandi
+  - [x] `webapp.py` dan `/modules` route'lari olib tashlandi, `modules.html`, `module_quizzes.html` o'chirildi
+  - [ ] ~~Alembic migratsiya~~ — T-111 da squash
 
 ### T-109 · `StudentProfile` modeli + `TelegramUser` bog'lanishi + migratsiya
 - **Owner:** solutions-architect

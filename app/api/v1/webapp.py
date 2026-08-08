@@ -82,18 +82,6 @@ async def landing(request: Request, db: AsyncSession = Depends(get_db), t: str |
     return templates.TemplateResponse("index.html", {"request": request, "content": None})
 
 
-@pages.get("/modules", response_class=HTMLResponse)
-async def modules_page(request: Request):
-    return templates.TemplateResponse("modules.html", {"request": request})
-
-
-@pages.get("/modules/{module_id}", response_class=HTMLResponse)
-async def module_topics_page(request: Request, module_id: int):
-    return templates.TemplateResponse(
-        "module_quizzes.html", {"request": request, "module_id": module_id}
-    )
-
-
 @pages.get("/topics/{topic_id}", response_class=HTMLResponse)
 async def topic_quizzes_page(request: Request, topic_id: int):
     return templates.TemplateResponse("quizzes.html", {"request": request, "topic_id": topic_id})

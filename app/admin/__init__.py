@@ -2,16 +2,18 @@ from pathlib import Path
 
 from admin.auth import AdminAuth
 from admin.i18n_uz import install_uzbek
-from admin.views.module import ModuleAdminView
+from admin.views.faculty import FacultyAdminView
 from admin.views.question import QuestionAdminView
 from admin.views.quiz import QuizAdminView
+from admin.views.subject import SubjectAdminView
 from admin.views.telegram_user import TelegramUserAdminView
 from admin.views.topic import TopicAdminView
 from db.session import engine
 from fastapi import FastAPI
-from models.module import Module
+from models.faculty import Faculty
 from models.question import Question
 from models.quiz import Quiz
+from models.subject import Subject
 from models.telegram_user import TelegramUser
 from models.topic import Topic
 from starlette_admin import DropDown
@@ -34,10 +36,18 @@ def setup_admin(app: FastAPI) -> None:
     )
 
     admin.add_view(DropDown(
+        label="Universitet",
+        icon="fa fa-graduation-cap",
+        views=[
+            FacultyAdminView(Faculty, identity="fakultet"),
+            SubjectAdminView(Subject, identity="fan"),
+        ],
+    ))
+
+    admin.add_view(DropDown(
         label="Kontent",
         icon="fa fa-book-open-reader",
         views=[
-            ModuleAdminView(Module, identity="modul"),
             TopicAdminView(Topic, identity="mavzu"),
             QuizAdminView(Quiz, identity="test"),
             QuestionAdminView(Question, identity="savol"),
