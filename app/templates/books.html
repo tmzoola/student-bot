@@ -1,0 +1,154 @@
+{% extends "_base.html" %}
+{% set nav_active = 'books' %}
+{% block title %}Kitoblar — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.search{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);margin-bottom:14px}
+.search svg{color:var(--muted-lt);flex-shrink:0}
+.search input{flex:1;border:none;outline:none;font-size:.9rem;font-family:inherit;background:transparent;color:#111}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;background:#fff;border-radius:20px;padding:8px 16px;font-size:.78rem;font-weight:700;color:var(--muted);box-shadow:var(--shadow);cursor:pointer;transition:.15s;border:1.5px solid transparent}
+.chip.active{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(61,182,106,.3)}
+
+.book{background:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow);margin-bottom:10px;transition:.15s;animation:fadeUp .25s ease}
+.book:active{transform:scale(.985)}
+.book-ic{width:46px;height:56px;border-radius:10px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#fff;font-size:1rem}
+.book-ext{font-size:.55rem;font-weight:800;letter-spacing:.03em;opacity:.95}
+.book-b{flex:1;min-width:0}
+.book-t{font-size:.9rem;font-weight:700;color:#111;line-height:1.3;margin-bottom:3px}
+.book-m{font-size:.73rem;color:var(--muted);line-height:1.45}
+.book-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:11px}
+.tag-cat{background:#E4F3EB;color:var(--green-dark)}
+.tag-topic{background:var(--blue-lt);color:var(--blue)}
+.book-dl{width:40px;height:40px;border-radius:12px;background:#E4F3EB;color:var(--green-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.book-dl svg{width:18px;height:18px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-ic"><svg viewBox="0 0 24 24"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg></div>
+    <div>
+      <div class="hdr-title">Kitoblar</div>
+      <div class="hdr-sub" id="count-sub">…</div>
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="search">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input id="q" placeholder="Kitob qidirish…" oninput="render()">
+</div>
+
+<div class="chips" id="chips"></div>
+<div id="list"></div>
+
+<div id="empty" class="empty" style="display:none">
+  <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></div>
+  <div class="empty-t">Kitoblar topilmadi</div>
+  <div class="empty-d">Tez orada yangi kitoblar qo'shiladi</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+let BOOKS = [];
+let CATEGORIES = [];
+let CAT = '';
+
+const EXT_COLORS = {
+  PDF:'#E94E77', DOC:'#3A6DB5', DOCX:'#3A6DB5', PPT:'#EA580C', PPTX:'#EA580C',
+  XLS:'#2E9A57', XLSX:'#2E9A57', EPUB:'#8B5CF6', DJVU:'#0EA5E9', TXT:'#64748B',
+};
+
+(async function(){
+    await MK.ensureAuth();
+    try {
+        const [rc, rb] = await Promise.all([
+            fetch('/api/v1/webapp/books/categories'),
+            fetch('/api/v1/webapp/books'),
+        ]);
+        CATEGORIES = await rc.json();
+        BOOKS = await rb.json();
+    } catch(e){ CATEGORIES = []; BOOKS = []; }
+    if (CATEGORIES.length) CAT = CATEGORIES[0].name;
+    buildChips();
+    render();
+})();
+
+function buildChips(){
+    const el = document.getElementById('chips');
+    if (!CATEGORIES.length){ el.style.display='none'; return; }
+    el.innerHTML = CATEGORIES.map(c =>
+        `<div class="chip ${c.name===CAT?'active':''}" data-c="${esc(c.name)}">${esc(c.name)}${c.count ? ` <span style="opacity:.7">(${c.count})</span>` : ''}</div>`
+    ).join('');
+    el.querySelectorAll('.chip').forEach(ch => {
+        ch.onclick = () => {
+            MK.haptic('light');
+            CAT = ch.dataset.c;
+            el.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x === ch));
+            render();
+        };
+    });
+}
+
+function fmtSize(b){
+    if (b >= 1048576) return (b/1048576).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(b/1024)) + ' KB';
+}
+
+function render(){
+    const q = (document.getElementById('q').value || '').toLowerCase();
+    const items = BOOKS.filter(b =>
+        (!CAT || b.category === CAT) &&
+        (!q || (b.title + ' ' + (b.author||'') + ' ' + (b.topic||'')).toLowerCase().includes(q))
+    );
+    document.getElementById('count-sub').textContent = CAT
+        ? `${CAT} · ${items.length} ta`
+        : `${BOOKS.length} ta kitob`;
+    document.getElementById('empty').style.display = items.length ? 'none' : '';
+    document.getElementById('list').innerHTML = items.map(b => {
+        const color = EXT_COLORS[b.ext] || '#64748B';
+        return `
+        <a href="${b.url}" class="book" data-url="${b.url}">
+            <div class="book-ic" style="background:${color}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/></svg>
+                <span class="book-ext">${esc(b.ext)}</span>
+            </div>
+            <div class="book-b">
+                <div class="book-t">${esc(b.title)}</div>
+                <div class="book-m">${b.author ? esc(b.author) + ' · ' : ''}${fmtSize(b.file_size)} · ${b.downloads} marta yuklab olindi</div>
+                ${(b.category || b.topic) ? `<div class="book-tags">
+                    ${b.category ? `<span class="tag tag-cat">${esc(b.category)}</span>` : ''}
+                    ${b.topic ? `<span class="tag tag-topic">${esc(b.topic)}</span>` : ''}
+                </div>` : ''}
+            </div>
+            <div class="book-dl">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+        </a>`;
+    }).join('');
+
+    // Open via Telegram's external browser when available (better PDF handling)
+    document.querySelectorAll('#list .book').forEach(el => {
+        el.onclick = (e) => {
+            MK.haptic('light');
+            const tg = window.Telegram?.WebApp;
+            if (tg?.openLink) {
+                e.preventDefault();
+                tg.openLink(location.origin + el.dataset.url, { try_instant_view: false });
+            }
+        };
+    });
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

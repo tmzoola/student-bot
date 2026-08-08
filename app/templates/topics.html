@@ -1,0 +1,83 @@
+{% extends "_base.html" %}
+{% block title %}Mavzular — Muslima Darmonova{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+.hdr-back-btn{width:38px;height:38px;background:#f4f5f2;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/modules" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </a>
+  <div>
+    <div class="hdr-title" id="hdr-title">Mavzular</div>
+    <div class="hdr-sub" id="hdr-sub">…</div>
+  </div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="section-t" id="section-count">MAVZULAR</div>
+<div id="list"></div>
+<div id="empty" class="empty" style="display:none">
+  <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+  <div class="empty-t">Bu modulda mavzular yo'q</div>
+  <div class="empty-d">Tez orada qo'shiladi</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const MODULE_ID = {{ module_id }};
+
+const COLORS = [
+  {bg:'#E4F3EB', fg:'#3DB66A', em:'📗'},
+  {bg:'#E3EBF8', fg:'#3A6DB5', em:'📘'},
+  {bg:'#F8F1E3', fg:'#B5812E', em:'📙'},
+  {bg:'#FBE5EC', fg:'#E94E77', em:'📕'},
+  {bg:'#EEE7FE', fg:'#8B5CF6', em:'📓'},
+  {bg:'#E0F2FE', fg:'#0EA5E9', em:'📒'},
+];
+
+(async function(){
+    try {
+        const r = await fetch(`/api/v1/webapp/modules/${MODULE_ID}/topics`);
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+
+        document.getElementById('hdr-title').textContent = data.module.title;
+        document.getElementById('hdr-sub').textContent = `${data.topics.length} ta mavzu`;
+        document.getElementById('section-count').textContent = `${data.topics.length} ta mavzu`;
+
+        if (!data.topics.length) {
+            document.getElementById('empty').style.display = '';
+            return;
+        }
+
+        document.getElementById('list').innerHTML = data.topics.map((t, i) => {
+            const c = COLORS[i % COLORS.length];
+            return `
+            <a href="/webapp/topics/${t.id}" class="card" style="margin-bottom:10px">
+                <div class="card-row">
+                    <div class="card-ic" style="background:${c.bg};color:${c.fg}">${c.em}</div>
+                    <div class="card-body">
+                        <div class="card-title">${esc(t.title)}</div>
+                        <div class="card-sub">${t.quiz_count} ta test${t.description ? ' · ' + esc(t.description) : ''}</div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </div>
+            </a>`;
+        }).join('');
+    } catch (e) {
+        document.getElementById('empty').style.display = '';
+    }
+})();
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

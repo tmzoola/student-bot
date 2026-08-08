@@ -1,0 +1,97 @@
+{% extends "_base.html" %}
+{% set nav_active = 'contests' %}
+{% block title %}G'oliblar — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.medal{border-radius:16px;padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+.medal .r{font-size:1.7rem;line-height:1}
+.medal.g1{background:linear-gradient(135deg,#FEF3C7,#FDE68A)}
+.medal.g2{background:linear-gradient(135deg,#F1F5F9,#E2E8F0)}
+.medal.g3{background:linear-gradient(135deg,#FED7AA,#FDBA74)}
+.medal .n{font-weight:800;color:#111;font-size:.86rem;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.medal .s{font-size:.72rem;color:#4b5563;margin-top:3px}
+
+.row-w{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.rank{width:32px;height:32px;background:#F4F5F2;color:#4b5563;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0}
+.rank.g1{background:#FEF3C7;color:#b45309}
+.rank.g2{background:#F1F5F9;color:#475569}
+.rank.g3{background:#FED7AA;color:#9a3412}
+.wb{flex:1;min-width:0}
+.wn{font-size:.9rem;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws{font-size:.72rem;color:var(--muted)}
+.wp{font-size:.9rem;font-weight:800;color:var(--green-dark);flex-shrink:0}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/contests/{{ contest_id }}" class="hdr-back">←</a>
+  <div class="hdr-title">🏆 G'oliblar</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="root">
+    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const CONTEST_ID = {{ contest_id }};
+
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch(`/api/v1/webapp/contests/${CONTEST_ID}/winners`, { headers: MK.authHeaders() });
+    if (!r.ok) { document.getElementById('root').innerHTML = '<div class="empty">Ma\'lumot topilmadi</div>'; return; }
+    const d = await r.json();
+    render(d);
+})();
+
+function render(d){
+    const w = d.winners || [];
+    if (!w.length) {
+        document.getElementById('root').innerHTML = `
+            <div class="empty">
+                <div class="empty-ic">🕐</div>
+                <div class="empty-t">Hozircha g'olib yo'q</div>
+                <div class="empty-d">Test tugagach natijalar shu yerda ko'rinadi</div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    if (d.contest.prize) {
+        html += `<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400e;padding:12px 14px;border-radius:12px;font-weight:800;margin-bottom:14px;text-align:center">🎁 ${esc(d.contest.prize)}</div>`;
+    }
+
+    if (w.length >= 3) {
+        const [a,b,c] = w;
+        html += `<div class="podium">
+            <div class="medal g1"><div class="r">🥇</div><div class="n">${esc(a.name)}</div><div class="s">${a.score}/${a.total}</div></div>
+            <div class="medal g2"><div class="r">🥈</div><div class="n">${esc(b.name)}</div><div class="s">${b.score}/${b.total}</div></div>
+            <div class="medal g3"><div class="r">🥉</div><div class="n">${esc(c.name)}</div><div class="s">${c.score}/${c.total}</div></div>
+        </div>`;
+    }
+
+    html += '<div class="section-t">BARCHA ISHTIROKCHILAR</div>';
+    html += w.map(p => `
+        <div class="row-w">
+            <div class="rank ${p.rank===1?'g1':p.rank===2?'g2':p.rank===3?'g3':''}">${p.rank}</div>
+            <div class="wb">
+                <div class="wn">${esc(p.name)}</div>
+                <div class="ws">${p.score}/${p.total} · ${p.percentage}% · ${MK.fmtTime(p.time_taken_seconds)}</div>
+            </div>
+            <div class="wp">${p.score}</div>
+        </div>
+    `).join('');
+
+    document.getElementById('root').innerHTML = html;
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends "_base.html" %}
+{% block title %}Natija — Muslima Darmonova{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+body{background:linear-gradient(180deg,#EEF3EA 0%,#F5F8F2 50%,#EEF3EA 100%);padding-bottom:24px}
+
+/* ─── Hero score card ─────────────────────────────── */
+.hero-r{background:#fff;border-radius:24px;padding:26px 22px 22px;text-align:center;box-shadow:var(--shadow);margin-bottom:14px;position:relative}
+.attempt-badge{position:absolute;top:14px;right:14px;background:#f4f5f2;color:#555;font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px}
+.attempt-badge.best{background:#FFF3E0;color:#B5812E}
+.attempt-badge.best::before{content:"⭐ "}
+.hero-emoji{font-size:52px;margin-bottom:6px}
+.hero-t{font-size:1.3rem;font-weight:800;color:#111;margin-bottom:4px}
+.hero-s{font-size:.85rem;color:var(--muted);margin-bottom:20px}
+.hero-circle{width:140px;height:140px;margin:0 auto 18px;position:relative;display:flex;align-items:center;justify-content:center}
+.hero-circle svg{position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg)}
+.hero-circle .track{stroke:#EEF3EA;fill:none;stroke-width:12}
+.hero-circle .fill{fill:none;stroke:var(--green);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset 1.1s ease-out}
+.hero-circle .pct{font-size:2.1rem;font-weight:800;color:#111;line-height:1;position:relative;z-index:2}
+.hero-circle .pct-l{font-size:.7rem;color:var(--muted);font-weight:600;margin-top:2px}
+
+.badges{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.rb{background:#F4F5F2;border-radius:12px;padding:11px 6px;text-align:center}
+.rb .v{font-size:1.1rem;font-weight:800;line-height:1.1;color:#111}
+.rb .l{font-size:.66rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+.rb-green .v{color:var(--green-dark)}
+.rb-blue .v{color:var(--blue)}
+.rb-amber .v{color:var(--amber)}
+
+/* ─── Trend indicator ─────────────────────────────── */
+.trend{background:#fff;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.trend-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
+.trend-up{background:#E4F3EB;color:var(--green-dark)}
+.trend-down{background:#FDE8E8;color:#c0392b}
+.trend-flat{background:#f0f0f0;color:#888}
+.trend-t{font-size:.86rem;font-weight:700;color:#111}
+.trend-s{font-size:.72rem;color:var(--muted)}
+
+/* ─── Section titles ──────────────────────────────── */
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 10px}
+.sec-title h3{font-size:.98rem;font-weight:800;color:#111;margin:0}
+.sec-title-count{font-size:.74rem;color:var(--muted);font-weight:600}
+
+/* ─── Attempt history pills (horizontal scroll) ───── */
+.hist{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;margin:0 -18px;padding-left:18px;padding-right:18px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.hist::-webkit-scrollbar{display:none}
+.hist-item{flex-shrink:0;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);min-width:130px;text-align:left;scroll-snap-align:start;transition:.15s;border:2px solid transparent}
+.hist-item:active{transform:scale(.97)}
+.hist-item.current{border-color:var(--green);background:#F0FAF3}
+.hist-item .n{font-size:.66rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.hist-item .p{font-size:1.15rem;font-weight:800;color:#111;line-height:1;margin-bottom:2px}
+.hist-item .p span{font-size:.7rem;color:var(--muted);font-weight:600;margin-left:2px}
+.hist-item .d{font-size:.68rem;color:var(--muted-lt)}
+.hist-item .pct{display:inline-block;font-size:.68rem;padding:2px 7px;border-radius:20px;background:#F4F5F2;color:#555;font-weight:700;margin-top:6px}
+.hist-item.current .pct{background:var(--green);color:#fff}
+
+/* ─── Question review ────────────────────────────── */
+.qr{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--green)}
+.qr.wrong{border-left-color:#f87171}
+.qr.skip{border-left-color:#c8cdd4}
+.qr-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.qr-num{background:#f4f5f2;color:#555;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:6px;flex-shrink:0}
+.qr-status{margin-left:auto;font-size:.75rem;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.qr.correct .qr-status{color:var(--green-dark)}
+.qr.wrong .qr-status{color:#c0392b}
+.qr.skip .qr-status{color:#888}
+.qr-text{font-size:.95rem;font-weight:600;color:#111;line-height:1.4;margin-bottom:12px}
+.qr-img{display:block;max-width:100%;max-height:200px;border-radius:10px;margin-bottom:12px}
+.qr-opts{display:flex;flex-direction:column;gap:6px}
+.qr-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:#F8F9F7;font-size:.86rem;color:#333;line-height:1.35}
+.qr-opt.is-correct{background:#E4F3EB;color:#1a7a3f;font-weight:600}
+.qr-opt.is-wrong{background:#FDE8E8;color:#a02020;font-weight:600}
+.qr-opt-letter{width:22px;height:22px;border-radius:6px;background:#e6e8e3;color:#666;font-weight:700;font-size:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qr-opt.is-correct .qr-opt-letter{background:var(--green);color:#fff}
+.qr-opt.is-wrong .qr-opt-letter{background:#dc2626;color:#fff}
+.qr-opt-text{flex:1}
+.qr-opt-tag{font-size:.66rem;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0}
+.qr-opt.is-correct .qr-opt-tag{background:rgba(255,255,255,.6);color:var(--green-dark)}
+.qr-opt.is-wrong .qr-opt-tag{background:rgba(255,255,255,.6);color:#a02020}
+.qr-expl{margin-top:10px;padding:10px 12px;background:#FFF9EA;border-radius:9px;font-size:.8rem;color:#7a5c11;line-height:1.5;border-left:3px solid #FFD966}
+.qr-expl b{color:#5a4308}
+
+/* ─── Actions ─────────────────────────────────────── */
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/modules" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </a>
+  <div class="hdr-title">Natija</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+  <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const ATTEMPT_ID = {{ attempt_id }};
+
+(async function(){
+    const r = await fetch(`/api/v1/webapp/results/${ATTEMPT_ID}`);
+    if (!r.ok) {
+        document.getElementById('content').innerHTML = '<div class="empty">Natija topilmadi</div>';
+        return;
+    }
+    const d = await r.json();
+
+    const passed = d.percentage >= 60;
+    const emoji = d.percentage >= 90 ? '🏆' : d.percentage >= 70 ? '🎉' : d.percentage >= 50 ? '👍' : '💪';
+    const title = d.percentage >= 90 ? 'Ajoyib!' : d.percentage >= 70 ? 'Yaxshi!' : d.percentage >= 50 ? 'Yaxshi urinish' : 'Yana urinib ko\'ring!';
+    const sub = passed ? 'Muvaffaqiyatli o\'tdingiz' : '60% dan yuqori kerak';
+
+    const CIRC = 2 * Math.PI * 60;
+    const offset = CIRC - (CIRC * d.percentage / 100);
+    const strokeColor = passed ? '#3DB66A' : '#E94E77';
+
+    let html = '';
+
+    // ── Hero ────────────────────────────────
+    const attemptBadge = d.total_attempts > 1
+        ? `<div class="attempt-badge ${d.is_best ? 'best' : ''}">${d.attempt_number}/${d.total_attempts} urinish${d.is_best ? ' · eng yaxshi' : ''}</div>`
+        : '';
+
+    html += `
+        <div class="hero-r">
+            ${attemptBadge}
+            <div class="hero-emoji">${emoji}</div>
+            <div class="hero-t">${title}</div>
+            <div class="hero-s">${esc(d.quiz_title)} · ${sub}</div>
+            <div class="hero-circle">
+                <svg viewBox="0 0 140 140">
+                    <circle class="track" cx="70" cy="70" r="60"/>
+                    <circle class="fill" cx="70" cy="70" r="60"
+                            style="stroke:${strokeColor};stroke-dasharray:${CIRC};stroke-dashoffset:${CIRC};" id="fillcircle"/>
+                </svg>
+                <div style="text-align:center;position:relative;z-index:2">
+                    <div class="pct">${d.percentage}%</div>
+                    <div class="pct-l">to'g'ri</div>
+                </div>
+            </div>
+            <div class="badges">
+                <div class="rb rb-green"><div class="v">${d.score}<span style="opacity:.5">/${d.total}</span></div><div class="l">Ball</div></div>
+                <div class="rb rb-blue"><div class="v">${d.points}</div><div class="l">Reyting</div></div>
+                <div class="rb rb-amber"><div class="v">${MK.fmtTime(d.time_taken_seconds)}</div><div class="l">Vaqt</div></div>
+            </div>
+        </div>
+    `;
+
+    // ── Trend (vs previous attempt) ────────
+    if (d.trend) {
+        const dp = d.trend.points_delta;
+        const dt = d.trend.time_delta;
+        const kind = dp > 0 ? 'up' : (dp < 0 ? 'down' : 'flat');
+        const trendIc = dp > 0 ? '📈' : (dp < 0 ? '📉' : '➡️');
+        const trendT = dp > 0
+            ? `Yaxshilandi! +${dp} ball`
+            : (dp < 0 ? `${dp} ball kamayibdi` : 'O\'sha xil ball');
+        const timeStr = dt > 0 ? `${dt}s sekinroq` : (dt < 0 ? `${Math.abs(dt)}s tezroq` : 'o\'sha xil vaqt');
+        html += `
+            <div class="trend">
+                <div class="trend-ic trend-${kind}">${trendIc}</div>
+                <div>
+                    <div class="trend-t">${trendT}</div>
+                    <div class="trend-s">Oldingi urinish bilan solishtirilganda · ${timeStr}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ── History pills ───────────────────────
+    if (d.history.length > 1) {
+        html += `
+            <div class="sec-title">
+                <h3>Urinishlar tarixi</h3>
+                <div class="sec-title-count">${d.history.length} ta urinish</div>
+            </div>
+            <div class="hist">
+                ${d.history.slice().reverse().map(h => `
+                    <a href="/webapp/results/${h.attempt_id}" class="hist-item ${h.is_current?'current':''}">
+                        <div class="n">${h.attempt_number}-urinish</div>
+                        <div class="p">${h.points}<span>ball</span></div>
+                        <div class="d">${h.date}</div>
+                        <div class="pct">${h.percentage}% · ${MK.fmtTime(h.time_taken_seconds)}</div>
+                    </a>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // ── Question review ────────────────────
+    const wrongCount = d.questions.filter(q => !q.is_correct && q.answered).length;
+    const skipCount  = d.questions.filter(q => !q.answered).length;
+
+    html += `
+        <div class="sec-title">
+            <h3>Savollar tahlili</h3>
+            <div class="sec-title-count">${d.score}/${d.total} to'g'ri${wrongCount?' · ' + wrongCount + ' xato':''}${skipCount?' · ' + skipCount + ' o\'tkazilgan':''}</div>
+        </div>
+    `;
+
+    html += d.questions.map(q => {
+        let cls = 'correct';
+        let statusHtml = '<i>✓</i> To\'g\'ri';
+        if (!q.answered) { cls = 'skip'; statusHtml = '<i>—</i> O\'tkazilgan'; }
+        else if (!q.is_correct) { cls = 'wrong'; statusHtml = '<i>✗</i> Xato'; }
+
+        return `
+            <div class="qr ${cls}">
+                <div class="qr-head">
+                    <div class="qr-num">Savol ${q.order || q.id}</div>
+                    <div class="qr-status">${statusHtml}</div>
+                </div>
+                ${q.image_url ? `<img class="qr-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+                ${q.text ? `<div class="qr-text">${esc(q.text)}</div>` : ''}
+                <div class="qr-opts">
+                    ${['A','B','C','D'].map(L => {
+                        const isCorrect = q.correct_answer === L;
+                        const isUserChoice = q.user_answer === L;
+                        let optCls = '', tag = '';
+                        if (isCorrect) {
+                            optCls = 'is-correct';
+                            tag = isUserChoice ? '<span class="qr-opt-tag">Sizning javobingiz ✓</span>' : '<span class="qr-opt-tag">To\'g\'ri javob</span>';
+                        } else if (isUserChoice) {
+                            optCls = 'is-wrong';
+                            tag = '<span class="qr-opt-tag">Sizning javobingiz ✗</span>';
+                        }
+                        return `
+                            <div class="qr-opt ${optCls}">
+                                <div class="qr-opt-letter">${L}</div>
+                                <div class="qr-opt-text">${esc(q['option_'+L.toLowerCase()])}</div>
+                                ${tag}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                ${q.explanation ? `<div class="qr-expl"><b>Izoh:</b> ${esc(q.explanation)}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    // ── Actions ─────────────────────────────
+    html += `
+        <div class="actions">
+            <a href="/webapp/quiz/${d.quiz_id}" class="btn btn-primary">Yana bir marta urinib ko'rish</a>
+            <a href="/webapp/modules" class="btn btn-secondary">Modullarga qaytish</a>
+        </div>
+    `;
+
+    document.getElementById('content').innerHTML = html;
+
+    // Animate the score circle
+    requestAnimationFrame(() => {
+        const fc = document.getElementById('fillcircle');
+        if (fc) fc.style.strokeDashoffset = offset;
+    });
+
+    // Haptic feedback
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.notificationOccurred(passed ? 'success' : 'warning');
+    }
+})();
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

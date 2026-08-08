@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test yaratish — Muslima Darmonova Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f6fa;color:#3b4256;min-height:100vh}
+
+/* Top bar */
+.top{background:#ffffff;border-bottom:1px solid rgba(0,0,0,.07);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#111827;font-weight:700;font-size:1rem;text-decoration:none}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#6c63f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.back-link{color:#6b7280;text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;transition:.15s}
+.back-link:hover{background:rgba(0,0,0,.04);color:#111827}
+.top-actions{display:flex;gap:10px}
+.btn{border:none;cursor:pointer;font-weight:600;border-radius:9px;padding:9px 18px;font-size:.85rem;display:inline-flex;align-items:center;gap:8px;transition:.15s;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,#6c63f6,#8b5cf6);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,99,246,.35)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:#ffffff;color:#3b4256;border:1px solid rgba(0,0,0,.14)}
+.btn-ghost:hover{background:#f1f2f7;color:#111827}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+
+/* Layout */
+.wrap{max-width:1100px;margin:0 auto;padding:28px}
+.page-title{font-size:1.75rem;font-weight:800;color:#111827;margin:0 0 4px}
+.page-sub{color:#6b7280;font-size:.9rem;margin:0 0 24px}
+
+/* Card */
+.card{background:#ffffff;border:1px solid rgba(0,0,0,.07);border-radius:14px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.card-head{padding:14px 20px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between}
+.card-head h3{margin:0;color:#111827;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.card-head .dot{width:6px;height:6px;background:#6c63f6;border-radius:50%}
+.card-body{padding:18px 20px}
+.card-body-tight{padding:0}
+
+/* Inputs */
+.label{display:block;font-size:.75rem;color:#6b7280;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.input, .textarea, .select{width:100%;background:#ffffff;border:1px solid rgba(0,0,0,.14);border-radius:9px;padding:10px 14px;color:#1f2430;font-size:.9rem;font-family:inherit;transition:.15s}
+.input:focus, .textarea:focus, .select:focus{outline:none;border-color:#6c63f6;box-shadow:0 0 0 3px rgba(108,99,246,.15)}
+.textarea{resize:vertical;min-height:80px}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239aa2b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Topic picker */
+.topic-tabs{display:flex;gap:0;background:#eef0f3;padding:4px;border-radius:10px;margin-bottom:14px;width:fit-content}
+.topic-tab{padding:8px 18px;background:transparent;border:none;color:#6b7280;font-weight:600;font-size:.82rem;border-radius:7px;cursor:pointer;transition:.15s}
+.topic-tab.active{background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(16,24,40,.1)}
+
+/* Questions */
+.q-toolbar{display:flex;gap:10px;align-items:center;padding:14px 20px;background:#f7f8fc;border-bottom:1px solid rgba(0,0,0,.07)}
+.q-count{color:#6b7280;font-size:.85rem;margin-right:auto}
+.q-count b{color:#111827}
+
+.q-item{padding:20px;border-bottom:1px solid rgba(0,0,0,.06);position:relative}
+.q-item:last-child{border-bottom:none}
+.q-num{position:absolute;top:20px;left:20px;width:28px;height:28px;background:rgba(108,99,246,.14);color:#6c63f6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem}
+.q-content{padding-left:44px}
+.q-del{position:absolute;top:20px;right:20px;background:transparent;border:none;color:#aab0c0;cursor:pointer;padding:6px;border-radius:6px;transition:.15s}
+.q-del:hover{background:rgba(220,58,58,.12);color:#dc2626}
+
+.q-img{margin-bottom:12px}
+.q-img-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#f7f8fc;border:1px dashed rgba(0,0,0,.18);border-radius:9px;color:#6b7280;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.q-img-btn:hover{border-color:#6c63f6;color:#6c63f6;background:rgba(108,99,246,.05)}
+.q-img-preview{position:relative;display:inline-block;max-width:260px}
+.q-img-preview img{max-width:100%;max-height:180px;border-radius:9px;border:1px solid rgba(0,0,0,.1);display:block}
+.q-img-del{position:absolute;top:6px;right:6px;width:26px;height:26px;border:none;border-radius:7px;background:rgba(16,24,40,.7);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.q-img-del:hover{background:#dc2626}
+.q-text{margin-bottom:12px}
+.q-fmt-btn{background:transparent;border:none;color:#9aa2b8;font-size:.75rem;cursor:pointer;padding:4px 0;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:.15s}
+.q-fmt-btn:hover{color:#6c63f6}
+.q-preview-label{font-size:.7rem;color:#9aa2b8;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:8px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.q-preview{white-space:pre-line;background:#f7f8fc;border:1px dashed rgba(0,0,0,.12);border-radius:9px;padding:10px 12px;font-size:.88rem;line-height:1.4;color:#1f2430}
+.q-preview .ph{color:#9aa2b8}
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.q-opt{display:flex;align-items:center;gap:8px;background:#f7f8fc;border:1px solid rgba(0,0,0,.08);border-radius:9px;padding:2px 12px 2px 6px;transition:.15s}
+.q-opt.is-correct{border-color:#22c98a;background:rgba(34,197,138,.08)}
+.q-opt-letter{background:rgba(0,0,0,.06);color:#6b7280;font-weight:700;font-size:.72rem;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.q-opt.is-correct .q-opt-letter{background:#22c98a;color:#fff}
+.q-opt input[type=text]{flex:1;background:transparent;border:none;color:#1f2430;font-size:.85rem;padding:8px 0}
+.q-opt input[type=text]:focus{outline:none}
+.q-opt input[type=radio]{accent-color:#22c98a;flex-shrink:0}
+.q-hint{display:flex;align-items:center;gap:6px;color:#9aa2b8;font-size:.72rem;margin-top:4px}
+.q-hint i{color:#16a34a}
+
+.q-add-btn{display:block;margin:14px 20px 20px;padding:14px;background:transparent;border:2px dashed rgba(0,0,0,.14);border-radius:10px;color:#6b7280;font-weight:600;font-size:.85rem;width:calc(100% - 40px);cursor:pointer;transition:.15s}
+.q-add-btn:hover{border-color:#6c63f6;color:#6c63f6;background:rgba(108,99,246,.05)}
+
+/* Modal */
+.modal-back{position:fixed;inset:0;background:rgba(16,24,40,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-back.open{display:flex}
+.modal{background:#ffffff;border:1px solid rgba(0,0,0,.1);border-radius:14px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(16,24,40,.2)}
+.modal-head{padding:16px 20px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{margin:0;color:#111827;font-size:1rem}
+.modal-close{background:transparent;border:none;color:#6b7280;font-size:1.1rem;cursor:pointer;padding:6px;border-radius:6px}
+.modal-close:hover{background:rgba(0,0,0,.04);color:#111827}
+.modal-body{padding:20px;flex:1;overflow-y:auto}
+.modal-body .hint{color:#6b7280;font-size:.8rem;line-height:1.6;margin-bottom:12px;background:#f7f8fc;border:1px solid rgba(0,0,0,.07);border-radius:9px;padding:12px 14px}
+.modal-body .hint code{background:rgba(108,99,246,.14);color:#6c63f6;padding:2px 6px;border-radius:4px;font-size:.78rem}
+.modal-foot{padding:14px 20px;border-top:1px solid rgba(0,0,0,.07);display:flex;justify-content:flex-end;gap:10px}
+
+/* Toast */
+.toast{position:fixed;top:24px;right:24px;background:#ffffff;border:1px solid rgba(0,0,0,.1);color:#111827;padding:12px 18px;border-radius:10px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(16,24,40,.18);transform:translateX(calc(100% + 40px));transition:transform .25s;z-index:200}
+.toast.show{transform:translateX(0)}
+.toast.ok{border-left:3px solid #22c98a}
+.toast.err{border-left:3px solid #dc2626}
+
+/* Save bar */
+.save-bar{position:sticky;bottom:0;background:#ffffff;border-top:1px solid rgba(0,0,0,.08);margin:24px -28px -28px;padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
+.save-summary{color:#6b7280;font-size:.85rem}
+.save-summary b{color:#111827}
+
+/* ─── Dark mode overrides ─────────────────────────────────────── */
+html[data-theme="dark"] body{background:#0f1420;color:#cdd3e0}
+html[data-theme="dark"] .top{background:#0a0e18;border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .brand{color:#fff}
+html[data-theme="dark"] .back-link{color:#7c8aa8}
+html[data-theme="dark"] .back-link:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .btn-ghost{background:transparent;color:#b8c1d3;border-color:rgba(255,255,255,.1)}
+html[data-theme="dark"] .btn-ghost:hover{background:rgba(255,255,255,.04);color:#fff}
+html[data-theme="dark"] .page-title{color:#fff}
+html[data-theme="dark"] .page-sub{color:#7c8aa8}
+html[data-theme="dark"] .card{background:#1a2035;border-color:rgba(255,255,255,.05);box-shadow:none}
+html[data-theme="dark"] .card-head{border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .card-head h3{color:#fff}
+html[data-theme="dark"] .label{color:#a3adc2}
+html[data-theme="dark"] .input,html[data-theme="dark"] .textarea,html[data-theme="dark"] .select{background-color:#131828;border-color:rgba(255,255,255,.08);color:#fff}
+html[data-theme="dark"] .select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237c8aa8' d='M6 8L0 0h12z'/%3E%3C/svg%3E")}
+html[data-theme="dark"] .topic-tabs{background:#131828}
+html[data-theme="dark"] .topic-tab{color:#7c8aa8}
+html[data-theme="dark"] .topic-tab.active{background:#1e2439;color:#fff;box-shadow:none}
+html[data-theme="dark"] .q-toolbar{background:#131828;border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .q-count{color:#7c8aa8}
+html[data-theme="dark"] .q-count b{color:#fff}
+html[data-theme="dark"] .q-item{border-bottom-color:rgba(255,255,255,.04)}
+html[data-theme="dark"] .q-num{background:rgba(108,99,246,.18);color:#a78bfa}
+html[data-theme="dark"] .q-del{color:#4c5776}
+html[data-theme="dark"] .q-del:hover{background:rgba(220,58,58,.15);color:#f87171}
+html[data-theme="dark"] .q-img-btn{background:#131828;border-color:rgba(255,255,255,.12);color:#7c8aa8}
+html[data-theme="dark"] .q-img-btn:hover{border-color:#6c63f6;color:#fff}
+html[data-theme="dark"] .q-img-preview img{border-color:rgba(255,255,255,.1)}
+html[data-theme="dark"] .q-opt{background:#131828;border-color:rgba(255,255,255,.06)}
+html[data-theme="dark"] .q-opt.is-correct{background:rgba(34,197,138,.06)}
+html[data-theme="dark"] .q-opt-letter{background:rgba(255,255,255,.06);color:#a3adc2}
+html[data-theme="dark"] .q-opt input[type=text]{color:#fff}
+html[data-theme="dark"] .q-hint{color:#4c5776}
+html[data-theme="dark"] .q-hint i{color:#22c98a}
+html[data-theme="dark"] .q-add-btn{border-color:rgba(255,255,255,.1);color:#7c8aa8}
+html[data-theme="dark"] .q-add-btn:hover{border-color:#6c63f6;color:#fff}
+html[data-theme="dark"] .modal-back{background:rgba(0,0,0,.7)}
+html[data-theme="dark"] .modal{background:#1a2035;border-color:rgba(255,255,255,.08);box-shadow:none}
+html[data-theme="dark"] .modal-head{border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .modal-head h3{color:#fff}
+html[data-theme="dark"] .modal-close{color:#7c8aa8}
+html[data-theme="dark"] .modal-close:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .modal-body .hint{color:#7c8aa8;background:#131828;border-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .modal-body .hint code{background:rgba(108,99,246,.2);color:#a78bfa}
+html[data-theme="dark"] #bulk-preview{background:#131828;border-color:rgba(255,255,255,.08);color:#cdd3e0}
+html[data-theme="dark"] .q-fmt-btn{color:#7c8aa8}
+html[data-theme="dark"] .q-fmt-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+html[data-theme="dark"] .q-preview-label{color:#7c8aa8}
+html[data-theme="dark"] .q-preview{background:#131828;border-color:rgba(255,255,255,.1);color:#cdd3e0}
+html[data-theme="dark"] .q-preview .ph{color:#4c5776}
+html[data-theme="dark"] .modal-foot{border-top-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .toast{background:#1e2439;border-color:rgba(255,255,255,.08);color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+html[data-theme="dark"] .toast.err{border-left-color:#f87171}
+html[data-theme="dark"] .save-bar{background:#0a0e18;border-top-color:rgba(255,255,255,.06)}
+html[data-theme="dark"] .save-summary{color:#7c8aa8}
+html[data-theme="dark"] .save-summary b{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="top">
+    <div class="top-left">
+        <a href="/admin/" class="brand">
+            <span class="brand-icon"><i class="fa fa-bolt"></i></span>
+            Muslima Darmonova
+        </a>
+        <a href="/admin/" class="back-link"><i class="fa fa-arrow-left"></i> Dashboardga qaytish</a>
+    </div>
+    <div class="top-actions">
+        <button class="btn btn-ghost btn-sm" id="theme-toggle" title="Yorug‘/Tungi rejim"><i class="fa fa-moon"></i></button>
+        <button class="btn btn-ghost" id="btn-bulk"><i class="fa fa-paste"></i> Ko'p savol yopishtirish</button>
+        <button class="btn btn-primary" id="btn-save"><i class="fa fa-check"></i> Saqlash</button>
+    </div>
+</div>
+
+<div class="wrap">
+    <h1 class="page-title"><i class="fa fa-wand-magic-sparkles" style="color:#6c63f6;margin-right:8px"></i>Test yaratish</h1>
+    <p class="page-sub">Mavzuni tanlang, test sarlavhasini yozing va savollarni qo'shing — hammasi bitta joydan.</p>
+
+    {# ── Module ──────────────────────────────────────────────── #}
+    <div class="card">
+        <div class="card-head"><h3><span class="dot"></span>1. Modul</h3></div>
+        <div class="card-body">
+            <div class="topic-tabs" data-group="module">
+                <button class="topic-tab active" data-mode="existing">Mavjud</button>
+                <button class="topic-tab" data-mode="new">Yangi yaratish</button>
+                <button class="topic-tab" data-mode="skip">Modulsiz</button>
+            </div>
+
+            <div id="module-existing">
+                <label class="label">Modulni tanlang</label>
+                <select class="select" id="module-select">
+                    <option value="">— tanlang —</option>
+                    {% for m in modules %}
+                    <option value="{{ m.id }}">{{ m.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="module-new" style="display:none">
+                <label class="label">Modul nomi</label>
+                <input class="input" type="text" id="module-title" placeholder="Masalan: Ona tili va adabiyot">
+            </div>
+
+            <div id="module-skip" style="display:none">
+                <p style="color:#7c8296;font-size:.85rem;margin:0">Bu test hech qanday modulga bog'lanmaydi.</p>
+            </div>
+        </div>
+    </div>
+
+    {# ── Quiz meta ───────────────────────────────────────────── #}
+    <div class="card">
+        <div class="card-head"><h3><span class="dot"></span>2. Test</h3></div>
+        <div class="card-body">
+            <label class="label">Sarlavha *</label>
+            <input class="input" type="text" id="quiz-title" placeholder="Masalan: 1-daraja test">
+            <div style="height:14px"></div>
+            <label class="label">Tavsif (ixtiyoriy)</label>
+            <textarea class="textarea" id="quiz-desc" placeholder="Test haqida qisqacha"></textarea>
+            <div style="height:14px"></div>
+            <label class="label">Vaqt chegarasi (soniya)</label>
+            <input class="input" type="number" id="quiz-time" value="300" min="30" max="7200"
+                   style="max-width:220px">
+            <div style="color:#7c8296;font-size:.75rem;margin-top:6px">
+                Foydalanuvchi shu vaqt ichida testni yechishi kerak. 300 soniya = 5 daqiqa.
+            </div>
+        </div>
+    </div>
+
+    {# ── Questions ──────────────────────────────────────────── #}
+    <div class="card">
+        <div class="card-head"><h3><span class="dot"></span>3. Savollar</h3></div>
+        <div class="card-body-tight">
+            <div class="q-toolbar">
+                <div class="q-count"><b id="q-count">0</b> ta savol</div>
+                <button class="btn btn-ghost btn-sm" onclick="clearAll()"><i class="fa fa-trash"></i> Barchasini o'chirish</button>
+            </div>
+            <div id="q-list"></div>
+            <button class="q-add-btn" onclick="addQuestion()">
+                <i class="fa fa-plus"></i> Savol qo'shish
+            </button>
+        </div>
+    </div>
+
+    <div class="save-bar">
+        <div class="save-summary">
+            <b id="s-summary">0 ta savol</b> — saqlashga tayyor
+            <label style="display:inline-flex;align-items:center;gap:6px;margin-left:14px;font-weight:600;color:#4b5563;cursor:pointer">
+                <input type="checkbox" id="notify-users" checked style="width:auto;margin:0">
+                <span>Foydalanuvchilarga xabar yuborish</span>
+            </label>
+        </div>
+        <button class="btn btn-primary" onclick="save()">
+            <i class="fa fa-check"></i> Testni saqlash
+        </button>
+    </div>
+</div>
+
+{# ── Bulk paste modal ───────────────────────────────────── #}
+<div class="modal-back" id="bulk-modal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3><i class="fa fa-paste" style="color:#6c63f6;margin-right:8px"></i>Ko'p savol yopishtirish</h3>
+            <button class="modal-close" onclick="closeBulk()"><i class="fa fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="hint">
+                Format: har bir savol yangi qatordan, variantlar <code>A) …</code> <code>B) …</code> <code>C) …</code> <code>D) …</code>,
+                to'g'ri javob <code>Answer: A</code> (yoki <code>Javob: A</code>). Savollar orasida bo'sh qator yoki <code>---</code>.
+                Savol matni ichida bir necha qator bo'lishi mumkin — ular xuddi shu ko'rinishda saqlanadi.
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="autoFormatBulk()" title="Savol matni ichidagi '1.', '2.', 'a)', 'b)' kabi bandlarni topib, har birini alohida qatorga o'tkazadi">
+                    <i class="fa fa-list-ol"></i> Bandlarni qatorlarga ajratish
+                </button>
+            </div>
+            <textarea class="textarea" id="bulk-text" style="min-height:280px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:.82rem" placeholder="1. 2+2 nechchi?
+A) 3
+B) 4
+C) 5
+D) 6
+Answer: B
+
+---
+
+2. Poytaxti Toshkent bo'lgan davlat?
+A) Qozog'iston
+B) O'zbekiston
+C) Qirg'iziston
+D) Tojikiston
+Javob: B"></textarea>
+            <div class="hint" style="margin-top:8px;margin-bottom:0">
+                <b>Oldindan ko'rish</b> — savol matni foydalanuvchiga shunday ko'rinadi:
+            </div>
+            <div id="bulk-preview" style="white-space:pre-line;border:1px solid rgba(0,0,0,.1);border-radius:9px;padding:12px 14px;font-size:.88rem;color:#1f2430;background:#f7f8fc;min-height:40px"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" onclick="closeBulk()">Bekor qilish</button>
+            <button class="btn btn-primary" onclick="parseBulk()"><i class="fa fa-arrow-down"></i> Import qilish</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let questions = [];
+
+function addQuestion(data) {
+    questions.push({
+        text: data?.text || '',
+        image_url: data?.image_url || '',
+        option_a: data?.option_a || '',
+        option_b: data?.option_b || '',
+        option_c: data?.option_c || '',
+        option_d: data?.option_d || '',
+        correct: data?.correct || '',
+    });
+    render();
+}
+
+function delQuestion(i) {
+    questions.splice(i, 1);
+    render();
+}
+
+function clearAll() {
+    if (!questions.length) return;
+    if (!confirm(`${questions.length} ta savol o'chiriladi. Davom etamizmi?`)) return;
+    questions = [];
+    render();
+}
+
+function update(i, field, val) {
+    questions[i][field] = val;
+    if (field === 'correct') render();
+}
+
+async function uploadImage(i, input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    await uploadImageFile(i, file);
+}
+
+async function uploadImageFile(i, file) {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const r = await fetch('/admin-tools/upload-image', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || 'Rasm yuklanmadi');
+        questions[i].image_url = data.url;
+        render();
+        toast('Rasm yuklandi', 'ok');
+    } catch (e) {
+        toast(e.message, 'err');
+    }
+}
+
+function handlePaste(event, i) {
+    const items = event.clipboardData && event.clipboardData.items;
+    if (!items) return;
+    for (const it of items) {
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+            const file = it.getAsFile();
+            if (file) {
+                event.preventDefault();
+                uploadImageFile(i, file);
+                return;
+            }
+        }
+    }
+}
+
+async function pasteImage(i) {
+    try {
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            toast('Brauzer clipboard rasm o\'qishni qo\'llab-quvvatlamaydi. Ctrl+V bilan urinib ko\'ring.', 'err');
+            return;
+        }
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+            const imgType = item.types.find(t => t.startsWith('image/'));
+            if (imgType) {
+                const blob = await item.getType(imgType);
+                const ext = imgType.split('/')[1] || 'png';
+                const file = new File([blob], `pasted.${ext}`, {type: imgType});
+                await uploadImageFile(i, file);
+                return;
+            }
+        }
+        toast('Clipboardda rasm topilmadi', 'err');
+    } catch (e) {
+        toast('Rasmni o\'qib bo\'lmadi: ' + e.message, 'err');
+    }
+}
+
+function removeImage(i) {
+    questions[i].image_url = '';
+    render();
+}
+
+function render() {
+    const list = document.getElementById('q-list');
+    document.getElementById('q-count').textContent = questions.length;
+    document.getElementById('s-summary').textContent = questions.length + " ta savol";
+
+    if (!questions.length) {
+        list.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#4c5776;font-size:.85rem">Hozircha savollar yo\'q. Pastdagi tugmani bosing yoki ko\'p savol yopishtiring.</div>';
+        return;
+    }
+
+    list.innerHTML = questions.map((q, i) => `
+        <div class="q-item" onpaste="handlePaste(event, ${i})">
+            <div class="q-num">${i+1}</div>
+            <button class="q-del" onclick="delQuestion(${i})" title="O'chirish"><i class="fa fa-trash"></i></button>
+            <div class="q-content">
+                <div class="q-img">
+                    ${q.image_url ? `
+                        <div class="q-img-preview">
+                            <img src="${esc(q.image_url)}" alt="savol rasmi">
+                            <button type="button" class="q-img-del" onclick="removeImage(${i})" title="Rasmni o'chirish"><i class="fa fa-xmark"></i></button>
+                        </div>
+                    ` : `
+                        <label class="q-img-btn">
+                            <i class="fa fa-image"></i> Rasm yuklash
+                            <input type="file" accept="image/*" style="display:none" onchange="uploadImage(${i}, this)">
+                        </label>
+                        <span style="margin-left:10px;color:#9aa2b8;font-size:.78rem"><i class="fa fa-paste"></i> yoki Ctrl+V bosing</span>
+                    `}
+                </div>
+                <div class="q-text">
+                    <textarea class="textarea auto-grow" placeholder="Savol matni (rasm bo'lsa ixtiyoriy)" style="min-height:52px;overflow:hidden;resize:none"
+                              oninput="update(${i},'text',this.value); autoGrow(this); updateQPreview(${i}, this.value)">${esc(q.text)}</textarea>
+                    <button type="button" class="q-fmt-btn" onclick="autoFormatQuestion(${i})" title="'1.', '2.', 'a)', 'b)' kabi bandlarni topib, har birini alohida qatorga o'tkazadi">
+                        <i class="fa fa-list-ol"></i> Bandlarni qatorlarga ajratish
+                    </button>
+                    <div class="q-preview-label"><i class="fa fa-eye"></i> Foydalanuvchi shunday ko'radi</div>
+                    <div class="q-preview" id="q-preview-${i}">${q.text.trim() ? esc(q.text) : '<span class="ph">Savol matni shu yerda ko\'rinadi…</span>'}</div>
+                </div>
+                <div class="q-options">
+                    ${['A','B','C','D'].map(L => `
+                        <label class="q-opt ${q.correct===L?'is-correct':''}">
+                            <input type="radio" name="correct-${i}" ${q.correct===L?'checked':''}
+                                   onchange="update(${i},'correct','${L}')">
+                            <span class="q-opt-letter">${L}</span>
+                            <input type="text" placeholder="${L} javob matnini kiriting" value="${esc(q['option_'+L.toLowerCase()])}"
+                                   oninput="update(${i},'option_${L.toLowerCase()}',this.value)">
+                        </label>
+                    `).join('')}
+                </div>
+                ${q.correct ? `<div class="q-hint"><i class="fa fa-circle-check"></i> To'g'ri javob: <b style="color:#22c98a">${q.correct}</b></div>` : `<div class="q-hint" style="color:#dc2626"><i class="fa fa-circle-exclamation" style="color:#dc2626"></i> To'g'ri javobni tanlang</div>`}
+            </div>
+        </div>
+    `).join('');
+    list.querySelectorAll('textarea.auto-grow').forEach(autoGrow);
+}
+
+function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
+/* Uzun savol matnida "1.", "2.", "a)", "b)" kabi bandlarni topib,
+   har birini alohida qatorga o'tkazadi — admin natijani ko'rib, xohlasa
+   qo'lda (Enter/Backspace bilan) qayta tuzatishi mumkin. */
+function autoSplitNumbered(text) {
+    return String(text || '')
+        .replace(/(\S)[ \t]+(\d{1,2}[\.\)][ \t])/g, '$1\n$2')
+        .replace(/(\S)[ \t]+([a-dA-D][\.\)][ \t])/g, '$1\n$2')
+        .trim();
+}
+
+function autoFormatQuestion(i) {
+    questions[i].text = autoSplitNumbered(questions[i].text);
+    render();
+}
+
+function updateQPreview(i, text) {
+    const el = document.getElementById('q-preview-' + i);
+    if (!el) return;
+    el.innerHTML = text.trim() ? esc(text) : '<span class="ph">Savol matni shu yerda ko\'rinadi…</span>';
+}
+
+function autoFormatBulk() {
+    const el = document.getElementById('bulk-text');
+    el.value = autoSplitNumbered(el.value);
+    updateBulkPreview();
+}
+
+function updateBulkPreview() {
+    document.getElementById('bulk-preview').innerHTML = esc(document.getElementById('bulk-text').value) || '<span style="color:#9aa2b8">…</span>';
+}
+
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Tab groups (module + topic) */
+document.querySelectorAll('.topic-tabs').forEach(group => {
+    const key = group.dataset.group || 'topic';
+    group.querySelectorAll('.topic-tab').forEach(btn => {
+        btn.onclick = () => {
+            group.querySelectorAll('.topic-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const mode = btn.dataset.mode;
+            const ids = ['existing','new','skip'];
+            ids.forEach(id => {
+                const el = document.getElementById(`${key}-${id}`);
+                if (el) el.style.display = id === mode ? '' : 'none';
+            });
+        };
+    });
+});
+
+/* Bulk */
+document.getElementById('btn-bulk').onclick = () => { document.getElementById('bulk-modal').classList.add('open'); updateBulkPreview(); };
+document.getElementById('btn-save').onclick = save;
+document.getElementById('bulk-text').addEventListener('input', updateBulkPreview);
+function closeBulk() { document.getElementById('bulk-modal').classList.remove('open'); }
+
+async function parseBulk() {
+    const text = document.getElementById('bulk-text').value;
+    if (!text.trim()) { toast('Matn kiritilmagan', 'err'); return; }
+
+    const r = await fetch('/admin-tools/builder/parse', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({text}),
+    });
+    const data = await r.json();
+    const parsed = data.questions || [];
+
+    if (!parsed.length) { toast("Hech qanday savol topilmadi", 'err'); return; }
+
+    parsed.forEach(q => questions.push(q));
+    render();
+    closeBulk();
+    document.getElementById('bulk-text').value = '';
+    toast(`${parsed.length} ta savol qo'shildi`, 'ok');
+}
+
+/* Save */
+async function save() {
+    const moduleMode = document.querySelector('.topic-tabs[data-group="module"] .topic-tab.active').dataset.mode;
+
+    const module_id = moduleMode === 'existing' ? document.getElementById('module-select').value : '';
+    const new_module_title = moduleMode === 'new' ? document.getElementById('module-title').value : '';
+
+    const quiz_title = document.getElementById('quiz-title').value.trim();
+    const quiz_description = document.getElementById('quiz-desc').value.trim();
+    const time_limit_seconds = parseInt(document.getElementById('quiz-time').value || '300', 10);
+
+    if (moduleMode === 'existing' && !module_id) { toast('Modulni tanlang', 'err'); return; }
+    if (moduleMode === 'new' && !new_module_title) { toast('Yangi modul nomini kiriting', 'err'); return; }
+    if (!quiz_title) { toast('Test sarlavhasini kiriting', 'err'); return; }
+    if (!questions.length) { toast('Kamida bitta savol qo\'shing', 'err'); return; }
+    const missingCorrect = questions.findIndex(q => !q.correct);
+    if (missingCorrect !== -1) { toast(`${missingCorrect+1}-savolda to'g'ri javob tanlanmagan`, 'err'); return; }
+    const missingOpt = questions.findIndex(q =>
+        !q.option_a?.trim() || !q.option_b?.trim() || !q.option_c?.trim() || !q.option_d?.trim()
+    );
+    if (missingOpt !== -1) { toast(`${missingOpt+1}-savolda barcha variantlar (A,B,C,D) to'ldirilishi kerak`, 'err'); return; }
+    const missingText = questions.findIndex(q => !q.text?.trim() && !q.image_url);
+    if (missingText !== -1) { toast(`${missingText+1}-savolda matn yoki rasm bo'lishi kerak`, 'err'); return; }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saqlanmoqda…';
+
+    try {
+        const r = await fetch('/admin-tools/builder/save', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                module_id: module_id || null,
+                new_module_title,
+                quiz_title,
+                quiz_description,
+                time_limit_seconds,
+                questions,
+                notify: document.getElementById('notify-users')?.checked ?? true,
+            }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || 'Xatolik');
+        toast(`✓ Test saqlandi (${data.questions_saved} ta savol)`, 'ok');
+        setTimeout(() => window.location.href = '/admin/', 1200);
+    } catch (e) {
+        toast(e.message, 'err');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check"></i> Saqlash';
+    }
+}
+
+/* Toast */
+let toastTimer;
+function toast(msg, kind='ok') {
+    const t = document.getElementById('toast');
+    t.className = 'toast ' + kind + ' show';
+    t.innerHTML = (kind==='ok' ? '<i class="fa fa-circle-check" style="color:#22c98a"></i>' : '<i class="fa fa-circle-exclamation" style="color:#f87171"></i>') + msg;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* Global Ctrl+V paste — rasmni fokusdagi (yoki oxirgi) savolga qo'yadi */
+document.addEventListener('paste', (event) => {
+    const items = event.clipboardData && event.clipboardData.items;
+    if (!items) return;
+    let file = null;
+    for (const it of items) {
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+            file = it.getAsFile();
+            break;
+        }
+    }
+    if (!file) return;
+    let idx = -1;
+    const active = document.activeElement;
+    if (active) {
+        const els = Array.from(document.querySelectorAll('#q-list .q-item'));
+        idx = els.findIndex(el => el.contains(active));
+    }
+    if (idx === -1) idx = questions.length - 1;
+    if (idx < 0) return;
+    event.preventDefault();
+    uploadImageFile(idx, file);
+});
+
+/* Init with one empty question */
+addQuestion();
+</script>
+<script>
+(function(){var KEY='malaka-admin-theme';function ico(t){return t==='dark'?'fa-sun':'fa-moon';}
+function apply(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem(KEY,t);}catch(e){}var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(t);}
+document.addEventListener('DOMContentLoaded',function(){var cur=document.documentElement.getAttribute('data-theme')||'light';var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(cur);var b=document.getElementById('theme-toggle');if(b)b.addEventListener('click',function(e){e.preventDefault();apply(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});});})();
+</script>
+</body>
+</html>

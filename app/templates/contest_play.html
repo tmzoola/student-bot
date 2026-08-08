@@ -1,0 +1,148 @@
+{% extends "_base.html" %}
+{% block title %}Yutuqli test — Yechish{% endblock %}
+
+{% block head %}
+<style>
+.timer{position:sticky;top:0;background:#fff;padding:12px 18px;box-shadow:var(--shadow);z-index:5;display:flex;justify-content:space-between;align-items:center;margin:-20px -18px 16px}
+.timer .prog{font-size:.82rem;color:var(--muted);font-weight:700}
+.timer .clock{font-size:1.05rem;font-weight:800;color:var(--green-dark);font-variant-numeric:tabular-nums}
+.timer .clock.warn{color:#EA580C}
+.timer .clock.crit{color:#dc2626}
+
+.q-card{background:#fff;border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.q-num{display:inline-block;background:rgba(245,158,11,.15);color:#b45309;padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:800;margin-bottom:10px}
+.q-text{font-size:.95rem;font-weight:700;color:#111;line-height:1.5;margin-bottom:14px;white-space:pre-line}
+.q-img{display:block;max-width:100%;max-height:240px;border-radius:12px;margin-bottom:12px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{background:#F9FAFB;border:2px solid transparent;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.12s}
+.opt.active{background:rgba(34,197,138,.1);border-color:var(--green)}
+.opt-letter{width:26px;height:26px;background:#e5e7eb;color:#4b5563;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0}
+.opt.active .opt-letter{background:var(--green);color:#fff}
+.opt-txt{font-size:.88rem;color:#111;white-space:pre-line}
+
+.nav{display:flex;gap:10px;margin-top:8px}
+.nav .btn{flex:1;padding:14px}
+.finish{background:linear-gradient(135deg,#F59E0B,#EA580C);color:#fff;box-shadow:0 4px 14px rgba(234,88,12,.35)}
+</style>
+{% endblock %}
+
+{% block header %}{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block content %}
+<div id="root">
+    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const CONTEST_ID = {{ contest_id }};
+let quiz = null;
+let answers = {};
+let idx = 0;
+let startedAt = 0;
+let timerHandle = null;
+
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch(`/api/v1/webapp/contests/${CONTEST_ID}/questions`, { headers: MK.authHeaders() });
+    if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        document.getElementById('root').innerHTML = `<div class="empty" style="padding:60px 20px">
+            <div class="empty-ic">⚠️</div>
+            <div class="empty-t">${esc(e.detail || 'Ochilmadi')}</div>
+            <div class="empty-d"><a href="/webapp/contests/${CONTEST_ID}" style="color:var(--green-dark);font-weight:700">Testga qaytish</a></div>
+        </div>`;
+        return;
+    }
+    quiz = await r.json();
+    startedAt = Date.now();
+    render();
+    timerHandle = setInterval(tick, 500);
+})();
+
+function render(){
+    const q = quiz.questions[idx];
+    const sel = answers[q.id];
+    const html = `
+        <div class="timer">
+            <div class="prog"><b>${idx+1}</b> / ${quiz.questions.length}</div>
+            <div class="clock" id="clock">${MK.fmtTime(quiz.time_limit_seconds)}</div>
+        </div>
+        <div class="q-card">
+            <div class="q-num">Savol ${idx+1}</div>
+            ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+            ${q.text ? `<div class="q-text">${esc(q.text)}</div>` : ''}
+            <div class="opts">
+                ${['A','B','C','D'].map(L => `
+                    <div class="opt ${sel===L?'active':''}" onclick="pick('${L}')">
+                        <div class="opt-letter">${L}</div>
+                        <div class="opt-txt">${esc(q['option_'+L.toLowerCase()])}</div>
+                    </div>`).join('')}
+            </div>
+        </div>
+        <div class="nav">
+            ${idx > 0 ? `<button class="btn btn-secondary" onclick="go(-1)">← Oldingi</button>` : ''}
+            ${idx < quiz.questions.length - 1
+                ? `<button class="btn btn-primary" onclick="go(1)">Keyingi →</button>`
+                : `<button class="btn finish" onclick="finish()">✓ Yakunlash</button>`}
+        </div>
+    `;
+    document.getElementById('root').innerHTML = html;
+}
+
+function pick(L){
+    const q = quiz.questions[idx];
+    answers[q.id] = L;
+    MK.haptic('light');
+    render();
+}
+
+function go(delta){
+    idx = Math.max(0, Math.min(quiz.questions.length - 1, idx + delta));
+    render();
+    window.scrollTo({top: 0, behavior: 'instant'});
+}
+
+function tick(){
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    const left = Math.max(0, quiz.time_limit_seconds - elapsed);
+    const clk = document.getElementById('clock');
+    if (clk) {
+        clk.textContent = MK.fmtTime(left);
+        clk.className = 'clock' + (left <= 30 ? ' crit' : left <= 120 ? ' warn' : '');
+    }
+    if (left <= 0) finish(true);
+}
+
+async function finish(auto){
+    if (!auto && !confirm(`Testni yakunlaysizmi? Javob berilganlar: ${Object.keys(answers).length}/${quiz.questions.length}`)) return;
+    clearInterval(timerHandle);
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+
+    document.getElementById('root').innerHTML = '<div class="empty" style="padding:60px 20px">Natija hisoblanmoqda…</div>';
+
+    try {
+        const r = await fetch(`/api/v1/webapp/contests/${CONTEST_ID}/submit`, {
+            method: 'POST',
+            headers: Object.assign({'Content-Type':'application/json'}, MK.authHeaders()),
+            body: JSON.stringify({ answers, time_taken_seconds: elapsed })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Xatolik');
+        MK.haptic('success');
+        location.href = `/webapp/contests/${CONTEST_ID}`;
+    } catch(e){
+        MK.haptic('error');
+        document.getElementById('root').innerHTML = `<div class="empty" style="padding:60px 20px">
+            <div class="empty-ic">⚠️</div>
+            <div class="empty-t">${esc(e.message)}</div>
+            <div class="empty-d"><a href="/webapp/contests/${CONTEST_ID}" style="color:var(--green-dark);font-weight:700">Qaytish</a></div>
+        </div>`;
+    }
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

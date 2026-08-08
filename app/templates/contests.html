@@ -1,0 +1,87 @@
+{% extends "_base.html" %}
+{% set nav_active = 'contests' %}
+{% block title %}Yutuqli testlar — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.st-live{background:#E4F3EB;color:var(--green-dark)}
+.st-upcoming{background:var(--blue-lt);color:var(--blue)}
+.st-finished{background:#F1EEFF;color:var(--purple)}
+.dot{width:6px;height:6px;background:currentColor;border-radius:50%}
+.c-card{background:#fff;border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:12px;display:block;transition:.15s}
+.c-card:active{transform:scale(.98)}
+.c-title{font-size:1rem;font-weight:800;color:#111;margin-bottom:4px}
+.c-desc{color:var(--muted);font-size:.78rem;margin-bottom:10px;line-height:1.4}
+.c-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.75rem;color:var(--muted);margin-top:10px}
+.c-meta b{color:#111}
+.c-prize{background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400e;padding:8px 12px;border-radius:10px;font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:8px;margin-top:8px}
+.mine{background:rgba(34,197,138,.14);color:var(--green-dark);padding:3px 8px;border-radius:99px;font-size:.68rem;font-weight:700;margin-left:6px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div style="width:38px"></div>
+  <div class="hdr-title">🏆 Yutuqli testlar</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="list">
+    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch('/api/v1/webapp/contests', { headers: MK.authHeaders() });
+    if (!r.ok) { renderEmpty(); return; }
+    const list = await r.json();
+    if (!list.length) { renderEmpty(); return; }
+
+    const html = list.map(c => {
+        const st = c.status;
+        const stLbl = st === 'live' ? 'Live' : st === 'upcoming' ? 'Kutilmoqda' : 'Tugadi';
+        const stCls = st === 'live' ? 'st-live' : st === 'upcoming' ? 'st-upcoming' : 'st-finished';
+        return `
+        <a href="/webapp/contests/${c.id}" class="c-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                <div class="c-title">${esc(c.title)} ${c.my_participated?'<span class="mine">✓ ishtirok etgansiz</span>':''}</div>
+                <span class="status ${stCls}"><span class="dot"></span>${stLbl}</span>
+            </div>
+            ${c.description ? `<div class="c-desc">${esc(c.description)}</div>` : ''}
+            ${c.prize ? `<div class="c-prize">🎁 <b>${esc(c.prize)}</b></div>` : ''}
+            <div class="c-meta">
+                <div>Boshlanish: <b>${fmtDate(c.start_at)}</b></div>
+                <div>Tugash: <b>${fmtDate(c.end_at)}</b></div>
+                <div>Savollar: <b>${c.question_count}</b></div>
+                <div>Ishtirokchilar: <b>${c.participants}</b></div>
+            </div>
+        </a>`;
+    }).join('');
+    document.getElementById('list').innerHTML = html;
+})();
+
+function renderEmpty(){
+    document.getElementById('list').innerHTML = `
+        <div class="empty">
+            <div class="empty-ic">🏆</div>
+            <div class="empty-t">Hozircha yutuqli test yo'q</div>
+            <div class="empty-d">Yangi musobaqalardan xabardor bo'lish uchun kuting</div>
+        </div>`;
+}
+
+function fmtDate(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

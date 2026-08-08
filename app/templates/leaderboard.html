@@ -1,0 +1,114 @@
+{% extends "_base.html" %}
+{% set nav_active = 'leaderboard' %}
+{% block title %}Reyting — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.tabs{display:flex;gap:0;background:#fff;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:var(--shadow)}
+.tab{flex:1;padding:9px 6px;background:transparent;border:none;color:var(--muted);font-weight:600;font-size:.8rem;border-radius:9px;cursor:pointer;transition:.15s}
+.tab.active{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(61,182,106,.3)}
+.top3{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin-bottom:20px;align-items:end}
+.pod{background:#fff;border-radius:16px;padding:14px 6px;text-align:center;box-shadow:var(--shadow);position:relative}
+.pod .m{font-size:1.5rem;margin-bottom:2px}
+.pod .n{font-size:.78rem;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+.pod .p{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:1px}
+.pod-1{padding:20px 6px 18px;transform:translateY(-4px)}
+.pod-1 .m{font-size:1.9rem}
+
+.row{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.row-r{width:32px;height:32px;background:#f4f5f2;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);font-size:.85rem;flex-shrink:0}
+.row-body{flex:1;min-width:0}
+.row-n{font-size:.9rem;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-a{font-size:.72rem;color:var(--muted)}
+.row-p{font-size:1rem;font-weight:800;color:var(--green-dark);flex-shrink:0}
+.row-p .l{font-size:.62rem;color:var(--muted);font-weight:600;margin-left:2px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div style="width:38px"></div>
+  <div>
+    <div class="hdr-title">Reyting</div>
+    <div class="hdr-sub">Eng faol foydalanuvchilar</div>
+  </div>
+  <div class="hdr-right">🏆</div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="tabs" id="tabs">
+    <button class="tab active" data-p="day">Bugun</button>
+    <button class="tab" data-p="week">Hafta</button>
+    <button class="tab" data-p="month">Oy</button>
+    <button class="tab" data-p="all">Butun davr</button>
+</div>
+<div id="content">
+    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const MEDALS = ['🥇','🥈','🥉'];
+let currentPeriod = 'day';
+
+async function loadBoard(period){
+    currentPeriod = period;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.p === period));
+    const c = document.getElementById('content');
+    c.innerHTML = '<div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>';
+
+    const r = await fetch(`/api/v1/webapp/leaderboard?period=${period}`);
+    const rows = await r.json();
+
+    if (!rows.length) {
+        const label = {day:'bugun',week:'shu hafta',month:'shu oy',all:'hozircha'}[period];
+        c.innerHTML = `
+            <div class="empty">
+                <div class="empty-ic">🏆</div>
+                <div class="empty-t">Reyting ${label} bo'sh</div>
+                <div class="empty-d">Birinchi bo'lib test yeching!</div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    if (rows.length >= 3) {
+        const [first, second, third] = rows;
+        html += `
+            <div class="top3">
+                <div class="pod pod-2"><div class="m">🥈</div><div class="n">${esc(second.name)}</div><div class="p">${second.points} ball</div></div>
+                <div class="pod pod-1"><div class="m">🥇</div><div class="n">${esc(first.name)}</div><div class="p">${first.points} ball</div></div>
+                <div class="pod pod-3"><div class="m">🥉</div><div class="n">${esc(third.name)}</div><div class="p">${third.points} ball</div></div>
+            </div>
+            <div class="section-t">Barcha ishtirokchilar</div>
+        `;
+    }
+
+    html += rows.map(r => {
+        const medal = r.rank <= 3 ? MEDALS[r.rank-1] : `#${r.rank}`;
+        return `
+        <div class="row">
+            <div class="row-r">${medal}</div>
+            <div class="row-body">
+                <div class="row-n">${esc(r.name)}</div>
+                <div class="row-a">${r.attempts} ta test · ${MK.fmtTime(r.time_taken_seconds)}</div>
+            </div>
+            <div class="row-p">${r.points}<span class="l">ball</span></div>
+        </div>`;
+    }).join('');
+
+    c.innerHTML = html;
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.tab');
+    if (btn && btn.dataset.p !== currentPeriod) loadBoard(btn.dataset.p);
+});
+
+loadBoard('day');
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samandar Market — Admin</title>
+<style>
+    :root {
+        --bg: #f3f4f6;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --warning: #f59e0b;
+        --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    .hidden { display: none !important; }
+
+    /* ---------- Login ---------- */
+    .login-wrap {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .login-card {
+        background: #fff;
+        padding: 36px 32px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 400px;
+    }
+    .login-card h1 { margin: 0 0 6px; font-size: 22px; }
+    .login-card .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .field input {
+        width: 100%; padding: 11px 13px; border: 2px solid var(--border);
+        border-radius: 10px; font-size: 15px; outline: none; background: var(--surface-2);
+    }
+    .field input:focus { border-color: var(--primary); background: #fff; }
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 10px 16px; border-radius: 10px; border: 2px solid var(--border);
+        font-size: 14px; font-weight: 600; cursor: pointer; background: var(--surface-2); color: var(--text);
+        transition: all 0.12s;
+    }
+    .btn:hover { background: #e2e8f0; }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .btn.success { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn.danger:hover { filter: brightness(0.92); }
+    .btn.block { display: flex; width: 100%; padding: 13px; font-size: 15px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .login-err { color: var(--danger); font-size: 13px; margin-top: 6px; min-height: 18px; }
+
+    /* ---------- App shell ---------- */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .topbar {
+        background: var(--surface); border-bottom: 1px solid var(--border);
+        padding: 12px 24px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow);
+    }
+    .topbar .brand { font-size: 18px; font-weight: 700; }
+    .topbar .brand .dot { color: var(--primary); }
+    .tabs { display: flex; gap: 6px; margin-left: 20px; }
+    .tab {
+        padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600;
+        cursor: pointer; color: var(--muted); border: none; background: transparent;
+    }
+    .tab:hover { background: var(--surface-2); color: var(--text); }
+    .tab.active { background: var(--primary); color: #fff; }
+    .topbar .grow { flex: 1; }
+    .user-chip { font-size: 13px; color: var(--muted); }
+
+    .main { flex: 1; overflow-y: auto; padding: 22px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ---------- Generic ---------- */
+    .card {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+        padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px;
+    }
+    .card h2 { margin: 0 0 14px; font-size: 17px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .stat {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+    }
+    .stat .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .stat .value { font-size: 24px; font-weight: 800; margin-top: 6px; }
+    .stat .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .delta-up { color: var(--success); }
+    .delta-down { color: var(--danger); }
+
+    /* ---------- Tables ---------- */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--surface-2); font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    tbody tr:hover { background: var(--surface-2); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .pill.active { background: #dcfce7; color: #14532d; }
+    .pill.inactive { background: #fee2e2; color: #7f1d1d; }
+    .btn.sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ---------- Toolbar ---------- */
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .toolbar input[type="text"], .toolbar input[type="date"], .toolbar select {
+        padding: 8px 11px; border: 2px solid var(--border); border-radius: 8px;
+        font-size: 14px; outline: none; background: #fff;
+    }
+    .toolbar input:focus, .toolbar select:focus { border-color: var(--primary); }
+
+    /* ---------- Modal ---------- */
+    .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+        display: flex; align-items: center; justify-content: center; z-index: 200;
+        opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .modal { background: #fff; padding: 24px; border-radius: 14px; width: 100%; max-width: 460px; box-shadow: var(--shadow-lg); }
+    .modal h3 { margin: 0 0 14px; font-size: 17px; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+    /* ---------- Expandable row ---------- */
+    .tx-row { cursor: pointer; }
+    .tx-detail { background: #fafbfc; }
+    .tx-detail td { padding: 12px 14px; }
+    .tx-detail .tx-items { padding-left: 12px; }
+    .tx-detail .tx-items > div { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+    .caret { display: inline-block; transition: transform 0.15s; }
+    .caret.open { transform: rotate(90deg); }
+
+    /* ---------- Charts ---------- */
+    canvas { display: block; width: 100%; max-width: 100%; }
+    .chart-card { padding: 18px; max-width: 720px; }
+    .chart-card h2 { margin-bottom: 6px; }
+    .chart-card canvas { height: 180px; }
+    .chart-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+    /* ---------- Table overflow wrapper ----------
+       Wide tables (products: 6 cols, transactions: 7 cols) overflow narrow
+       laptops. Allow horizontal scroll inside the card without breaking the
+       layout. */
+    .card { overflow-x: auto; }
+    .card > table { min-width: 600px; }
+
+    /* ---------- Toast ---------- */
+    .toast {
+        position: fixed; bottom: 24px; left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--text); color: #fff; padding: 11px 18px;
+        border-radius: 999px; font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 300;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .empty-row td { text-align: center; color: var(--muted); padding: 30px 12px; }
+
+    /* ---------- Responsive ---------- */
+    /* 13" laptops (MacBook Air M1/M2/M3 render at ~1440-1470 effective) —
+       tighten spacing. 1512px also covers 13" Pro defaults. */
+    @media (max-width: 1512px) {
+        .topbar { padding: 10px 16px; gap: 12px; }
+        .topbar .brand { font-size: 16px; }
+        .tabs { margin-left: 12px; gap: 4px; }
+        .tab { padding: 7px 11px; font-size: 13px; }
+        .user-chip { font-size: 12px; }
+
+        .main { padding: 16px; }
+        .card { padding: 14px; margin-bottom: 14px; }
+        .card h2 { font-size: 16px; }
+        .chart-card { padding: 14px; }
+        .chart-card canvas { height: 160px; }
+
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .stat { padding: 13px; }
+        .stat .value { font-size: 20px; }
+
+        table { font-size: 13px; }
+        th, td { padding: 8px 10px; }
+
+        .toolbar { gap: 8px; margin-bottom: 12px; }
+        .toolbar input[type="text"], .toolbar input[type="date"], .toolbar select {
+            padding: 7px 10px; font-size: 13px;
+        }
+        .btn { padding: 8px 13px; font-size: 13px; }
+    }
+
+    /* short-height screens (13" Air viewport ~830-900px) — keep things compact */
+    @media (max-height: 920px) {
+        .main { padding: 14px; }
+        .chart-card canvas { height: 140px; }
+    }
+
+    /* tablets and small laptops */
+    @media (max-width: 900px) {
+        .topbar { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+        .topbar .grow { display: none; }
+        .tabs {
+            order: 3; margin-left: 0; width: 100%;
+            overflow-x: auto; padding-bottom: 4px;
+        }
+        .main { padding: 12px; }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        .stat .value { font-size: 18px; }
+        .chart-card canvas { height: 140px; }
+        .modal { max-width: calc(100% - 32px); }
+    }
+
+    @media (max-width: 600px) {
+        .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+        .toolbar { flex-direction: column; align-items: stretch; }
+        .toolbar > * { width: 100%; }
+        .toolbar .grow { display: none; }
+        .login-card { padding: 28px 22px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="loginView" class="login-wrap">
+    <form class="login-card" id="loginForm">
+        <h1>🛒 Samandar.Market Admin</h1>
+        <p class="sub">Boshqaruv paneliga kirish</p>
+        <div class="field">
+            <label for="lUser">Login</label>
+            <input id="lUser" type="text" required autocomplete="username" />
+        </div>
+        <div class="field">
+            <label for="lPass">Parol</label>
+            <input id="lPass" type="password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn primary block" id="loginBtn">Kirish</button>
+        <div class="login-err" id="loginErr"></div>
+    </form>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="appView" class="shell hidden">
+    <header class="topbar">
+        <div class="brand">🛒 Samandar<span class="dot">.</span>Market <span style="color: var(--muted); font-weight: 500;">/ Admin</span></div>
+        <nav class="tabs">
+            <button class="tab active" data-tab="overview">Umumiy</button>
+            <button class="tab" data-tab="products">Mahsulotlar</button>
+            <button class="tab" data-tab="inventory">Ombor</button>
+            <button class="tab" data-tab="daily">Kunlik hisobot</button>
+        </nav>
+        <div class="grow"></div>
+        <div class="user-chip" id="userChip"></div>
+        <button class="btn" id="logoutBtn">Chiqish</button>
+    </header>
+
+    <main class="main">
+
+        <!-- =========== OVERVIEW =========== -->
+        <section class="panel active" data-panel="overview">
+            <div class="grid-4" id="overviewStats"></div>
+
+            <div class="card chart-card">
+                <h2>Haftalik tushum</h2>
+                <div class="chart-meta">Oxirgi 7 kun</div>
+                <canvas id="weeklyChart" height="180"></canvas>
+            </div>
+
+            <div class="card">
+                <h2>Eng ko'p sotilgan mahsulotlar (haftalik top-5)</h2>
+                <table>
+                    <thead><tr><th>#</th><th>Mahsulot</th><th class="num">Soni</th><th class="num">Tushum</th></tr></thead>
+                    <tbody id="topProductsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- =========== PRODUCTS =========== -->
+        <section class="panel" data-panel="products">
+            <div class="toolbar">
+                <input type="text" id="prodSearch" placeholder="Mahsulot qidirish..." />
+                <select id="prodFilter">
+                    <option value="all">Hammasi</option>
+                    <option value="active">Faqat faol</option>
+                    <option value="inactive">Faqat o'chirilgan</option>
+                </select>
+                <div class="grow" style="flex: 1;"></div>
+                <button class="btn primary" id="addProdBtn">+ Yangi mahsulot</button>
+            </div>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nomi</th>
+                            <th>Kategoriya</th>
+                            <th class="num">Narx</th>
+                            <th class="num">Qoldiq</th>
+                            <th>Shtrix-kod</th>
+                            <th>Holat</th>
+                            <th style="width: 1px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="prodBody"></tbody>
+                </table>
+                <div id="prodPager" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding: 12px 16px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--border);">
+                    <div id="prodPagerInfo">—</div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn" id="prodPrevBtn" disabled>← Oldingi</button>
+                        <button class="btn" id="prodNextBtn" disabled>Keyingi →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========== INVENTORY =========== -->
+        <section class="panel" data-panel="inventory">
+            <div class="grid-4" id="inventoryStats"></div>
+
+            <div class="card">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
+                    <h2 style="margin: 0;">⚠ Tugayotgan mahsulotlar</h2>
+                    <div style="font-size: 13px; color: var(--muted);">Past kelishi past bo'lgan mahsulotlar — eng ko'p ehtiyojli birinchi</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mahsulot</th>
+                            <th>Kategoriya</th>
+                            <th class="num">Qoldiq</th>
+                            <th class="num">Past kelishi</th>
+                            <th>Holat</th>
+                            <th style="width: 1px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lowStockBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
+                    <h2 style="margin: 0;">📦 Butun ombor</h2>
+                    <input type="text" id="invSearch" placeholder="Qidirish..." style="padding: 8px 11px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; background: #fff;" />
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mahsulot</th>
+                            <th>Kategoriya</th>
+                            <th class="num">Qoldiq</th>
+                            <th class="num">Past kelishi</th>
+                            <th>Holat</th>
+                            <th style="width: 1px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="invBody"></tbody>
+                </table>
+                <div id="invPager" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding: 12px 4px 4px; font-size: 13px; color: var(--muted);">
+                    <div id="invPagerInfo">—</div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn" id="invPrevBtn" disabled>← Oldingi</button>
+                        <button class="btn" id="invNextBtn" disabled>Keyingi →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========== DAILY =========== -->
+        <section class="panel" data-panel="daily">
+            <div class="toolbar">
+                <label for="dailyDate" style="font-weight: 600; font-size: 14px;">Sana:</label>
+                <input type="date" id="dailyDate" />
+                <button class="btn" id="dailyTodayBtn">Bugun</button>
+                <div class="grow" style="flex: 1;"></div>
+                <button class="btn" id="dailyExportBtn">⬇ CSV eksport</button>
+            </div>
+
+            <div class="grid-4" id="dailyStats"></div>
+
+            <div class="card chart-card">
+                <h2>Soatlik sotuv</h2>
+                <div class="chart-meta">Tashkent vaqti</div>
+                <canvas id="hourlyChart" height="180"></canvas>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
+                    <h2 style="margin: 0;">Tranzaksiyalar</h2>
+                    <input type="text" id="txSearch" placeholder="# yoki mahsulot nomi..." style="padding: 8px 11px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; background: #fff; min-width: 220px;" />
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th>#</th>
+                            <th>Vaqt</th>
+                            <th class="num">Soni</th>
+                            <th class="num">Jami</th>
+                            <th class="num">Naqd</th>
+                            <th class="num">Qaytim</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txBody"></tbody>
+                </table>
+                <div id="txPager" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding: 12px 4px 4px; font-size: 13px; color: var(--muted);">
+                    <div id="txPagerInfo">—</div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn" id="txPrevBtn" disabled>← Oldingi</button>
+                        <button class="btn" id="txNextBtn" disabled>Keyingi →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ========== PRODUCT MODAL ========== -->
+<div class="modal-backdrop" id="prodModal">
+    <form class="modal" id="prodForm">
+        <h3 id="prodModalTitle">Yangi mahsulot</h3>
+        <input type="hidden" id="pId" />
+        <div class="field"><label>Nomi</label><input id="pName" type="text" required /></div>
+        <div class="field"><label>Kategoriya</label><input id="pCategory" type="text" required /></div>
+        <div class="field">
+            <label>Sotish birligi</label>
+            <select id="pSoldBy" style="width: 100%; padding: 11px 13px; border: 2px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; background: var(--surface-2);">
+                <option value="unit">Dona (1, 2, 3...)</option>
+                <option value="weight">Og'irlik (kg, gramm)</option>
+            </select>
+        </div>
+        <div class="field" id="pUnitLabelRow" style="display: none;">
+            <label>Birlik (kg, g, ...)</label>
+            <input id="pUnitLabel" type="text" maxlength="8" placeholder="kg" />
+        </div>
+        <div class="field">
+            <label id="pPriceLabel">Narx (so'm)</label>
+            <input id="pPrice" type="number" min="0" step="100" required />
+        </div>
+        <div class="field"><label>Emoji</label><input id="pEmoji" type="text" maxlength="4" placeholder="📦" /></div>
+        <div class="field">
+            <label>Shtrix-kod (ixtiyoriy)</label>
+            <input id="pBarcode" type="text" placeholder="Skannerlab kiriting yoki qo'lda yozing" autocomplete="off" />
+        </div>
+        <div class="weight-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="field" style="margin: 0;">
+                <label id="pStockLabel">Qoldiq</label>
+                <input id="pStock" type="number" step="0.001" min="0" placeholder="0" />
+            </div>
+            <div class="field" style="margin: 0;">
+                <label id="pThresholdLabel">Past kelishi (ogohlantirish)</label>
+                <input id="pThreshold" type="number" step="0.001" min="0" placeholder="bo'sh = ogohlantirish yo'q" />
+            </div>
+        </div>
+        <div class="field"><label><input id="pActive" type="checkbox" /> Faol</label></div>
+        <div class="actions">
+            <button type="button" class="btn" id="prodCancel">Bekor</button>
+            <button type="submit" class="btn primary">Saqlash</button>
+        </div>
+    </form>
+</div>
+
+<!-- ========== REFILL MODAL ========== -->
+<div class="modal-backdrop" id="refillModal">
+    <form class="modal" id="refillForm">
+        <h3 id="refillTitle">Ombor to'ldirish</h3>
+        <div class="sub" id="refillSub" style="color: var(--muted); margin-bottom: 14px; font-size: 13px;"></div>
+        <input type="hidden" id="rfId" />
+        <div class="field">
+            <label>Qancha qo'shish</label>
+            <input id="rfQty" type="number" step="0.001" min="0.001" required />
+        </div>
+        <div class="field">
+            <label>Izoh (ixtiyoriy)</label>
+            <input id="rfNote" type="text" maxlength="200" placeholder="Masalan: yetkazib beruvchi nomi, sana" />
+        </div>
+        <div class="actions">
+            <button type="button" class="btn" id="refillCancel">Bekor</button>
+            <button type="submit" class="btn success">+ Qo'shish</button>
+        </div>
+    </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => {
+    if (!isFinite(n)) n = 0;
+    return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + " so'm";
+};
+const fmtInt = (n) => (n ?? 0).toLocaleString('ru-RU').replace(/,/g, ' ');
+function formatProductQty(p) {
+    // p may be a TopProduct (sold_by + unit_label) or a basic row.
+    if (p && p.sold_by === 'weight') {
+        const trimmed = Number(p.quantity).toFixed(3).replace(/\.?0+$/, '');
+        return `${trimmed} ${p.unit_label || 'kg'}`;
+    }
+    return `${fmtInt(p.quantity)} dona`;
+}
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[c]));
+let toastTimer = null;
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function api(path, opts = {}) {
+    opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+    opts.credentials = 'same-origin';
+    const res = await fetch(path, opts);
+    if (res.status === 401) {
+        showLogin();
+        throw new Error('unauthorized');
+    }
+    if (!res.ok) {
+        let detail = res.statusText;
+        try { detail = (await res.json()).detail || detail; } catch (_) {}
+        throw new Error(detail);
+    }
+    if (res.status === 204) return null;
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+}
+
+// ---------- auth / view switching ----------
+function showLogin() {
+    $('appView').classList.add('hidden');
+    $('loginView').classList.remove('hidden');
+    $('lUser').focus();
+}
+function showApp() {
+    $('loginView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+    bootApp();
+}
+
+async function checkSession() {
+    try {
+        const me = await api('/admin/me');
+        $('userChip').textContent = `@${me.username}`;
+        showApp();
+    } catch {
+        showLogin();
+    }
+}
+
+$('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('loginErr').textContent = '';
+    $('loginBtn').disabled = true;
+    try {
+        await api('/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ username: $('lUser').value, password: $('lPass').value }),
+        });
+        await checkSession();
+    } catch (err) {
+        $('loginErr').textContent = err.message || 'Xato';
+    } finally {
+        $('loginBtn').disabled = false;
+    }
+});
+
+$('logoutBtn').addEventListener('click', async () => {
+    try { await fetch('/admin/logout', { credentials: 'same-origin' }); } catch {}
+    showLogin();
+});
+
+// ---------- tabs ----------
+document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.querySelector(`.panel[data-panel="${tab}"]`).classList.add('active');
+        if (tab === 'overview') loadOverview();
+        if (tab === 'products') loadProducts();
+        if (tab === 'inventory') loadInventory();
+        if (tab === 'daily') loadDaily();
+    });
+});
+
+// ---------- boot ----------
+function bootApp() {
+    loadOverview();
+    // default daily date to today
+    const today = new Date().toISOString().slice(0, 10);
+    $('dailyDate').value = today;
+}
+
+// =========================================================================
+// PRODUCTS
+// =========================================================================
+const PROD_PAGE_SIZE = 50;
+let _allProducts = [];
+let prodState = { page: 1, q: '', status: 'all' };
+
+async function loadProducts() {
+    const params = new URLSearchParams({
+        page: prodState.page,
+        page_size: PROD_PAGE_SIZE,
+        status: prodState.status,
+    });
+    if (prodState.q) params.set('q', prodState.q);
+    try {
+        const data = await api(`/admin/products?${params.toString()}`);
+        _allProducts = data.items;
+        renderProducts(data);
+    } catch (err) { toast(err.message); }
+}
+
+function renderProducts(data) {
+    const body = $('prodBody');
+    body.innerHTML = '';
+    if (!data.items.length) {
+        const msg = prodState.q
+            ? `«${escapeHtml(prodState.q)}» bo'yicha mahsulot topilmadi`
+            : 'Mahsulot topilmadi';
+        body.innerHTML = `<tr class="empty-row"><td colspan="7">${msg}</td></tr>`;
+        renderProdPager(data);
+        return;
+    }
+    for (const p of data.items) {
+        const tr = document.createElement('tr');
+        const priceSuffix = p.sold_by === 'weight' ? ` / ${escapeHtml(p.unit_label || 'kg')}` : '';
+        const soldByPill = p.sold_by === 'weight'
+            ? `<span class="pill" style="background:#fef3c7; color:#78350f;">${escapeHtml(p.unit_label || 'kg')}</span>`
+            : `<span class="pill" style="background:#e0e7ff; color:#312e81;">dona</span>`;
+        tr.innerHTML = `
+            <td>${escapeHtml(p.emoji || '')} ${escapeHtml(p.name)} ${soldByPill}</td>
+            <td>${escapeHtml(p.category)}</td>
+            <td class="num">${fmt(p.price)}${priceSuffix}</td>
+            <td class="num">${renderStockCell(p)}</td>
+            <td>${escapeHtml(p.barcode || '—')}</td>
+            <td><span class="pill ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Faol' : 'O\'chirilgan'}</span></td>
+            <td style="white-space: nowrap;">
+                <button class="btn sm" data-edit="${p.id}">Tahrirlash</button>
+                <button class="btn sm success" data-refill="${p.id}" title="Ombor to'ldirish">+ Refill</button>
+                ${p.is_active ? `<button class="btn sm danger" data-soft="${p.id}" title="Cashier ko'rmaydi, lekin tarixda saqlanadi">🚫 Nofaol</button>` : ''}
+                <button class="btn sm danger" data-hard="${p.id}" title="DB dan butunlay o'chirish (faqat tarixsiz mahsulotlar)">🗑 O'chirish</button>
+            </td>
+        `;
+        body.appendChild(tr);
+    }
+
+    body.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openProductModal(Number(b.dataset.edit))));
+    body.querySelectorAll('[data-refill]').forEach(b => b.addEventListener('click', () => openRefillModal(Number(b.dataset.refill))));
+    body.querySelectorAll('[data-soft]').forEach(b => b.addEventListener('click', () => softDeleteProduct(Number(b.dataset.soft))));
+    body.querySelectorAll('[data-hard]').forEach(b => b.addEventListener('click', () => hardDeleteProduct(Number(b.dataset.hard))));
+
+    renderProdPager(data);
+}
+
+function renderProdPager(data) {
+    const from = data.total === 0 ? 0 : (data.page - 1) * data.page_size + 1;
+    const to = Math.min(data.page * data.page_size, data.total);
+    $('prodPagerInfo').textContent = `${from}–${to} / ${data.total}`;
+    $('prodPrevBtn').disabled = data.page <= 1;
+    $('prodNextBtn').disabled = !data.has_next;
+}
+
+let _prodSearchTimer = null;
+$('prodSearch').addEventListener('input', (e) => {
+    clearTimeout(_prodSearchTimer);
+    const val = e.target.value.trim();
+    _prodSearchTimer = setTimeout(() => {
+        prodState.q = val;
+        prodState.page = 1;
+        loadProducts();
+    }, 250);
+});
+$('prodFilter').addEventListener('change', (e) => {
+    prodState.status = e.target.value;
+    prodState.page = 1;
+    loadProducts();
+});
+$('prodPrevBtn').addEventListener('click', () => {
+    if (prodState.page > 1) { prodState.page -= 1; loadProducts(); }
+});
+$('prodNextBtn').addEventListener('click', () => {
+    prodState.page += 1;
+    loadProducts();
+});
+$('addProdBtn').addEventListener('click', () => openProductModal(null));
+
+function refreshSoldByUi() {
+    const sb = $('pSoldBy').value;
+    const isWeight = sb === 'weight';
+    $('pUnitLabelRow').style.display = isWeight ? '' : 'none';
+    const unit = isWeight ? ($('pUnitLabel').value.trim() || 'kg') : 'dona';
+    $('pPriceLabel').textContent = isWeight ? `Narx (so'm / ${unit})` : `Narx (so'm)`;
+    $('pStockLabel').textContent = `Qoldiq (${unit})`;
+    $('pThresholdLabel').textContent = `Past kelishi (${unit})`;
+}
+$('pSoldBy').addEventListener('change', refreshSoldByUi);
+// Update price label live as user types the unit label.
+document.addEventListener('DOMContentLoaded', () => {
+    const ul = $('pUnitLabel');
+    if (ul) ul.addEventListener('input', refreshSoldByUi);
+});
+
+function openProductModal(id) {
+    const isEdit = id !== null;
+    $('prodModalTitle').textContent = isEdit ? 'Tahrirlash' : 'Yangi mahsulot';
+    $('pId').value = id || '';
+    if (isEdit) {
+        const p = _allProducts.find(x => x.id === id);
+        if (!p) return;
+        $('pName').value = p.name;
+        $('pCategory').value = p.category;
+        $('pPrice').value = p.price;
+        $('pEmoji').value = p.emoji || '';
+        $('pBarcode').value = p.barcode || '';
+        $('pActive').checked = p.is_active;
+        $('pSoldBy').value = p.sold_by || 'unit';
+        $('pUnitLabel').value = p.unit_label || '';
+        $('pStock').value = p.stock ?? 0;
+        $('pThreshold').value = p.low_stock_threshold ?? '';
+    } else {
+        $('prodForm').reset();
+        $('pActive').checked = true;
+        $('pSoldBy').value = 'unit';
+        $('pUnitLabel').value = '';
+        $('pStock').value = 0;
+        $('pThreshold').value = '';
+    }
+    refreshSoldByUi();
+    $('prodModal').classList.add('open');
+    setTimeout(() => $('pName').focus(), 50);
+}
+function closeProductModal() { $('prodModal').classList.remove('open'); }
+$('prodCancel').addEventListener('click', closeProductModal);
+$('prodModal').addEventListener('click', (e) => { if (e.target === $('prodModal')) closeProductModal(); });
+
+// Most USB barcode scanners send the digits then an Enter keystroke. If
+// that Enter reaches the form, it submits a half-filled product — so
+// swallow Enter inside the barcode field. The cashier confirms with the
+// Save button when ready.
+$('pBarcode').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') e.preventDefault();
+});
+
+$('prodForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('pId').value;
+    const soldBy = $('pSoldBy').value;
+    const thresholdRaw = $('pThreshold').value.trim();
+    const payload = {
+        name: $('pName').value.trim(),
+        category: $('pCategory').value.trim(),
+        price: Number($('pPrice').value),
+        emoji: $('pEmoji').value.trim() || null,
+        barcode: $('pBarcode').value.trim() || null,
+        is_active: $('pActive').checked,
+        sold_by: soldBy,
+        unit_label: soldBy === 'weight' ? ($('pUnitLabel').value.trim() || 'kg') : null,
+        stock: Number($('pStock').value) || 0,
+        low_stock_threshold: thresholdRaw === '' ? null : Number(thresholdRaw),
+    };
+    try {
+        if (id) {
+            await api(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+            toast('Yangilandi');
+        } else {
+            await api('/api/products', { method: 'POST', body: JSON.stringify(payload) });
+            toast('Qo\'shildi');
+        }
+        closeProductModal();
+        await loadProducts();
+    } catch (err) {
+        toast(err.message);
+    }
+});
+
+async function softDeleteProduct(id) {
+    const p = _allProducts.find(x => x.id === id);
+    if (!p) return;
+    if (!confirm(`«${p.name}» nofaol qilinsinmi?\n\nCashier dashboarddan yo'qoladi, lekin DB da saqlanadi (eski hisobotlar buzilmaydi).`)) return;
+    try {
+        await api(`/api/products/${id}`, { method: 'DELETE' });
+        toast('Nofaol qilindi');
+        await loadProducts();
+    } catch (err) { toast(err.message); }
+}
+
+async function hardDeleteProduct(id) {
+    const p = _allProducts.find(x => x.id === id);
+    if (!p) return;
+    if (!confirm(`«${p.name}» BUTUNLAY o'chirilsinmi?\n\nBu mahsulot DB dan to'liq yo'qoladi. Faqat hech qachon sotilmagan mahsulotlar uchun ishlaydi — aks holda «Nofaol qilish» dan foydalaning.`)) return;
+    try {
+        await api(`/api/products/${id}?hard=true`, { method: 'DELETE' });
+        toast('Butunlay o\'chirildi');
+        await loadProducts();
+    } catch (err) {
+        // 409 from the API surfaces here via the api() helper as err.message
+        toast(err.message);
+    }
+}
+
+// =========================================================================
+// INVENTORY
+// =========================================================================
+function fmtStock(p) {
+    const v = Number(p.stock || 0);
+    if (p.sold_by === 'weight') {
+        return `${v.toFixed(3).replace(/\.?0+$/, '')} ${p.unit_label || 'kg'}`;
+    }
+    return `${Math.round(v)} dona`;
+}
+
+function statusPill(status) {
+    if (status === 'out')
+        return `<span class="pill" style="background:#fee2e2; color:#7f1d1d;">⛔ Tugadi</span>`;
+    if (status === 'low')
+        return `<span class="pill" style="background:#fef3c7; color:#92400e;">⚠ Past</span>`;
+    return `<span class="pill" style="background:#dcfce7; color:#14532d;">✓ OK</span>`;
+}
+
+function statusFromProduct(p) {
+    const s = Number(p.stock || 0);
+    if (s <= 0) return 'out';
+    if (p.low_stock_threshold != null && s <= Number(p.low_stock_threshold)) return 'low';
+    return 'ok';
+}
+
+function renderStockCell(p) {
+    const status = statusFromProduct(p);
+    const color = status === 'out' ? 'color:#b91c1c; font-weight:700;'
+                : status === 'low' ? 'color:#92400e; font-weight:600;' : '';
+    return `<span style="${color}">${fmtStock(p)}</span>`;
+}
+
+const INV_PAGE_SIZE = 50;
+let _inventoryItems = [];
+let invState = { page: 1, q: '' };
+
+async function loadInventory() {
+    try {
+        const [report, low] = await Promise.all([
+            api('/api/inventory?include_inactive=false'),
+            api('/api/inventory/low-stock'),
+        ]);
+        renderInventoryStats(report);
+        renderLowStock(low);
+        invState.page = 1;
+        await loadInventoryItems();
+        // Cache low-stock items so refill buttons there work even when the
+        // matching product isn't on the current paginated inventory page.
+        cacheInventoryItems(low);
+    } catch (err) { toast(err.message); }
+}
+
+async function loadInventoryItems() {
+    const params = new URLSearchParams({
+        page: invState.page,
+        page_size: INV_PAGE_SIZE,
+        include_inactive: 'false',
+    });
+    if (invState.q) params.set('q', invState.q);
+    try {
+        const data = await api(`/api/inventory/items?${params.toString()}`);
+        cacheInventoryItems(data.items);
+        renderFullInventory(data);
+    } catch (err) { toast(err.message); }
+}
+
+function cacheInventoryItems(items) {
+    const byId = new Map(_inventoryItems.map(x => [x.product_id, x]));
+    for (const it of items) byId.set(it.product_id, it);
+    _inventoryItems = Array.from(byId.values());
+}
+
+function renderInventoryStats(report) {
+    $('inventoryStats').innerHTML = `
+        <div class="stat">
+            <div class="label">Mahsulotlar</div>
+            <div class="value">${fmtInt(report.total_products)}</div>
+            <div class="sub">faol</div>
+        </div>
+        <div class="stat">
+            <div class="label">Tugagan</div>
+            <div class="value" style="color:#b91c1c;">${fmtInt(report.out_of_stock)}</div>
+            <div class="sub">qoldiq 0</div>
+        </div>
+        <div class="stat">
+            <div class="label">Tugayotgan</div>
+            <div class="value" style="color:#92400e;">${fmtInt(report.low_stock)}</div>
+            <div class="sub">past kelishi ostida</div>
+        </div>
+        <div class="stat">
+            <div class="label">Sog'lom</div>
+            <div class="value" style="color:#15803d;">${fmtInt(report.total_products - report.low_stock - report.out_of_stock)}</div>
+            <div class="sub">to'liq</div>
+        </div>
+    `;
+}
+
+function renderLowStock(items) {
+    const flagged = items.filter(it => it.status !== 'ok');
+    // Most urgent first: out-of-stock, then by stock/threshold ratio.
+    flagged.sort((a, b) => {
+        const ax = a.status === 'out' ? 0 : 1;
+        const bx = b.status === 'out' ? 0 : 1;
+        if (ax !== bx) return ax - bx;
+        const ar = a.low_stock_threshold ? a.stock / a.low_stock_threshold : a.stock;
+        const br = b.low_stock_threshold ? b.stock / b.low_stock_threshold : b.stock;
+        return ar - br;
+    });
+    const body = $('lowStockBody');
+    body.innerHTML = '';
+    if (flagged.length === 0) {
+        body.innerHTML = '<tr class="empty-row"><td colspan="6">🎉 Hammasi sog\'lom — past kelishi ostida hech narsa yo\'q</td></tr>';
+        return;
+    }
+    for (const it of flagged) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${escapeHtml(it.emoji || '')} ${escapeHtml(it.name)}</td>
+            <td>${escapeHtml(it.category)}</td>
+            <td class="num">${renderStockCell(it)}</td>
+            <td class="num">${it.low_stock_threshold != null ? fmtStock({stock: it.low_stock_threshold, sold_by: it.sold_by, unit_label: it.unit_label}) : '—'}</td>
+            <td>${statusPill(it.status)}</td>
+            <td><button class="btn sm success" data-rf="${it.product_id}">+ Refill</button></td>
+        `;
+        body.appendChild(tr);
+    }
+    body.querySelectorAll('[data-rf]').forEach(b => b.addEventListener('click', () => openRefillModal(Number(b.dataset.rf))));
+}
+
+function renderFullInventory(data) {
+    const body = $('invBody');
+    body.innerHTML = '';
+    if (!data.items.length) {
+        const msg = invState.q ? `«${escapeHtml(invState.q)}» bo'yicha topilmadi` : 'Topilmadi';
+        body.innerHTML = `<tr class="empty-row"><td colspan="6">${msg}</td></tr>`;
+        renderInvPager(data);
+        return;
+    }
+    for (const it of data.items) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${escapeHtml(it.emoji || '')} ${escapeHtml(it.name)}</td>
+            <td>${escapeHtml(it.category)}</td>
+            <td class="num">${renderStockCell(it)}</td>
+            <td class="num">${it.low_stock_threshold != null ? fmtStock({stock: it.low_stock_threshold, sold_by: it.sold_by, unit_label: it.unit_label}) : '—'}</td>
+            <td>${statusPill(it.status)}</td>
+            <td><button class="btn sm success" data-rf="${it.product_id}">+ Refill</button></td>
+        `;
+        body.appendChild(tr);
+    }
+    body.querySelectorAll('[data-rf]').forEach(b => b.addEventListener('click', () => openRefillModal(Number(b.dataset.rf))));
+    renderInvPager(data);
+}
+
+function renderInvPager(data) {
+    const from = data.total === 0 ? 0 : (data.page - 1) * data.page_size + 1;
+    const to = Math.min(data.page * data.page_size, data.total);
+    $('invPagerInfo').textContent = `${from}–${to} / ${data.total}`;
+    $('invPrevBtn').disabled = data.page <= 1;
+    $('invNextBtn').disabled = !data.has_next;
+}
+
+let _invSearchTimer = null;
+$('invSearch').addEventListener('input', (e) => {
+    clearTimeout(_invSearchTimer);
+    const val = e.target.value.trim();
+    _invSearchTimer = setTimeout(() => {
+        invState.q = val;
+        invState.page = 1;
+        loadInventoryItems();
+    }, 250);
+});
+$('invPrevBtn').addEventListener('click', () => {
+    if (invState.page > 1) { invState.page -= 1; loadInventoryItems(); }
+});
+$('invNextBtn').addEventListener('click', () => {
+    invState.page += 1;
+    loadInventoryItems();
+});
+
+// ---- Refill modal ----
+function openRefillModal(productId) {
+    // Refill can be triggered from products or inventory tab — find the
+    // record in whichever list is loaded.
+    const fromInv = _inventoryItems.find(x => x.product_id === productId);
+    const fromProd = _allProducts.find(x => x.id === productId);
+    if (!fromInv && !fromProd) return;
+
+    const name = fromInv ? fromInv.name : fromProd.name;
+    const emoji = (fromInv && fromInv.emoji) || (fromProd && fromProd.emoji) || '';
+    const sold_by = fromInv ? fromInv.sold_by : (fromProd ? fromProd.sold_by : 'unit');
+    const unit_label = fromInv ? fromInv.unit_label : (fromProd ? fromProd.unit_label : null);
+    const stock = fromInv ? fromInv.stock : (fromProd ? fromProd.stock : 0);
+
+    $('rfId').value = productId;
+    $('refillTitle').textContent = `Ombor to'ldirish — ${emoji} ${name}`.trim();
+    $('refillSub').textContent = `Hozirgi qoldiq: ${fmtStock({stock, sold_by, unit_label})}`;
+    $('rfQty').value = '';
+    $('rfNote').value = '';
+    $('refillModal').classList.add('open');
+    setTimeout(() => $('rfQty').focus(), 50);
+}
+
+function closeRefillModal() { $('refillModal').classList.remove('open'); }
+$('refillCancel').addEventListener('click', closeRefillModal);
+$('refillModal').addEventListener('click', (e) => { if (e.target === $('refillModal')) closeRefillModal(); });
+
+$('refillForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = Number($('rfId').value);
+    const quantity = Number($('rfQty').value);
+    if (!isFinite(quantity) || quantity <= 0) {
+        toast("⚠️ Miqdor 0 dan katta bo'lishi kerak");
+        return;
+    }
+    const payload = {
+        quantity,
+        note: $('rfNote').value.trim() || null,
+    };
+    try {
+        await api(`/api/inventory/${id}/refill`, { method: 'POST', body: JSON.stringify(payload) });
+        toast('Ombor to\'ldirildi');
+        closeRefillModal();
+        // Refresh whichever views are loaded.
+        await Promise.all([loadInventory(), loadProducts().catch(() => {})]);
+    } catch (err) { toast(err.message); }
+});
+
+// =========================================================================
+// DAILY REPORT
+// =========================================================================
+const TX_PAGE_SIZE = 50;
+let txState = { page: 1, totalPages: 1, q: '' };
+
+async function loadDaily() {
+    const dateStr = $('dailyDate').value || new Date().toISOString().slice(0, 10);
+    try {
+        const data = await api(`/api/reports/daily?date=${dateStr}`);
+        renderDailyStats(data);
+        renderHourlyChart(data.hourly);
+        txState.page = 1;
+        await loadTransactions();
+    } catch (err) { toast(err.message); }
+}
+
+async function loadTransactions() {
+    const dateStr = $('dailyDate').value || new Date().toISOString().slice(0, 10);
+    const params = new URLSearchParams({
+        date: dateStr,
+        page: txState.page,
+        page_size: TX_PAGE_SIZE,
+    });
+    if (txState.q) params.set('q', txState.q);
+    try {
+        const data = await api(`/api/reports/daily/transactions?${params.toString()}`);
+        renderTransactions(data.items);
+        txState.totalPages = Math.max(1, Math.ceil(data.total / data.page_size));
+        renderTxPager(data);
+    } catch (err) { toast(err.message); }
+}
+
+function renderTxPager(data) {
+    const from = data.total === 0 ? 0 : (data.page - 1) * data.page_size + 1;
+    const to = Math.min(data.page * data.page_size, data.total);
+    $('txPagerInfo').textContent = `${from}–${to} / ${data.total}`;
+    $('txPrevBtn').disabled = data.page <= 1;
+    $('txNextBtn').disabled = !data.has_next;
+}
+
+function renderDailyStats(d) {
+    const top = d.top_product;
+    $('dailyStats').innerHTML = `
+        <div class="stat"><div class="label">Tushum</div><div class="value">${fmt(d.total_revenue)}</div><div class="sub">${d.date}</div></div>
+        <div class="stat"><div class="label">Tranzaksiya</div><div class="value">${fmtInt(d.transactions_count)}</div></div>
+        <div class="stat"><div class="label">O'rtacha tranzaksiya</div><div class="value">${fmt(d.average_transaction)}</div></div>
+        <div class="stat"><div class="label">Eng ko'p sotilgan</div><div class="value" style="font-size: 16px;">${top ? escapeHtml(top.name) : '—'}</div><div class="sub">${top ? formatProductQty(top) : ''}</div></div>
+    `;
+}
+
+function renderTransactions(txs) {
+    const body = $('txBody');
+    body.innerHTML = '';
+    if (!txs.length) {
+        const msg = txState.q ? `«${escapeHtml(txState.q)}» bo'yicha tranzaksiya topilmadi` : 'Bu kunda tranzaksiya yo\'q';
+        body.innerHTML = `<tr class="empty-row"><td colspan="7">${msg}</td></tr>`;
+        return;
+    }
+    const qtyLabel = (it) => it.sold_by === 'weight'
+        ? `${Number(it.quantity).toFixed(3).replace(/\.?0+$/, '')} ${it.unit_label || 'kg'}`
+        : `× ${it.quantity}`;
+
+    for (const tx of txs) {
+        // Show row count — mixing units and kg in one number would be misleading.
+        const rowCount = tx.items.length;
+        const time = new Date(tx.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const main = document.createElement('tr');
+        main.className = 'tx-row';
+        main.innerHTML = `
+            <td><span class="caret">▶</span></td>
+            <td>#${tx.id}</td>
+            <td>${time}</td>
+            <td class="num">${rowCount}</td>
+            <td class="num"><strong>${fmt(tx.total_amount)}</strong></td>
+            <td class="num">${fmt(tx.cash_received)}</td>
+            <td class="num">${fmt(tx.change_amount)}</td>
+        `;
+        const detail = document.createElement('tr');
+        detail.className = 'tx-detail hidden';
+        const itemsHtml = tx.items.map(it => `
+            <div><span>${escapeHtml(it.product_name)} ${qtyLabel(it)}</span><span>${fmt(it.line_total)}</span></div>
+        `).join('');
+        detail.innerHTML = `<td></td><td colspan="6"><div class="tx-items">${itemsHtml}</div></td>`;
+        main.addEventListener('click', () => {
+            detail.classList.toggle('hidden');
+            main.querySelector('.caret').classList.toggle('open');
+        });
+        body.appendChild(main);
+        body.appendChild(detail);
+    }
+}
+
+$('dailyDate').addEventListener('change', () => {
+    $('txSearch').value = '';
+    txState.q = '';
+    loadDaily();
+});
+$('dailyTodayBtn').addEventListener('click', () => {
+    $('dailyDate').value = new Date().toISOString().slice(0, 10);
+    $('txSearch').value = '';
+    txState.q = '';
+    loadDaily();
+});
+$('dailyExportBtn').addEventListener('click', () => {
+    const dateStr = $('dailyDate').value || new Date().toISOString().slice(0, 10);
+    window.location.href = `/api/reports/export?date=${dateStr}`;
+});
+
+let _txSearchTimer = null;
+$('txSearch').addEventListener('input', (e) => {
+    clearTimeout(_txSearchTimer);
+    const val = e.target.value.trim();
+    _txSearchTimer = setTimeout(() => {
+        txState.q = val;
+        txState.page = 1;
+        loadTransactions();
+    }, 250);
+});
+$('txPrevBtn').addEventListener('click', () => {
+    if (txState.page > 1) { txState.page -= 1; loadTransactions(); }
+});
+$('txNextBtn').addEventListener('click', () => {
+    txState.page += 1;
+    loadTransactions();
+});
+
+// =========================================================================
+// CANVAS CHARTS (no libraries)
+// =========================================================================
+function drawBarChart(canvas, data, opts = {}) {
+    // data: [{ label, value, sub? }]
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    if (!data.length) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("Ma'lumot yo'q", w / 2, h / 2);
+        return;
+    }
+
+    const max = Math.max(1, ...data.map(d => d.value));
+    const padding = { top: 20, right: 12, bottom: 36, left: 56 };
+    const innerW = w - padding.left - padding.right;
+    const innerH = h - padding.top - padding.bottom;
+    const barW = innerW / data.length;
+    const gap = Math.max(2, barW * 0.18);
+
+    // grid + y-axis labels (4 ticks)
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i++) {
+        const y = padding.top + innerH * (1 - i / 4);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(w - padding.right, y);
+        ctx.stroke();
+        const val = Math.round(max * i / 4);
+        ctx.fillText(formatShortNumber(val), padding.left - 6, y);
+    }
+
+    // bars
+    const color = opts.color || '#2563eb';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        const x = padding.left + i * barW + gap / 2;
+        const bw = barW - gap;
+        const bh = (d.value / max) * innerH;
+        const y = padding.top + innerH - bh;
+        ctx.fillStyle = color;
+        roundedRect(ctx, x, y, bw, bh, 4);
+        ctx.fill();
+
+        // x-axis label
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(d.label, x + bw / 2, padding.top + innerH + 6);
+    }
+}
+
+function roundedRect(ctx, x, y, w, h, r) {
+    if (h < 1) { ctx.beginPath(); ctx.rect(x, y, w, h); return; }
+    r = Math.min(r, w / 2, h);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function formatShortNumber(n) {
+    n = Math.round(n);
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1) + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + 'k';
+    return String(n);
+}
+
+function renderHourlyChart(hourly) {
+    const canvas = $('hourlyChart');
+    const data = hourly.map(h => ({
+        label: String(h.hour).padStart(2, '0'),
+        value: h.revenue,
+    }));
+    drawBarChart(canvas, data, { color: '#2563eb' });
+}
+
+function renderWeeklyChart(daily) {
+    const canvas = $('weeklyChart');
+    const data = daily.map(d => {
+        const dt = new Date(d.date + 'T00:00:00');
+        const labels = ['Yak', 'Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha'];
+        return { label: labels[dt.getDay()], value: d.revenue };
+    });
+    drawBarChart(canvas, data, { color: '#16a34a' });
+}
+
+// =========================================================================
+// OVERVIEW
+// =========================================================================
+async function loadOverview() {
+    try {
+        const [weekly, top] = await Promise.all([
+            api('/api/reports/weekly'),
+            api('/api/reports/top-products?period=week'),
+        ]);
+
+        const todayRev = weekly.today.revenue;
+        const yestRev = weekly.yesterday.revenue;
+        let delta = 0, deltaCls = '';
+        if (yestRev > 0) {
+            delta = ((todayRev - yestRev) / yestRev) * 100;
+            deltaCls = delta >= 0 ? 'delta-up' : 'delta-down';
+        }
+
+        $('overviewStats').innerHTML = `
+            <div class="stat">
+                <div class="label">Bugun</div>
+                <div class="value">${fmt(todayRev)}</div>
+                <div class="sub">${fmtInt(weekly.today.count)} tranzaksiya</div>
+            </div>
+            <div class="stat">
+                <div class="label">Kecha</div>
+                <div class="value">${fmt(yestRev)}</div>
+                <div class="sub ${deltaCls}">${yestRev > 0 ? (delta >= 0 ? '▲' : '▼') + ' ' + Math.abs(delta).toFixed(1) + '%' : 'Solishtirib bo\'lmaydi'}</div>
+            </div>
+            <div class="stat">
+                <div class="label">Bu hafta</div>
+                <div class="value">${fmt(weekly.this_week.revenue)}</div>
+                <div class="sub">${fmtInt(weekly.this_week.count)} tranzaksiya</div>
+            </div>
+            <div class="stat">
+                <div class="label">O'tgan hafta</div>
+                <div class="value">${fmt(weekly.last_week.revenue)}</div>
+                <div class="sub">${fmtInt(weekly.last_week.count)} tranzaksiya</div>
+            </div>
+        `;
+
+        renderWeeklyChart(weekly.daily);
+
+        const tbody = $('topProductsBody');
+        tbody.innerHTML = '';
+        if (!top.products.length) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Sotuv yo\'q</td></tr>';
+        } else {
+            top.products.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(p.name)}</td><td class="num">${formatProductQty(p)}</td><td class="num">${fmt(p.revenue)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (err) {
+        if (err.message !== 'unauthorized') toast(err.message);
+    }
+}
+
+window.addEventListener('resize', () => {
+    // re-render visible charts to fit new width
+    const dailyActive = document.querySelector('.panel[data-panel="daily"].active');
+    const overviewActive = document.querySelector('.panel[data-panel="overview"].active');
+    if (dailyActive) loadDaily();
+    if (overviewActive) loadOverview();
+});
+
+// boot
+checkSession();
+</script>
+</body>
+</html>

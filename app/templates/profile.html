@@ -1,0 +1,98 @@
+{% extends "_base.html" %}
+{% set nav_active = 'me' %}
+{% block title %}Men — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.prof{background:#fff;border-radius:20px;padding:24px 22px;text-align:center;box-shadow:var(--shadow);margin-bottom:16px}
+.avatar{width:80px;height:80px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.9rem}
+.prof-n{font-size:1.15rem;font-weight:800;color:#111;margin-bottom:2px}
+.prof-u{font-size:.85rem;color:var(--muted);margin-bottom:16px}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ps{background:#F4F5F2;border-radius:12px;padding:12px 8px}
+.ps .v{font-size:1.4rem;font-weight:800;color:var(--green-dark)}
+.ps.blue .v{color:var(--blue)}
+.ps .l{font-size:.7rem;color:var(--muted);font-weight:600}
+
+.rec-row{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.rec-ic{width:38px;height:38px;border-radius:10px;background:#F4F5F2;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem;font-weight:800}
+.rec-pass{background:#E4F3EB;color:var(--green-dark)}
+.rec-fail{background:#FDE8E8;color:#c0392b}
+.rec-body{flex:1;min-width:0}
+.rec-t{font-size:.88rem;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-s{font-size:.72rem;color:var(--muted)}
+.rec-p{font-size:.9rem;font-weight:800;color:var(--green-dark);flex-shrink:0}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div style="width:38px"></div>
+  <div class="hdr-title">Mening profilim</div>
+  <a href="/webapp/settings" class="hdr-back" title="Sozlamalar">⚙</a>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch('/api/v1/webapp/me/progress', { headers: MK.authHeaders() });
+    if (!r.ok) {
+        document.getElementById('content').innerHTML = '<div class="empty">Ma\'lumot topilmadi</div>';
+        return;
+    }
+    const d = await r.json();
+
+    const initial = (d.user.name || '?').charAt(0).toUpperCase();
+
+    let html = `
+        <div class="prof">
+            <div class="avatar">${initial}</div>
+            <div class="prof-n">${esc(d.user.name)}</div>
+            <div class="prof-u">${d.user.username ? '@' + esc(d.user.username) : 'Foydalanuvchi'}</div>
+            <div class="prof-stats">
+                <div class="ps"><div class="v">${d.total_points}</div><div class="l">Ballar</div></div>
+                <div class="ps blue"><div class="v">${d.total_attempts}</div><div class="l">Yechilgan test</div></div>
+            </div>
+        </div>
+    `;
+
+    html += `<a href="/webapp/my-orders" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:14px;box-shadow:var(--shadow);margin-bottom:12px;color:#111;text-decoration:none;font-weight:600;font-size:.9rem">
+        <span style="font-size:1.3rem">📦</span> Mening buyurtmalarim
+        <span style="margin-left:auto;color:var(--muted)">→</span>
+    </a>`;
+
+    if (d.recent.length) {
+        html += '<div class="section-t">SO\'NGGI URINISHLAR</div>';
+        html += d.recent.map(a => `
+            <div class="rec-row">
+                <div class="rec-ic ${a.percentage>=60?'rec-pass':'rec-fail'}">${a.percentage}%</div>
+                <div class="rec-body">
+                    <div class="rec-t">${esc(a.quiz_title)}</div>
+                    <div class="rec-s">${a.score}/${a.total} · ${MK.fmtTime(a.time_taken_seconds)} · ${a.date}</div>
+                </div>
+                <div class="rec-p">+${a.points}</div>
+            </div>
+        `).join('');
+    } else {
+        html += `
+            <div class="empty">
+                <div class="empty-ic">📝</div>
+                <div class="empty-t">Hali test yechmagansiz</div>
+                <div class="empty-d">Modulni tanlab, birinchi testni yeching</div>
+            </div>`;
+    }
+
+    document.getElementById('content').innerHTML = html;
+})();
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "_base.html" %}
+{% set nav_active = 'me' %}
+{% block title %}Buyurtmalarim — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.order-card{background:#fff;border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:12px;position:relative;overflow:hidden}
+.order-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.order-card.pending::before{background:#F59E0B}
+.order-card.confirmed::before{background:#3B82F6}
+.order-card.processing::before{background:#8B5CF6}
+.order-card.shipped::before{background:#10B981}
+.ord-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.ord-title{font-weight:800;font-size:.95rem;color:#111}
+.ord-id{font-size:.72rem;color:var(--muted);margin-top:2px}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700}
+.badge-pending{background:#FEF3C7;color:#92400E}
+.badge-confirmed{background:#DBEAFE;color:#1E40AF}
+.badge-processing{background:#EDE9FE;color:#5B21B6}
+.badge-shipped{background:#D1FAE5;color:#065F46}
+.ord-price{font-size:.88rem;font-weight:700;color:var(--green-dark);margin-bottom:8px}
+.timeline{margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6}
+.tl-step{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.8rem;color:var(--muted)}
+.tl-step.done{color:#111;font-weight:600}
+.tl-dot{width:18px;height:18px;border-radius:50%;background:#e5e7eb;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem}
+.tl-dot.done{background:var(--green);color:#fff}
+.tl-dot.active{background:#3B82F6;color:#fff}
+.ord-delivery{margin-top:10px;font-size:.8rem;color:var(--muted);background:#f8fafc;border-radius:10px;padding:8px 12px}
+.ord-delivery b{color:#111}
+.ord-date{font-size:.72rem;color:var(--muted);margin-top:8px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/me" class="hdr-back">←</a>
+  <div class="hdr-title">Mening buyurtmalarim</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+  <div class="empty" style="padding:40px 20px">Yuklanmoqda…</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const STEPS = [
+  {key:'pending',   label:"To'lov kutilmoqda",    icon:"⏳"},
+  {key:'confirmed', label:"To'lov tasdiqlandi",   icon:"✅"},
+  {key:'processing',label:"Manzil qabul qilindi", icon:"📋"},
+  {key:'shipped',   label:"Yo'lda / Yetkazildi",  icon:"🚚"},
+];
+const STATUS_ORDER = {pending:0, confirmed:1, processing:2, shipped:3};
+
+function esc(s){const d=document.createElement('div');d.textContent=s??'';return d.innerHTML;}
+function fmt(n){return Number(n).toLocaleString('uz-UZ')+' so\'m';}
+
+function renderTimeline(status){
+  const cur = STATUS_ORDER[status] ?? 0;
+  return STEPS.map((s,i)=>{
+    const done = i <= cur;
+    const active = i === cur;
+    return `<div class="tl-step ${done?'done':''}">
+      <div class="tl-dot ${done?(active?'active':'done'):''}">
+        ${done ? (active ? s.icon : '✓') : ''}
+      </div>
+      <span>${s.label}</span>
+    </div>`;
+  }).join('');
+}
+
+(async function(){
+  await MK.ensureAuth();
+  const r = await fetch('/api/v1/webapp/my-orders', {headers: MK.authHeaders()});
+  const el = document.getElementById('content');
+  if(!r.ok){el.innerHTML='<div class="empty">Ma\'lumot yuklanmadi</div>';return;}
+  const orders = await r.json();
+  if(!orders.length){
+    el.innerHTML='<div class="empty"><div class="empty-t">Buyurtmalar yo\'q</div><div class="empty-s">Kitob sotib olish uchun botga /kitoblar yuboring</div></div>';
+    return;
+  }
+  el.innerHTML = orders.map(o=>`
+    <div class="order-card ${o.status}">
+      <div class="ord-head">
+        <div>
+          <div class="ord-title">${esc(o.book_title)}</div>
+          <div class="ord-id">Buyurtma #${o.id}</div>
+        </div>
+        <span class="badge badge-${o.status}">${esc(o.status_label)}</span>
+      </div>
+      <div class="ord-price">${fmt(o.book_price)}</div>
+      <div class="timeline">${renderTimeline(o.status)}</div>
+      ${o.delivery_name ? `<div class="ord-delivery">
+        <b>Yetkazib berish:</b> ${esc(o.delivery_name)} · ${esc(o.delivery_phone||'')} · ${esc(o.delivery_address||'')}
+      </div>` : ''}
+      <div class="ord-date">${esc(o.created_at)}</div>
+    </div>
+  `).join('');
+})();
+</script>
+{% endblock %}

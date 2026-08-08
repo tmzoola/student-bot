@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyurtmalar — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.topbar{background:#1a1a2e;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px}
+.topbar a{color:#a0aec0;text-decoration:none;font-size:.85rem}
+.topbar h1{font-size:1.1rem;font-weight:700}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px}
+.tools{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:8px 18px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:.85rem;font-weight:600;cursor:pointer;transition:.15s;color:#374151}
+.filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.03em}
+.badge-pending{background:#FEF3C7;color:#92400E}
+.badge-confirmed{background:#DBEAFE;color:#1E40AF}
+.badge-processing{background:#EDE9FE;color:#5B21B6}
+.badge-shipped{background:#D1FAE5;color:#065F46}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+thead{background:#f8fafc}
+th{padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em}
+td{padding:12px 16px;font-size:.85rem;border-top:1px solid #f3f4f6;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.act-btn{padding:6px 14px;border-radius:8px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}
+.btn-confirm{background:#3B82F6;color:#fff}
+.btn-confirm:hover{background:#2563EB}
+.btn-ship{background:#10B981;color:#fff}
+.btn-ship:hover{background:#059669}
+.btn-detail{background:#f3f4f6;color:#374151}
+.btn-detail:hover{background:#e5e7eb}
+.btn-del{background:#fee2e2;color:#b91c1c;margin-left:6px}
+.btn-del:hover{background:#fecaca}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px 24px;max-width:440px;width:calc(100% - 32px)}
+.modal h3{font-size:1.05rem;font-weight:700;margin-bottom:16px}
+.modal .row{margin-bottom:10px;font-size:.88rem}
+.modal .lbl{font-size:.72rem;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.modal .val{font-weight:600;color:#111}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.empty{padding:40px;text-align:center;color:#9ca3af;font-size:.9rem}
+.theme-btn{margin-left:auto;background:transparent;border:none;color:#a0aec0;font-size:1rem;cursor:pointer;padding:6px 10px;border-radius:8px}
+.theme-btn:hover{background:rgba(255,255,255,.1)}
+
+html[data-theme="dark"] body{background:#0f1420;color:#cdd3e0}
+html[data-theme="dark"] .topbar{background:#0a0e18;border-bottom:1px solid rgba(255,255,255,.05)}
+html[data-theme="dark"] .filter-btn{background:#1a2035;border-color:rgba(255,255,255,.1);color:#a3adc2}
+html[data-theme="dark"] .filter-btn.active{background:#6c63f6;border-color:#6c63f6;color:#fff}
+html[data-theme="dark"] table{background:#1a2035;box-shadow:none}
+html[data-theme="dark"] thead{background:#131828}
+html[data-theme="dark"] th{color:#7c8aa8}
+html[data-theme="dark"] td{border-top-color:rgba(255,255,255,.05);color:#a3adc2}
+html[data-theme="dark"] tr:hover td{background:rgba(255,255,255,.03)}
+html[data-theme="dark"] td b,html[data-theme="dark"] td div[style*="font-weight:600"]{color:#e2e8f0}
+html[data-theme="dark"] .btn-detail{background:#1e2a42;color:#a3adc2}
+html[data-theme="dark"] .btn-detail:hover{background:#26314f}
+html[data-theme="dark"] .modal{background:#1a2035;border:1px solid rgba(255,255,255,.08)}
+html[data-theme="dark"] .modal h3{color:#fff}
+html[data-theme="dark"] .modal .lbl{color:#7c8aa8}
+html[data-theme="dark"] .modal .val{color:#e2e8f0}
+html[data-theme="dark"] .modal textarea{background:#131828;border-color:rgba(255,255,255,.1);color:#fff}
+html[data-theme="dark"] .empty{color:#6d7a94}
+html[data-theme="dark"] .badge-pending{background:rgba(251,191,36,.15);color:#fbbf24}
+html[data-theme="dark"] .badge-confirmed{background:rgba(96,165,250,.15);color:#60a5fa}
+html[data-theme="dark"] .badge-processing{background:rgba(167,139,250,.15);color:#a78bfa}
+html[data-theme="dark"] .badge-shipped{background:rgba(52,211,153,.15);color:#34d399}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/admin/">← Admin panel</a>
+  <h1>📦 Buyurtmalar boshqaruvi</h1>
+  <button class="theme-btn" id="theme-toggle" title="Yorug'/Tungi rejim">🌙</button>
+</div>
+
+<div class="wrap">
+  <div class="tools">
+    <button class="filter-btn active" onclick="filter('all')">Barchasi</button>
+    <button class="filter-btn" onclick="filter('pending')">⏳ Kutilmoqda</button>
+    <button class="filter-btn" onclick="filter('confirmed')">✅ Tasdiqlangan</button>
+    <button class="filter-btn" onclick="filter('processing')">📦 Joʻnatilmoqda</button>
+    <button class="filter-btn" onclick="filter('shipped')">🚀 Yetkazildi</button>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Foydalanuvchi</th>
+        <th>Kitob</th>
+        <th>Holat</th>
+        <th>Manzil</th>
+        <th>Sana</th>
+        <th>Amal</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="7" class="empty">Yuklanmoqda…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Detail / confirm modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="m-title">Buyurtma #—</h3>
+    <div class="row"><div class="lbl">Foydalanuvchi</div><div class="val" id="m-user"></div></div>
+    <div class="row"><div class="lbl">Kitob</div><div class="val" id="m-book"></div></div>
+    <div class="row"><div class="lbl">Narx</div><div class="val" id="m-price"></div></div>
+    <div class="row"><div class="lbl">Holat</div><div class="val" id="m-status"></div></div>
+    <div class="row"><div class="lbl">Ism Familya</div><div class="val" id="m-name"></div></div>
+    <div class="row"><div class="lbl">Telefon</div><div class="val" id="m-phone"></div></div>
+    <div class="row"><div class="lbl">Manzil</div><div class="val" id="m-address"></div></div>
+    <div class="row"><div class="lbl">Eslatma</div><textarea id="m-note" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:.85rem;resize:vertical" rows="2"></textarea></div>
+    <div class="modal-actions">
+      <button id="m-confirm" class="act-btn btn-confirm" style="display:none" onclick="doAction('confirm')">✅ To'lovni tasdiqlash</button>
+      <button id="m-ship" class="act-btn btn-ship" style="display:none" onclick="doAction('ship')">🚚 Jo'natildi</button>
+      <button class="act-btn btn-detail" onclick="closeModal()">Yopish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUS_LABELS = {
+  pending: "<span class='badge badge-pending'>⏳ Kutilmoqda</span>",
+  confirmed: "<span class='badge badge-confirmed'>✅ Tasdiqlangan</span>",
+  processing: "<span class='badge badge-processing'>📦 Joʻnatilmoqda</span>",
+  shipped: "<span class='badge badge-shipped'>🚀 Yetkazildi</span>",
+};
+
+let orders = [];
+let current = null;
+let currentFilter = 'all';
+
+function esc(s){ const d=document.createElement('div');d.textContent=s??'—';return d.innerHTML; }
+function fmt(n){ return Number(n).toLocaleString('uz-UZ') + ' so\'m'; }
+function fmtDate(s){ return s ? new Date(s).toLocaleDateString('uz-UZ',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'; }
+
+async function load(){
+  const r = await fetch('/admin-tools/orders/list');
+  if(!r.ok){document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="empty">Xatolik yuz berdi</td></tr>';return;}
+  orders = await r.json();
+  render();
+}
+
+function filter(status){
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function render(){
+  const list = currentFilter === 'all' ? orders : orders.filter(o=>o.status===currentFilter);
+  if(!list.length){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="empty">Buyurtmalar yo\'q</td></tr>';
+    return;
+  }
+  document.getElementById('tbody').innerHTML = list.map(o=>`
+    <tr>
+      <td><b>#${o.id}</b></td>
+      <td>
+        <div style="font-weight:600">${esc(o.user_name)}</div>
+        <div style="font-size:.75rem;color:#6b7280">${o.user_phone ? esc(o.user_phone) : esc('@'+o.user_username)}</div>
+      </td>
+      <td>${esc(o.book_title)}<br><span style="font-size:.75rem;color:#6b7280">${fmt(o.book_price)}</span></td>
+      <td>${STATUS_LABELS[o.status]||o.status}</td>
+      <td style="font-size:.8rem;color:#374151">${o.delivery_address ? esc(o.delivery_address.substring(0,40))+'…' : '—'}</td>
+      <td style="font-size:.78rem;color:#6b7280">${fmtDate(o.created_at)}</td>
+      <td>
+        <button class="act-btn btn-detail" onclick="openModal(${o.id})">Ko'rish</button>
+        <button class="act-btn btn-del" onclick="deleteOrder(${o.id})" title="O'chirish">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteOrder(id){
+  if(!confirm(`#${id} buyurtmani o'chirmoqchimisiz?`)) return;
+  const r = await fetch(`/admin-tools/orders/${id}/delete`, {method:'POST'});
+  if(!r.ok){alert('O\'chirib bo\'lmadi');return;}
+  await load();
+}
+
+function openModal(id){
+  current = orders.find(o=>o.id===id);
+  if(!current) return;
+  document.getElementById('m-title').textContent = 'Buyurtma #' + current.id;
+  document.getElementById('m-user').textContent = current.user_name + (current.user_phone ? ' · ' + current.user_phone : '');
+  document.getElementById('m-book').textContent = current.book_title;
+  document.getElementById('m-price').textContent = fmt(current.book_price);
+  document.getElementById('m-status').innerHTML = STATUS_LABELS[current.status] || current.status;
+  document.getElementById('m-name').textContent = current.delivery_name || '—';
+  document.getElementById('m-phone').textContent = current.delivery_phone || '—';
+  document.getElementById('m-address').textContent = current.delivery_address || '—';
+  document.getElementById('m-note').value = current.admin_note || '';
+  document.getElementById('m-confirm').style.display = current.status === 'pending' ? '' : 'none';
+  document.getElementById('m-ship').style.display = current.status === 'processing' ? '' : 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('open'); current=null; }
+
+async function doAction(action){
+  if(!current) return;
+  const note = document.getElementById('m-note').value.trim();
+  const r = await fetch(`/admin-tools/orders/${current.id}/${action}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({note})
+  });
+  const d = await r.json();
+  if(!r.ok){ alert(d.detail || 'Xatolik'); return; }
+  closeModal();
+  await load();
+}
+
+document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+(function(){
+  const KEY='malaka-admin-theme';
+  const btn=document.getElementById('theme-toggle');
+  function ico(t){return t==='dark'?'☀️':'🌙';}
+  btn.textContent=ico(document.documentElement.getAttribute('data-theme')||'light');
+  btn.addEventListener('click',()=>{
+    const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next);}catch(e){}
+    btn.textContent=ico(next);
+  });
+})();
+
+load();
+</script>
+</body>
+</html>

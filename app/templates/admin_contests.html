@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yutuqli testlar — Muslima Darmonova Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f6fa;color:#3b4256;min-height:100vh}
+.top{background:#fff;border-bottom:1px solid rgba(0,0,0,.07);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#111827;font-weight:700;font-size:1rem;text-decoration:none}
+.brand-ic{width:32px;height:32px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.back-link{color:#6b7280;text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px}
+.back-link:hover{background:rgba(0,0,0,.04);color:#111827}
+.btn{border:none;cursor:pointer;font-weight:600;border-radius:9px;padding:10px 18px;font-size:.85rem;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:.15s}
+.btn-primary{background:linear-gradient(135deg,#6c63f6,#8b5cf6);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(108,99,246,.35)}
+.btn-ghost{background:#fff;color:#3b4256;border:1px solid rgba(0,0,0,.14)}
+.btn-ghost:hover{background:#f1f2f7}
+.btn-danger{background:transparent;color:#b91c1c;border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.08)}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.wrap{max-width:1200px;margin:0 auto;padding:28px}
+.page-title{font-size:1.7rem;font-weight:800;color:#111827;margin:0 0 4px}
+.page-sub{color:#6b7280;font-size:.9rem;margin:0 0 20px}
+.head-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;gap:14px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.card{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,24,40,.06);display:flex;flex-direction:column;gap:10px}
+.card-title{font-size:1rem;font-weight:800;color:#111827;margin:0}
+.card-desc{color:#6b7280;font-size:.82rem;line-height:1.4}
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;width:fit-content}
+.st-live{background:rgba(34,197,138,.14);color:#15803d}
+.st-upcoming{background:rgba(58,109,181,.12);color:#3A6DB5}
+.st-finished{background:rgba(108,99,246,.12);color:#6c63f6}
+.st-inactive{background:rgba(0,0,0,.06);color:#6b7280}
+.dot{width:6px;height:6px;background:currentColor;border-radius:50%}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:.78rem;color:#6b7280;margin-top:4px}
+.meta b{color:#111827;font-weight:700}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.empty{text-align:center;padding:60px 20px;color:#9aa2b8;background:#fff;border:1px dashed rgba(0,0,0,.1);border-radius:14px}
+
+html[data-theme="dark"] body{background:#0b0e18;color:#cdd3e0}
+html[data-theme="dark"] .top{background:#0a0e18;border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .brand,html[data-theme="dark"] .page-title,html[data-theme="dark"] .card-title{color:#fff}
+html[data-theme="dark"] .card{background:#1a2035;border-color:rgba(255,255,255,.05);box-shadow:none}
+html[data-theme="dark"] .card-desc,html[data-theme="dark"] .meta{color:#7c8aa8}
+html[data-theme="dark"] .meta b{color:#fff}
+html[data-theme="dark"] .btn-ghost{background:transparent;color:#b8c1d3;border-color:rgba(255,255,255,.1)}
+html[data-theme="dark"] .btn-ghost:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .empty{background:#1a2035;border-color:rgba(255,255,255,.08);color:#7c8aa8}
+html[data-theme="dark"] .back-link{color:#7c8aa8}
+html[data-theme="dark"] .back-link:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .page-sub{color:#7c8aa8}
+html[data-theme="dark"] .st-inactive{background:rgba(255,255,255,.06);color:#7c8aa8}
+html[data-theme="dark"] .st-live{color:#4ade80}
+html[data-theme="dark"] .st-upcoming{color:#93c5fd}
+</style>
+</head>
+<body>
+<div class="top">
+    <div class="top-left">
+        <a href="/admin/" class="brand"><span class="brand-ic"><i class="fa fa-trophy"></i></span> Muslima Darmonova</a>
+        <a href="/admin/" class="back-link"><i class="fa fa-arrow-left"></i> Admin</a>
+    </div>
+    <button class="back-link" id="theme-toggle" title="Yorug'/Tungi rejim" style="border:none;background:transparent;cursor:pointer;font-family:inherit"><i class="fa fa-moon"></i></button>
+</div>
+
+<div class="wrap">
+    <div class="head-row">
+        <div>
+            <h1 class="page-title"><i class="fa fa-trophy" style="color:#f59e0b"></i> Yutuqli testlar</h1>
+            <p class="page-sub">Vaqtli yutuqli musobaqalarni yaratish va boshqarish. Har oy / hafta / ixtiyoriy sanada.</p>
+        </div>
+        <a href="/admin-tools/contests/new" class="btn btn-primary"><i class="fa fa-plus"></i> Yangi yaratish</a>
+    </div>
+
+    {% if not contests %}
+        <div class="empty">
+            <div style="font-size:2rem;margin-bottom:8px">🏆</div>
+            <div style="font-weight:700;margin-bottom:4px">Hozircha yutuqli test yo'q</div>
+            <div style="font-size:.85rem">Birinchi musobaqani yarating.</div>
+        </div>
+    {% else %}
+    <div class="grid">
+        {% for c in contests %}
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                <h3 class="card-title">{{ c.title }}</h3>
+                {% set st = c.status %}
+                <span class="status st-{{ st }}">
+                    <span class="dot"></span>
+                    {% if st == 'live' %}Live
+                    {% elif st == 'upcoming' %}Kutilmoqda
+                    {% elif st == 'finished' %}Tugadi
+                    {% else %}O'chirilgan{% endif %}
+                </span>
+            </div>
+            {% if c.prize %}<div class="card-desc">🎁 {{ c.prize }}</div>{% endif %}
+
+            <div class="meta">
+                <div>Boshlanish: <b><span class="dt" data-iso="{{ c.start_at }}">—</span></b></div>
+                <div>Tugash: <b><span class="dt" data-iso="{{ c.end_at }}">—</span></b></div>
+                <div>Savollar: <b>{{ c.questions_saved }} / {{ c.question_count }}</b></div>
+                <div>Ishtirokchilar: <b>{{ c.participants }}</b></div>
+            </div>
+
+            <div class="card-actions">
+                <a href="/admin-tools/contests/{{ c.id }}/winners" class="btn btn-ghost btn-sm"><i class="fa fa-medal"></i> G'oliblar</a>
+                <a href="/admin-tools/contests/{{ c.id }}/export" class="btn btn-ghost btn-sm"><i class="fa fa-file-excel"></i> Excel</a>
+                <a href="/admin-tools/contests/{{ c.id }}/edit" class="btn btn-ghost btn-sm"><i class="fa fa-pen"></i> Tahrirlash</a>
+                <button class="btn btn-danger btn-sm" onclick="del({{ c.id }}, '{{ c.title|replace("'", "\\'") }}')"><i class="fa fa-trash"></i></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.dt').forEach(el => {
+    const iso = el.dataset.iso;
+    if (!iso) return;
+    const d = new Date(iso);
+    if (isNaN(d)) { el.textContent = iso; return; }
+    el.textContent = d.toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+});
+
+async function del(id, title){
+    if (!confirm(`"${title}" o'chirilsinmi? Barcha ishtirokchilar natijalari ham o'chadi.`)) return;
+    const r = await fetch(`/admin-tools/contests/${id}/delete`, { method: 'POST' });
+    if (r.ok) location.reload();
+    else alert("Xatolik");
+}
+
+(function(){
+    const KEY='malaka-admin-theme';
+    function ico(t){return t==='dark'?'fa-sun':'fa-moon';}
+    const btn=document.getElementById('theme-toggle');
+    btn.querySelector('i').className='fa '+ico(document.documentElement.getAttribute('data-theme')||'light');
+    btn.addEventListener('click',()=>{
+        const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+        document.documentElement.setAttribute('data-theme',next);
+        try{localStorage.setItem(KEY,next);}catch(e){}
+        btn.querySelector('i').className='fa '+ico(next);
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{% extends "_base.html" %}
+{% block title %}Testlar — Muslima Darmonova{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+.q-card{background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);display:block;transition:.15s}
+.q-card:active{transform:scale(.98)}
+.q-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.q-ic{width:42px;height:42px;border-radius:11px;background:var(--blue-lt);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.q-title{flex:1;font-size:.95rem;font-weight:700;color:#111}
+.q-meta{display:flex;gap:8px;flex-wrap:wrap}
+.q-tag{background:#f4f5f2;color:#555;font-size:.72rem;font-weight:600;padding:5px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px}
+.q-tag svg{width:11px;height:11px}
+.q-tag.time{background:#FFF4E6;color:#B5812E}
+.q-tag.qs{background:var(--blue-lt);color:var(--blue)}
+.q-start{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;background:#f4f5f2;color:#333;font-size:.92rem;font-weight:600;padding:12px;border-radius:12px}
+.q-start svg{width:14px;height:14px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/modules" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </a>
+  <div>
+    <div class="hdr-title" id="hdr-title">Testlar</div>
+    <div class="hdr-sub" id="hdr-sub">…</div>
+  </div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="list"></div>
+<div id="empty" class="empty" style="display:none">
+  <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+  <div class="empty-t">Testlar hozircha yo'q</div>
+  <div class="empty-d">Tez orada qo'shiladi</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const MODULE_ID = {{ module_id }};
+
+(async function(){
+    try {
+        const r = await fetch(`/api/v1/webapp/modules/${MODULE_ID}/quizzes`);
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+
+        document.getElementById('hdr-title').textContent = data.module.title;
+        document.getElementById('hdr-sub').textContent = `${data.quizzes.length} ta test`;
+
+        if (!data.quizzes.length) {
+            document.getElementById('empty').style.display = '';
+            return;
+        }
+
+        document.getElementById('list').innerHTML = data.quizzes.map(q => `
+            <a href="/webapp/quiz/${q.id}" class="q-card">
+                <div class="q-top">
+                    <div class="q-ic">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                        </svg>
+                    </div>
+                    <div class="q-title">${esc(q.title)}</div>
+                    <div class="card-arrow">›</div>
+                </div>
+                <div class="q-meta">
+                    <span class="q-tag qs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+                        ${q.question_count} savol
+                    </span>
+                    <span class="q-tag time">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${MK.fmtTime(q.time_limit_seconds)}
+                    </span>
+                </div>
+                <div class="q-start">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                    Boshlash
+                </div>
+            </a>
+        `).join('');
+    } catch (e) {
+        document.getElementById('empty').style.display = '';
+    }
+})();
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+{% endblock %}

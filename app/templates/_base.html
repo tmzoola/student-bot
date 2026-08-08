@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>{% block title %}Muslima Darmonova{% endblock %}</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --green:#3DB66A; --green-dark:#2E9A57;
+  --blue:#3A6DB5; --blue-lt:#E3EBF8;
+  --amber:#B5812E; --amber-lt:#F8F1E3;
+  --pink:#E94E77; --pink-lt:#FBE5EC;
+  --purple:#8B5CF6; --purple-lt:#EEE7FE;
+  --teal:#0EA5E9; --teal-lt:#E0F2FE;
+  --bg:#EEF3EA; --card:#fff;
+  --text:#111; --muted:#666; --muted-lt:#999;
+  --shadow:0 1px 4px rgba(0,0,0,.06);
+  --shadow-hover:0 4px 16px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh;padding-bottom:80px}
+a{text-decoration:none;color:inherit}
+button{border:none;background:none;cursor:pointer;font-family:inherit}
+img,svg{display:block}
+
+/* ─── Header (main pages) ───────────────────── */
+.hdr{background:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;border-bottom:1px solid rgba(0,0,0,.03)}
+.hdr-back{width:38px;height:38px;background:#f4f5f2;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:15px}
+.hdr-back:active{transform:scale(.95)}
+.hdr-title{font-size:1.02rem;font-weight:700;color:#111}
+.hdr-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+.hdr-right{width:38px;text-align:right;color:var(--muted)}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo-ic{width:36px;height:36px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff}
+.hdr-logo-ic svg{width:20px;height:20px;fill:#fff}
+.hdr-logo-tx{font-size:1.05rem;font-weight:800}
+.btn-login{background:#111;color:#fff;padding:9px 18px;border-radius:20px;font-size:.8rem;font-weight:600}
+
+/* ─── Container ─────────────────────────────── */
+.wrap{padding:20px 18px}
+
+/* ─── Buttons ───────────────────────────────── */
+.btn{display:block;width:100%;text-align:center;padding:15px;border-radius:14px;font-size:.95rem;font-weight:700;transition:.15s}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(61,182,106,.35)}
+.btn-primary:active{transform:scale(.98);box-shadow:0 2px 8px rgba(61,182,106,.25)}
+.btn-secondary{background:#fff;color:#111;box-shadow:var(--shadow)}
+.btn-secondary:active{transform:scale(.98)}
+
+/* ─── Section titles ────────────────────────── */
+.section-t{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:6px 4px 12px}
+.section-t.big{font-size:1.05rem;text-transform:none;color:var(--text);letter-spacing:0;margin-bottom:10px}
+
+/* ─── Cards ─────────────────────────────────── */
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);transition:.15s;display:block}
+.card:active{transform:scale(.985);box-shadow:var(--shadow-hover)}
+.card-row{display:flex;align-items:center;gap:14px}
+.card-ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem}
+.card-body{flex:1;min-width:0}
+.card-title{font-size:.94rem;font-weight:700;color:#111;margin-bottom:3px}
+.card-sub{font-size:.78rem;color:var(--muted);line-height:1.4}
+.card-arrow{color:#c8cdd4;font-size:.9rem}
+
+/* ─── Empty state ───────────────────────────── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted-lt)}
+.empty-ic{width:74px;height:74px;background:#fff;border-radius:20px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:#c8cdd4;box-shadow:var(--shadow)}
+.empty-t{font-size:1rem;font-weight:700;color:#111;margin-bottom:4px}
+.empty-d{font-size:.83rem;color:var(--muted)}
+
+/* ─── Bottom nav ────────────────────────────── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;box-shadow:0 -2px 12px rgba(0,0,0,.05);z-index:10}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:14px;color:var(--muted-lt);flex:1;max-width:100px;transition:.15s}
+.bnav-item.active{color:var(--green);background:#E9F5EE}
+.bnav-item:active{transform:scale(.94)}
+.bnav-item svg{width:22px;height:22px}
+.bnav-item span{font-size:.68rem;font-weight:600}
+
+/* ─── Stats row (light) ─────────────────────── */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+.stat-c{border-radius:14px;padding:14px 8px;text-align:center}
+.stat-c .v{font-size:1.35rem;font-weight:800;line-height:1.1;margin-bottom:2px}
+.stat-c .l{font-size:.7rem;color:#777;line-height:1.2}
+.stat-green{background:#E4F3EB}.stat-green .v{color:var(--green-dark)}
+.stat-blue{background:var(--blue-lt)}.stat-blue .v{color:var(--blue)}
+.stat-amber{background:var(--amber-lt)}.stat-amber .v{color:var(--amber)}
+
+/* ─── Badge ─────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:20px;padding:5px 12px;font-size:.75rem;color:#333;box-shadow:var(--shadow)}
+.badge-dot{width:7px;height:7px;background:var(--green);border-radius:50%;flex-shrink:0}
+
+/* Skeleton loader */
+.skel{background:linear-gradient(90deg,#eee 0%,#f5f5f5 50%,#eee 100%);background-size:200% 100%;animation:skel 1.4s infinite;border-radius:8px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ─── Motion ────────────────────────────────── */
+.wrap{animation:pageIn .3s ease both}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% block header %}{% endblock %}
+
+<div class="wrap">
+{% block content %}{% endblock %}
+</div>
+
+{% block bottom_nav %}
+<nav class="bnav">
+  <a href="/webapp/modules" class="bnav-item {% if nav_active == 'home' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4v-6h-6v6H5a2 2 0 01-2-2z"/></svg>
+    <span>Uy</span>
+  </a>
+  <a href="/webapp/daily" class="bnav-item {% if nav_active == 'tests' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span>Testlar</span>
+  </a>
+  <a href="/webapp/contests" class="bnav-item {% if nav_active == 'contests' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4M6 4h12v6a6 6 0 01-12 0V4zM6 4H4a2 2 0 000 4h2m12-4h2a2 2 0 010 4h-2"/></svg>
+    <span>Yutuq</span>
+  </a>
+  <a href="/webapp/books" class="bnav-item {% if nav_active == 'books' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg>
+    <span>Kitob</span>
+  </a>
+  <a href="/webapp/leaderboard" class="bnav-item {% if nav_active == 'leaderboard' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4M6 4h12v6a6 6 0 01-12 0V4zM6 4H4a2 2 0 000 4h2m12-4h2a2 2 0 010 4h-2"/></svg>
+    <span>Reyting</span>
+  </a>
+  <a href="/webapp/me" class="bnav-item {% if nav_active == 'me' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+    <span>Men</span>
+  </a>
+</nav>
+{% endblock %}
+
+<script>
+/* ═══ Telegram WebApp bootstrap + shared helpers ═════════════════ */
+(function(){
+    /* Patch fetch to bypass ngrok's free-tier browser interstitial.
+       Without this, XHR calls receive the HTML "You are about to visit"
+       page instead of JSON, and every data fetch silently fails. */
+    const _fetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+        init.headers = Object.assign({}, init.headers, { 'ngrok-skip-browser-warning': 'true' });
+        // Session cookie'ni har chaqiruvda yuborish uchun.
+        if (!init.credentials) init.credentials = 'same-origin';
+        return _fetch(input, init);
+    };
+
+    const tg = window.Telegram?.WebApp;
+    if (tg){ tg.ready(); tg.expand(); }
+
+    // Eski (kalitsiz) keshni bir marta tozalash — u nomlarni oqizardi.
+    try { sessionStorage.removeItem('mk_user'); } catch(e){}
+
+    // Telegram initData'ni URL hash orqali beradi (#tgWebAppData=...).
+    // Sahifadan sahifaga o'tganda hash yo'qoladi — shu sababli har ichki
+    // <a href> click'ida joriy hash'ni meros qilib beramiz. Bu kesh emas,
+    // shunchaki URL manipulyatsiyasi — server har chaqiruvda initData
+    // imzosini qayta tekshiradi.
+    const currentHash = location.hash || '';
+    if (currentHash) {
+        document.addEventListener('click', function(ev){
+            const a = ev.target.closest && ev.target.closest('a[href]');
+            if (!a) return;
+            const href = a.getAttribute('href');
+            if (!href || href.startsWith('#') || /^[a-z]+:/i.test(href)) return;
+            try {
+                const u = new URL(href, location.href);
+                if (u.origin !== location.origin) return;
+                if (!u.hash) {
+                    u.hash = currentHash;
+                    a.setAttribute('href', u.pathname + u.search + u.hash);
+                }
+            } catch(e){}
+        }, true);
+    }
+
+    // Joriy Telegram foydalanuvchisining ID'si. Kesh SHU ID bilan bog'lanadi.
+    const tgUserId = tg?.initDataUnsafe?.user?.id || null;
+    const CACHE_KEY = tgUserId ? `mk_user_${tgUserId}` : null;
+
+    window.MK = {
+        user: null,
+        initData: tg?.initData || '',
+
+        async ensureAuth(){
+            if (this.user) return this.user;
+
+            // Kesh faqat aynan shu Telegram foydalanuvchisi uchun.
+            if (CACHE_KEY) {
+                const cached = sessionStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    try {
+                        const u = JSON.parse(cached);
+                        if (u && u.telegram_id === tgUserId) {
+                            this.user = u;
+                            return this.user;
+                        }
+                    } catch(e){}
+                }
+            }
+
+            const tgUser = tg?.initDataUnsafe?.user;
+            const payload = this.initData
+                ? { init_data: this.initData }
+                : (tgUser ? { user: tgUser } : {});
+            // Bo'sh payload bo'lsa ham /auth chaqiramiz — server session cookie
+            // orqali (landing sahifada o'rnatilgan) sizni topa oladi.
+
+            try {
+                const r = await fetch('/api/v1/webapp/auth', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(payload),
+                    credentials: 'same-origin',
+                });
+                if (r.status === 403) { this.showBlocked(); return null; }
+                if (r.ok) {
+                    this.user = await r.json();
+                    // must_subscribe holatida keshlamang — foydalanuvchi kanalga
+                    // qo'shilgach yangi holat qayta olinishi kerak.
+                    if (
+                        CACHE_KEY
+                        && this.user
+                        && this.user.telegram_id === tgUserId
+                        && this.user.must_subscribe !== true
+                    ) {
+                        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(this.user)); } catch(e){}
+                    }
+                }
+            } catch (e) { console.warn('auth failed', e); }
+
+            // Gate: unregistered users must complete /webapp/register first
+            if (this.user && this.user.is_registered === false) {
+                const path = location.pathname;
+                if (!path.endsWith('/webapp/register') && !path.endsWith('/webapp/register/')) {
+                    location.href = '/webapp/register';
+                    return this.user;
+                }
+            }
+            // Gate: barcha faol kuzatiladigan chatlarga a'zo bo'lish majburiy.
+            if (this.user && this.user.must_subscribe === true) {
+                const path = location.pathname;
+                const allowed = ['/webapp/subscribe', '/webapp/register'];
+                if (!allowed.some(p => path === p || path === p + '/')) {
+                    location.href = '/webapp/subscribe';
+                    return this.user;
+                }
+            }
+            return this.user;
+        },
+
+        authHeaders(){
+            const h = {};
+            if (this.initData) h['X-Init-Data'] = this.initData;
+            if (this.user?.telegram_id) h['X-Telegram-Id'] = String(this.user.telegram_id);
+            return h;
+        },
+
+        showBlocked(){
+            document.body.innerHTML =
+                '<div style="position:fixed;inset:0;display:flex;flex-direction:column;'
+                + 'align-items:center;justify-content:center;text-align:center;padding:32px;'
+                + 'gap:14px;background:#F9FAFB;color:#111;font-family:inherit">'
+                + '<div style="font-size:56px">⛔</div>'
+                + '<div style="font-size:1.2rem;font-weight:800">Siz bloklangansiz</div>'
+                + '<div style="font-size:.9rem;color:#6b7280;max-width:320px">'
+                + 'Hisobingiz administrator tomonidan bloklangan. '
+                + 'Iltimos, bot administratori bilan bog\'laning.</div></div>';
+        },
+
+        fmtTime(s){
+            const m = Math.floor(s/60), r = s%60;
+            return `${m}:${String(r).padStart(2,'0')}`;
+        },
+
+        haptic(type='light'){
+            try {
+                const h = tg?.HapticFeedback;
+                if (!h) return;
+                if (['success','error','warning'].includes(type)) h.notificationOccurred(type);
+                else h.impactOccurred(type);
+            } catch(e){}
+        }
+    };
+
+    MK.ensureAuth();
+})();
+</script>
+{% block script %}{% endblock %}
+</body>
+</html>

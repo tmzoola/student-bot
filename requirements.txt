@@ -1,0 +1,24 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+jinja2==3.1.4
+python-multipart==0.0.9
+aiofiles==24.1.0
+
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+
+starlette-admin==0.14.1
+babel==2.16.0
+itsdangerous==2.2.0
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+
+aiogram==3.15.0
+openpyxl==3.1.5
+
+# Multi-worker uchun umumiy kesh (subscription state, va h.k.)
+redis[hiredis]==5.2.1
+
+# Guruh guard boti — 18+ profil aniqlash (NudeNet, lokal)
+nudenet==3.4.2

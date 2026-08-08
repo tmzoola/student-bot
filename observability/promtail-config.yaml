@@ -1,0 +1,56 @@
+# Promtail — Docker konteyner log'larini Loki'ga uzatadi.
+# `/var/lib/docker/containers/*/…-json.log` ni kuzatadi, har log qatorini
+# JSON'dan parse qiladi va konteyner nomini label sifatida qo'shadi.
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    backoff_config:
+      min_period: 500ms
+      max_period: 5s
+      max_retries: 10
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+        filters:
+          - name: label
+            values: ["com.docker.compose.project"]
+    relabel_configs:
+      # Konteyner nomini `container` label sifatida qo'shamiz.
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+      # Compose service nomini `service` label sifatida.
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: service
+      # Compose project (odatda "edu-bot").
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: project
+    pipeline_stages:
+      # Docker log formati: {"log":"...","stream":"stdout","time":"..."}.
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            timestamp: time
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          stream:
+      - output:
+          source: output
+      # Xato darajasini aniqlash — uvicorn/aiogram format'idan.
+      - regex:
+          expression: '(?i)(?P<level>error|warning|info|debug|critical|traceback)'
+      - labels:
+          level:

@@ -1,0 +1,499 @@
+{% extends "layout.html" %}
+
+{% block head_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   Dashboard — designed layout on top of starlette-admin's grid slot
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Escape Tabler's row-cards / row-deck constraints */
+.page-body .container-fluid,
+.page-header .container-fluid { max-width: 1400px; }
+.page-body .row.row-deck.row-cards {
+    display: block !important;
+    margin: 0 !important;
+}
+.page-body .row.row-deck.row-cards > * {
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+}
+
+/* ─── Sidebar polish ──────────────────────────────────────────────── */
+.navbar-vertical .navbar-nav .nav-link {
+    color: #8b91a5 !important;
+    padding: 9px 14px !important;
+    font-size: .875rem !important;
+    font-weight: 500 !important;
+}
+.navbar-vertical .navbar-nav .nav-link .nav-link-icon {
+    color: #6b7290 !important;
+    width: 20px;
+    font-size: .95rem;
+}
+.navbar-vertical .navbar-nav .nav-link:hover { color: #111827 !important; background: rgba(0,0,0,.04) !important; }
+.navbar-vertical .navbar-nav .active > .nav-link,
+.navbar-vertical .navbar-nav .nav-link.active {
+    color: #6c63f6 !important;
+    background: rgba(108,99,246,.1) !important;
+    font-weight: 600 !important;
+}
+.navbar-vertical .navbar-nav .active .nav-link-icon,
+.navbar-vertical .navbar-nav .nav-link.active .nav-link-icon {
+    color: #6c8cff !important;
+}
+.navbar-brand h3 { font-size: 1.05rem !important; letter-spacing: -.01em; }
+
+/* ─── Header ──────────────────────────────────────────────────────── */
+.page-header { padding: 24px 0 8px !important; border: none !important; }
+.dash-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -.02em;
+}
+
+/* ─── Dashboard root layout ───────────────────────────────────────── */
+.dash {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
+/* Stats row: 4 equal columns */
+.dash-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+@media (max-width: 1100px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* Two-column main area */
+.dash-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 1100px) { .dash-main { grid-template-columns: 1fr; } }
+
+.dash-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ─── Stat card ───────────────────────────────────────────────────── */
+.stat {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 1px 3px rgba(16,24,40,.06);
+    transition: border-color .18s, transform .18s, box-shadow .18s;
+}
+.stat:hover { border-color: rgba(108,99,246,.3); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(16,24,40,.08); }
+.stat-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+}
+.stat-ic {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: .95rem; flex-shrink: 0;
+}
+.stat-lbl {
+    font-size: .68rem;
+    color: #8b91a5;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    min-width: 0;
+}
+.stat-val {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    letter-spacing: -.02em;
+}
+
+/* ─── Section card ────────────────────────────────────────────────── */
+.sec {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(16,24,40,.06);
+}
+.sec-head {
+    padding: 18px 22px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.sec-head-ic {
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    color: #6c8cff; font-size: .95rem;
+}
+.sec-title {
+    color: #111827; font-size: .98rem; font-weight: 700; margin: 0;
+    letter-spacing: -.005em;
+}
+
+/* Empty state */
+.empty {
+    padding: 60px 20px 70px;
+    text-align: center;
+}
+.empty-ic {
+    width: 64px; height: 64px; margin: 0 auto 16px;
+    background: #f1f2f7;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    color: #9aa2b8;
+}
+.empty-title { color: #111827; font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
+.empty-desc {
+    color: #6b7280; font-size: .85rem; margin: 0;
+    max-width: 300px; margin-inline: auto;
+    line-height: 1.5;
+}
+
+/* Recent attempts table */
+.att-tbl { width: 100%; border-collapse: collapse; }
+.att-tbl th {
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .07em;
+    color: #8b91a5; font-weight: 600;
+    padding: 12px 22px;
+    border-bottom: 1px solid rgba(0,0,0,.07);
+    text-align: left;
+}
+.att-tbl td {
+    padding: 14px 22px; font-size: .85rem; color: #4b5563;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+    vertical-align: middle;
+}
+.att-tbl tr:last-child td { border-bottom: none; }
+.att-tbl .user-name { font-weight: 600; color: #111827; }
+.att-tbl .quiz-name {
+    color: #6b7280; font-size: .82rem;
+    max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.badge-pass, .badge-fail {
+    font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    display: inline-block;
+}
+.badge-pass { background: rgba(34,197,138,.15); color: #15803d; }
+.badge-fail { background: rgba(248,113,113,.15); color: #dc2626; }
+
+/* ─── Quick actions grid ──────────────────────────────────────────── */
+.qa-grid {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.qa {
+    background: #f7f8fc;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 12px;
+    padding: 16px 18px 18px;
+    text-decoration: none;
+    position: relative;
+    transition: all .18s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 118px;
+}
+.qa:hover {
+    border-color: rgba(108,99,246,.35);
+    background: #eef0f8;
+    transform: translateY(-2px);
+}
+.qa-arrow {
+    position: absolute; top: 16px; right: 16px;
+    color: #aab0c0; font-size: .75rem;
+    transition: transform .18s;
+}
+.qa:hover .qa-arrow { color: #6c63f6; transform: translateX(2px); }
+.qa-ic {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: grid; place-items: center;
+    font-size: .95rem;
+}
+.qa-body { margin-top: 14px; }
+.qa-title { color: #111827; font-weight: 700; font-size: .9rem; margin: 0 0 3px; letter-spacing: -.005em; }
+.qa-sub { color: #6b7280; font-size: .76rem; margin: 0; }
+
+/* Featured quick action (Test yaratish) */
+.qa-featured {
+    background: linear-gradient(135deg, rgba(108,140,255,.14), rgba(167,139,250,.1));
+    border-color: rgba(108,140,255,.3);
+}
+.qa-featured .qa-ic { background: rgba(108,99,246,.2); color: #6c63f6; }
+.qa-featured:hover { border-color: rgba(108,99,246,.5); background: linear-gradient(135deg, rgba(108,140,255,.2), rgba(167,139,250,.14)); }
+
+/* ─── Bugungi holat ───────────────────────────────────────────────── */
+.today { }
+.today-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px;
+}
+.today-row + .today-row { border-top: 1px solid rgba(0,0,0,.06); }
+.today-lbl {
+    display: flex; align-items: center; gap: 12px;
+    font-size: .87rem; color: #374151;
+}
+.today-ic {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: .78rem;
+}
+.today-val { font-size: 1.1rem; font-weight: 700; color: #111827; }
+
+/* ── Dark mode overrides ─────────────────────────────────────────── */
+html[data-theme="dark"] .navbar-vertical .navbar-nav .nav-link:hover { color: #fff !important; background: rgba(255,255,255,.04) !important; }
+html[data-theme="dark"] .navbar-vertical .navbar-nav .active > .nav-link,
+html[data-theme="dark"] .navbar-vertical .navbar-nav .nav-link.active { color: #6c8cff !important; background: rgba(108,140,255,.08) !important; }
+html[data-theme="dark"] .dash-title { color: #fff; }
+html[data-theme="dark"] .stat { background: #141824; border-color: rgba(255,255,255,.05); box-shadow: none; }
+html[data-theme="dark"] .stat:hover { box-shadow: none; }
+html[data-theme="dark"] .stat-lbl { color: #7c8296; }
+html[data-theme="dark"] .stat-val { color: #fff; }
+html[data-theme="dark"] .sec { background: #141824; border-color: rgba(255,255,255,.05); box-shadow: none; }
+html[data-theme="dark"] .sec-head { border-bottom-color: rgba(255,255,255,.04); }
+html[data-theme="dark"] .sec-title { color: #fff; }
+html[data-theme="dark"] .empty-ic { background: #1a1f2e; color: #4c5776; }
+html[data-theme="dark"] .empty-title { color: #fff; }
+html[data-theme="dark"] .empty-desc { color: #7c8296; }
+html[data-theme="dark"] .att-tbl th { color: #6d7a94; border-bottom-color: rgba(255,255,255,.05); }
+html[data-theme="dark"] .att-tbl td { color: #b8c1d3; border-bottom-color: rgba(255,255,255,.03); }
+html[data-theme="dark"] .att-tbl .user-name { color: #fff; }
+html[data-theme="dark"] .att-tbl .quiz-name { color: #7c8296; }
+html[data-theme="dark"] .badge-pass { color: #4ade80; }
+html[data-theme="dark"] .badge-fail { color: #f87171; }
+html[data-theme="dark"] .qa { background: #1a1f2e; border-color: rgba(255,255,255,.05); }
+html[data-theme="dark"] .qa:hover { background: #1e2439; border-color: rgba(108,140,255,.35); }
+html[data-theme="dark"] .qa-arrow { color: #4c5776; }
+html[data-theme="dark"] .qa:hover .qa-arrow { color: #a4b8ff; }
+html[data-theme="dark"] .qa-title { color: #fff; }
+html[data-theme="dark"] .qa-sub { color: #7c8296; }
+html[data-theme="dark"] .qa-featured { background: linear-gradient(135deg, rgba(108,140,255,.16), rgba(167,139,250,.1)); }
+html[data-theme="dark"] .qa-featured .qa-ic { color: #a4b8ff; }
+html[data-theme="dark"] .today-row + .today-row { border-top-color: rgba(255,255,255,.04); }
+html[data-theme="dark"] .today-lbl { color: #cdd3e0; }
+html[data-theme="dark"] .today-val { color: #fff; }
+</style>
+{% endblock %}
+
+{% block header %}
+<h1 class="dash-title">Muslima Darmonova — Bosh sahifa</h1>
+{% endblock %}
+
+{% block content %}
+<div class="dash">
+
+    {# ── Stat row ───────────────────────────────────────────────── #}
+    <div class="dash-stats">
+        <div class="stat">
+            <div class="stat-head">
+                <div class="stat-ic" style="background:rgba(108,140,255,.15);color:#6c8cff">
+                    <i class="fa fa-users"></i>
+                </div>
+                <div class="stat-lbl">Foydalanuvchilar</div>
+            </div>
+            <div class="stat-val" id="s-users">0</div>
+        </div>
+        <div class="stat">
+            <div class="stat-head">
+                <div class="stat-ic" style="background:rgba(167,139,250,.15);color:#a78bfa">
+                    <i class="fa fa-list-check"></i>
+                </div>
+                <div class="stat-lbl">Testlar</div>
+            </div>
+            <div class="stat-val" id="s-quizzes">0</div>
+        </div>
+        <div class="stat">
+            <div class="stat-head">
+                <div class="stat-ic" style="background:rgba(74,222,128,.15);color:#4ade80">
+                    <i class="fa fa-circle-question"></i>
+                </div>
+                <div class="stat-lbl">Savollar</div>
+            </div>
+            <div class="stat-val" id="s-questions">0</div>
+        </div>
+        <div class="stat">
+            <div class="stat-head">
+                <div class="stat-ic" style="background:rgba(251,146,60,.15);color:#fb923c">
+                    <i class="fa fa-book"></i>
+                </div>
+                <div class="stat-lbl">Mavzular</div>
+            </div>
+            <div class="stat-val" id="s-topics">0</div>
+        </div>
+    </div>
+
+    {# ── Main two-column layout ─────────────────────────────────── #}
+    <div class="dash-main">
+
+        <div class="sec">
+            <div class="sec-head">
+                <div class="sec-head-ic"><i class="fa fa-wave-square"></i></div>
+                <h3 class="sec-title">So'nggi o'tishlar</h3>
+            </div>
+            <div id="attempts-wrap">
+                <div class="empty">
+                    <div class="empty-ic">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <div class="empty-title">Hozircha o'tishlar yo'q</div>
+                    <p class="empty-desc">Foydalanuvchilar test yechganda bu yerda ko'rinadi</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-right">
+
+            <div class="sec">
+                <div class="sec-head">
+                    <div class="sec-head-ic"><i class="fa fa-bolt"></i></div>
+                    <h3 class="sec-title">Tezkor amallar</h3>
+                </div>
+                <div class="qa-grid">
+                    <a href="/admin-tools/builder" class="qa qa-featured">
+                        <i class="fa fa-chevron-right qa-arrow"></i>
+                        <div class="qa-ic"><i class="fa fa-wand-magic-sparkles"></i></div>
+                        <div class="qa-body">
+                            <div class="qa-title">Test yaratish</div>
+                            <div class="qa-sub">Sehrgar bilan</div>
+                        </div>
+                    </a>
+                    <a href="{{ request.url_for(__name__ ~ ':index') }}mavzu/create" class="qa">
+                        <i class="fa fa-chevron-right qa-arrow"></i>
+                        <div class="qa-ic" style="background:rgba(251,146,60,.15);color:#fb923c">
+                            <i class="fa fa-book"></i>
+                        </div>
+                        <div class="qa-body">
+                            <div class="qa-title">Mavzu qo'shish</div>
+                            <div class="qa-sub">Yangi mavzu</div>
+                        </div>
+                    </a>
+                    <a href="{{ request.url_for(__name__ ~ ':index') }}savol/create" class="qa">
+                        <i class="fa fa-chevron-right qa-arrow"></i>
+                        <div class="qa-ic" style="background:rgba(74,222,128,.15);color:#4ade80">
+                            <i class="fa fa-circle-question"></i>
+                        </div>
+                        <div class="qa-body">
+                            <div class="qa-title">Savol qo'shish</div>
+                            <div class="qa-sub">Testga savol</div>
+                        </div>
+                    </a>
+                    <a href="{{ request.url_for(__name__ ~ ':index') }}foydalanuvchi/list" class="qa">
+                        <i class="fa fa-chevron-right qa-arrow"></i>
+                        <div class="qa-ic" style="background:rgba(108,140,255,.15);color:#6c8cff">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div class="qa-body">
+                            <div class="qa-title">Foydalanuvchilar</div>
+                            <div class="qa-sub">Ro'yxatni ko'rish</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sec">
+                <div class="sec-head">
+                    <div class="sec-head-ic"><i class="fa fa-chart-pie"></i></div>
+                    <h3 class="sec-title">Bugungi holat</h3>
+                </div>
+                <div class="today">
+                    <div class="today-row">
+                        <div class="today-lbl">
+                            <div class="today-ic" style="background:rgba(108,140,255,.15);color:#6c8cff">
+                                <i class="fa fa-play"></i>
+                            </div>
+                            Faol testlar
+                        </div>
+                        <div class="today-val" id="s-active-quizzes">0</div>
+                    </div>
+                    <div class="today-row">
+                        <div class="today-lbl">
+                            <div class="today-ic" style="background:rgba(74,222,128,.15);color:#4ade80">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            Jami urinishlar
+                        </div>
+                        <div class="today-val" id="s-attempts">0</div>
+                    </div>
+                    <div class="today-row">
+                        <div class="today-lbl">
+                            <div class="today-ic" style="background:rgba(251,146,60,.15);color:#fb923c">
+                                <i class="fa fa-book"></i>
+                            </div>
+                            Faol mavzular
+                        </div>
+                        <div class="today-val" id="s-active-topics">0</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+    fetch('/api/v1/webapp/admin-stats')
+        .then(r => r.json())
+        .then(data => {
+            const set = (id, v) => document.getElementById(id).textContent = v ?? 0;
+            set('s-users', data.users);
+            set('s-quizzes', data.quizzes);
+            set('s-questions', data.questions);
+            set('s-topics', data.topics);
+            set('s-active-quizzes', data.active_quizzes);
+            set('s-active-topics', data.active_topics);
+            set('s-attempts', data.total_attempts);
+
+            const attempts = data.recent_attempts || [];
+            if (!attempts.length) return;
+
+            const rows = attempts.map(a => `
+                <tr>
+                    <td><div class="user-name">${esc(a.user)}</div></td>
+                    <td><div class="quiz-name">${esc(a.quiz)}</div></td>
+                    <td>${a.percentage >= 60
+                        ? `<span class="badge-pass">${a.score}/${a.total}</span>`
+                        : `<span class="badge-fail">${a.score}/${a.total}</span>`}</td>
+                    <td style="color:#6d7a94;font-size:.78rem">${esc(a.date)}</td>
+                </tr>`).join('');
+
+            document.getElementById('attempts-wrap').innerHTML = `
+                <table class="att-tbl">
+                    <thead><tr>
+                        <th>Foydalanuvchi</th><th>Test</th><th>Natija</th><th>Sana</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        })
+        .catch(() => {});
+
+    function esc(s) {
+        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+})();
+</script>
+{% endblock %}

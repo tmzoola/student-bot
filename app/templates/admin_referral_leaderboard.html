@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top inviterlar — Muslima Darmonova Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f6fa;color:#3b4256;min-height:100vh}
+
+.top{background:#ffffff;border-bottom:1px solid rgba(0,0,0,.07);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#111827;font-weight:700;font-size:1rem;text-decoration:none}
+.brand-ic{width:32px;height:32px;background:linear-gradient(135deg,#6c63f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.back-link{color:#6b7280;text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;transition:.15s}
+.back-link:hover{background:rgba(0,0,0,.04);color:#111827}
+
+.wrap{max-width:1200px;margin:0 auto;padding:28px}
+.page-title{font-size:1.7rem;font-weight:800;color:#111827;margin:0 0 4px;display:flex;align-items:center;gap:12px}
+.page-sub{color:#6b7280;font-size:.9rem;margin:0 0 20px}
+
+.tools{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.tools form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1}
+.select-box, .search{background:#ffffff;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:9px 14px;display:flex;align-items:center;gap:8px}
+.select-box select, .search input{background:transparent;border:none;color:#1f2430;font-size:.85rem;outline:none;font-family:inherit}
+.search{min-width:260px;flex:1;max-width:360px}
+.search input{flex:1}
+.search input::placeholder{color:#aab0c0}
+.search svg{color:#9aa2b8;flex-shrink:0}
+.apply-btn{background:#6c63f6;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit}
+.apply-btn:hover{background:#5b52e5}
+.export-btn{display:inline-flex;align-items:center;gap:8px;background:#1a7f4b;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap;text-decoration:none}
+.export-btn:hover{background:#156b3f;transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,127,75,.3)}
+
+.card{background:#ffffff;border:1px solid rgba(0,0,0,.07);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.card-head{padding:16px 22px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between}
+.card-head h3{margin:0;color:#111827;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.card-head .dot{width:6px;height:6px;background:#6c63f6;border-radius:50%}
+.card-head .count{font-size:.78rem;color:#6b7280;font-weight:600}
+
+table{width:100%;border-collapse:collapse}
+thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:#8b91a5;font-weight:600;padding:14px 22px;border-bottom:1px solid rgba(0,0,0,.07);text-align:left;background:#f7f8fc}
+thead th:last-child, tbody td:last-child{text-align:right}
+tbody td{padding:14px 22px;font-size:.87rem;color:#4b5563;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(108,99,246,.04)}
+
+.rank{width:44px;height:34px;background:#eef0f3;color:#6b7280;font-weight:800;font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px}
+.rank-1{background:linear-gradient(135deg,#f5c542,#e8a319);color:#3a2500}
+.rank-2{background:linear-gradient(135deg,#d0d3db,#a3a7b3);color:#2a2e38}
+.rank-3{background:linear-gradient(135deg,#cd7f32,#9c5e21);color:#fff}
+.name{color:#111827;font-weight:600}
+.uname{font-size:.75rem;color:#8b91a5;margin-left:8px}
+.tg-id{font-size:.72rem;color:#8b91a5;display:block;margin-top:2px}
+.points{color:#16a34a;font-weight:800;font-size:.98rem;font-variant-numeric:tabular-nums}
+.tabular{font-variant-numeric:tabular-nums}
+
+.empty{padding:80px 20px;text-align:center;color:#9aa2b8}
+.empty-ic{width:80px;height:80px;background:#eef0f3;border-radius:20px;margin:0 auto 16px;display:grid;place-items:center;color:#9aa2b8;font-size:2rem}
+.empty-t{color:#111827;font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.empty-d{color:#6b7280;font-size:.85rem}
+
+#theme-toggle{border:none;background:transparent;cursor:pointer;font-size:1rem}
+
+html[data-theme="dark"] body{background:#0b0e18;color:#cdd3e0}
+html[data-theme="dark"] .top{background:#0a0e18;border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .brand{color:#fff}
+html[data-theme="dark"] .back-link{color:#7c8aa8}
+html[data-theme="dark"] .back-link:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .page-title{color:#fff}
+html[data-theme="dark"] .page-sub{color:#7c8aa8}
+html[data-theme="dark"] .select-box, html[data-theme="dark"] .search{background:#141824;border-color:rgba(255,255,255,.06)}
+html[data-theme="dark"] .select-box select, html[data-theme="dark"] .search input{color:#fff}
+html[data-theme="dark"] .card{background:#141824;border-color:rgba(255,255,255,.05);box-shadow:none}
+html[data-theme="dark"] .card-head{border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .card-head h3{color:#fff}
+html[data-theme="dark"] .card-head .count{color:#7c8aa8}
+html[data-theme="dark"] thead th{color:#6d7a94;border-bottom-color:rgba(255,255,255,.05);background:#131828}
+html[data-theme="dark"] tbody td{color:#b8c1d3;border-bottom-color:rgba(255,255,255,.03)}
+html[data-theme="dark"] tbody tr:hover td{background:rgba(255,255,255,.02)}
+html[data-theme="dark"] .rank{background:#1a1f2e;color:#7c8aa8}
+html[data-theme="dark"] .name{color:#fff}
+html[data-theme="dark"] .uname, html[data-theme="dark"] .tg-id{color:#7c8296}
+html[data-theme="dark"] .points{color:#4ade80}
+html[data-theme="dark"] .empty{color:#4c5776}
+html[data-theme="dark"] .empty-ic{background:#1a1f2e;color:#4c5776}
+html[data-theme="dark"] .empty-t{color:#fff}
+html[data-theme="dark"] .empty-d{color:#7c8296}
+</style>
+</head>
+<body>
+
+<div class="top">
+    <div class="top-left">
+        <a href="/admin/" class="brand"><span class="brand-ic"><i class="fa fa-bolt"></i></span>Muslima Darmonova</a>
+        <a href="/admin/" class="back-link"><i class="fa fa-arrow-left"></i> Dashboardga qaytish</a>
+    </div>
+    <button class="back-link" id="theme-toggle" title="Yorug'/Tungi rejim"><i class="fa fa-moon"></i></button>
+</div>
+
+<div class="wrap">
+    <h1 class="page-title"><i class="fa fa-user-plus" style="color:#6c63f6"></i>Top inviterlar</h1>
+    <p class="page-sub">Eng ko'p foydalanuvchi taklif qilgan a'zolar reytingi (barcha kuzatiladigan chatlar bo'yicha yig'iladi).</p>
+
+    <div class="tools">
+        <form method="get" action="/admin-tools/referral-leaderboard">
+            <div class="select-box">
+                <i class="fa fa-hashtag" style="color:#9aa2b8"></i>
+                <select name="tracked_chat_id" onchange="this.form.submit()">
+                    <option value="">Barcha chatlar</option>
+                    {% for c in chats %}
+                    <option value="{{ c.id }}" {% if selected_chat_id == c.id %}selected{% endif %}>{{ c.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" name="q" value="{{ search }}" placeholder="Ism / username / Telegram ID…">
+            </div>
+            <button type="submit" class="apply-btn"><i class="fa fa-filter"></i> Qidirish</button>
+        </form>
+        <a class="export-btn" href="/admin-tools/referral-leaderboard/export?{% if selected_chat_id %}tracked_chat_id={{ selected_chat_id }}&{% endif %}{% if search %}q={{ search|urlencode }}{% endif %}">
+            <i class="fa fa-file-excel"></i> Excelga eksport
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h3><span class="dot"></span>Reyting jadvali</h3>
+            <div class="count">{{ rows|length }} ta foydalanuvchi</div>
+        </div>
+
+        {% if rows %}
+        <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:70px">O'rin</th>
+                    <th>Foydalanuvchi</th>
+                    <th class="tabular">Umumiy taklif</th>
+                    <th class="tabular">Aktiv chatlar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>
+                        <span class="rank {% if r.rank <= 3 %}rank-{{ r.rank }}{% endif %}">
+                            {% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}#{{ r.rank }}{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="name">{{ r.full_name }}</span>
+                        {% if r.username %}<span class="uname">@{{ r.username }}</span>{% endif %}
+                        <span class="tg-id">TG ID: {{ r.telegram_id }}</span>
+                    </td>
+                    <td class="tabular points">{{ r.total_invites }}</td>
+                    <td class="tabular">{{ r.active_chats }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">
+            <div class="empty-ic">🏆</div>
+            <div class="empty-t">{% if search or selected_chat_id %}Foydalanuvchi topilmadi{% else %}Reyting bo'sh{% endif %}</div>
+            <div class="empty-d">{% if search or selected_chat_id %}Filterni o'zgartirib ko'ring{% else %}Foydalanuvchilar taklif linki orqali kimlarnidir chatga qo'shganda paydo bo'ladi{% endif %}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function(){var KEY='malaka-admin-theme';function ico(t){return t==='dark'?'fa-sun':'fa-moon';}
+function apply(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem(KEY,t);}catch(e){}var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(t);}
+document.addEventListener('DOMContentLoaded',function(){var cur=document.documentElement.getAttribute('data-theme')||'light';var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(cur);var b=document.getElementById('theme-toggle');if(b)b.addEventListener('click',function(e){e.preventDefault();apply(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});});})();
+</script>
+</body>
+</html>

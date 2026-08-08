@@ -1,0 +1,200 @@
+{% extends "_base.html" %}
+{% block title %}Test — Muslima Darmonova{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+body{padding-bottom:0}
+.hdr{padding:12px 16px}
+.hdr-title{font-size:.95rem}
+.timer{background:#111;color:#fff;padding:7px 14px;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.timer svg{width:14px;height:14px}
+.timer.warn{background:#B5812E}
+.timer.danger{background:#dc2626;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.progress-wrap{background:#fff;padding:0 20px 12px}
+.progress-info{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px}
+.progress-info b{color:var(--green)}
+.progress-bar{background:#EEF3EA;height:6px;border-radius:4px;overflow:hidden}
+.progress-fill{background:var(--green);height:100%;border-radius:4px;transition:width .3s}
+
+.q-content{padding:24px 20px 100px}
+.q-num{font-size:.75rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.02em}
+.q-text{font-size:1.15rem;font-weight:700;line-height:1.4;color:#111;margin-bottom:24px;animation:fadeUp .25s ease;white-space:pre-line}
+.q-img{display:block;max-width:100%;max-height:280px;border-radius:14px;margin-bottom:18px;animation:fadeUp .25s ease}
+
+.opts{display:flex;flex-direction:column;gap:10px;animation:fadeUp .28s ease}
+.opt{background:#fff;border:2px solid transparent;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
+.opt:active{transform:scale(.99)}
+.opt.sel{border-color:var(--green);background:#F0FAF3}
+.opt-letter{width:34px;height:34px;border-radius:10px;background:#f4f5f2;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;transition:.15s}
+.opt.sel .opt-letter{background:var(--green);color:#fff}
+.opt-text{flex:1;font-size:.92rem;color:#111;line-height:1.35;white-space:pre-line}
+
+.foot{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -2px 12px rgba(0,0,0,.05)}
+.foot .btn{padding:14px 18px;flex:1}
+.btn-prev{background:#f4f5f2;color:#333}
+.btn-prev:disabled{opacity:.4}
+
+.loader{text-align:center;padding:60px 20px;color:var(--muted)}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="javascript:if(confirm('Testni tark etmoqchimisiz?')) history.back()" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </a>
+  <div class="hdr-title" id="quiz-title" style="flex:1;padding:0 12px">…</div>
+  <div class="timer" id="timer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="timer-t">--:--</span>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-info">
+    <span id="prog-txt">Savol 0 / 0</span>
+    <span><b id="prog-answered">0</b> / <span id="prog-total">0</span> javob berildi</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="q-content" id="q-content">
+  <div class="loader">Yuklanmoqda…</div>
+</div>
+
+<div class="foot" id="foot" style="display:none">
+  <button class="btn btn-prev" id="btn-prev">Oldingi</button>
+  <button class="btn btn-primary" id="btn-next">Keyingi</button>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const QUIZ_ID = {{ quiz_id }};
+let quiz = null;
+let idx = 0;
+let answers = {};
+let startedAt = 0;
+let timeLeft = 0;
+let timerHandle = null;
+
+async function init(){
+    await MK.ensureAuth();
+    const r = await fetch(`/api/v1/webapp/quiz/${QUIZ_ID}`);
+    if (!r.ok) {
+        document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi</div>';
+        return;
+    }
+    quiz = await r.json();
+    document.getElementById('quiz-title').textContent = quiz.title;
+    document.getElementById('prog-total').textContent = quiz.questions.length;
+    document.getElementById('foot').style.display = '';
+    startedAt = Date.now();
+    timeLeft = quiz.time_limit_seconds;
+    startTimer();
+    render();
+}
+
+function render(){
+    const q = quiz.questions[idx];
+    const c = document.getElementById('q-content');
+    c.innerHTML = `
+        <div class="q-num">Savol ${idx+1} / ${quiz.questions.length}</div>
+        ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+        ${q.text ? `<div class="q-text">${esc(q.text)}</div>` : ''}
+        <div class="opts">
+            ${['A','B','C','D'].map(L => `
+                <div class="opt ${answers[q.id]===L?'sel':''}" data-l="${L}">
+                    <div class="opt-letter">${L}</div>
+                    <div class="opt-text">${esc(q['option_'+L.toLowerCase()])}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    c.querySelectorAll('.opt').forEach(el => {
+        el.onclick = () => {
+            MK.haptic('light');
+            answers[q.id] = el.dataset.l;
+            // toggle in place — re-render would replay the fade animation
+            c.querySelectorAll('.opt').forEach(o => o.classList.toggle('sel', o === el));
+            updateProgress();
+        };
+    });
+
+    // Update progress
+    document.getElementById('prog-txt').textContent = `Savol ${idx+1} / ${quiz.questions.length}`;
+    document.getElementById('prog-fill').style.width = `${((idx+1)/quiz.questions.length)*100}%`;
+    updateProgress();
+
+    const isLast = idx === quiz.questions.length - 1;
+    const btnNext = document.getElementById('btn-next');
+    btnNext.textContent = isLast ? 'Tugatish' : 'Keyingi';
+
+    document.getElementById('btn-prev').disabled = idx === 0;
+}
+
+function updateProgress(){
+    document.getElementById('prog-answered').textContent = Object.keys(answers).length;
+}
+
+document.addEventListener('click', e => {
+    if (e.target.closest('#btn-prev') && idx > 0) { idx--; render(); }
+    if (e.target.closest('#btn-next')) {
+        if (idx < quiz.questions.length - 1) { idx++; render(); }
+        else finish();
+    }
+});
+
+function startTimer(){
+    updateTimer();
+    timerHandle = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) { finish(true); return; }
+        updateTimer();
+    }, 1000);
+}
+
+function updateTimer(){
+    const el = document.getElementById('timer');
+    el.classList.remove('warn','danger');
+    if (timeLeft <= 10) el.classList.add('danger');
+    else if (timeLeft <= 30) el.classList.add('warn');
+    document.getElementById('timer-t').textContent = MK.fmtTime(Math.max(0,timeLeft));
+}
+
+async function finish(auto=false){
+    if (!auto && Object.keys(answers).length < quiz.questions.length) {
+        if (!confirm(`${quiz.questions.length - Object.keys(answers).length} ta savolga javob berilmadi. Baribir yakunlaymizmi?`)) return;
+    }
+    clearInterval(timerHandle);
+    const btn = document.getElementById('btn-next');
+    btn.disabled = true;
+    btn.textContent = 'Yuborilmoqda…';
+    const timeTaken = Math.round((Date.now() - startedAt) / 1000);
+    try {
+        const r = await fetch(`/api/v1/webapp/quiz/${QUIZ_ID}/submit`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', ...MK.authHeaders()},
+            body: JSON.stringify({ answers, time_taken_seconds: timeTaken }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || 'Xatolik');
+        window.location.replace(`/webapp/results/${data.attempt_id}`);
+    } catch (e) {
+        alert(e.message);
+        btn.disabled = false;
+        btn.textContent = 'Tugatish';
+    }
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+init();
+</script>
+{% endblock %}

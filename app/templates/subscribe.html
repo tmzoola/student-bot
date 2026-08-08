@@ -1,0 +1,147 @@
+{% extends "_base.html" %}
+{% block title %}A'zo bo'ling — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.gate-title{font-size:1.35rem;font-weight:800;margin:6px 0 6px;color:#111}
+.gate-sub{font-size:.9rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.chat-card{
+  background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;
+}
+.chat-name{font-weight:700;font-size:.95rem;color:#111;display:flex;align-items:center;gap:8px;min-width:0}
+.chat-name .ico{font-size:1.1rem;flex:0 0 auto}
+.chat-name .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.join-btn{
+  background:var(--green);color:#fff;border:0;border-radius:10px;
+  padding:9px 14px;font-weight:700;font-size:.85rem;text-decoration:none;
+  flex:0 0 auto;cursor:pointer;font-family:inherit;
+}
+.join-btn:active{transform:scale(.97)}
+.check-wrap{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:12px 14px;border-radius:12px;font-size:.85rem;font-weight:600}
+.msg-err{background:#FDE8E8;color:#c0392b}
+.msg-ok{background:#E4F3EB;color:var(--green-dark)}
+.hint{font-size:.78rem;color:var(--muted);text-align:center;margin-top:8px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div style="width:38px"></div>
+  <div class="hdr-title">A'zo bo'ling</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="gate-title">🔒 Testlar cheklangan</div>
+<div class="gate-sub">
+  Muslima Darmonova platformasidan foydalanish uchun quyidagi kanal va guruhlarga
+  a'zo bo'lishingiz shart. A'zo bo'lgach <b>«Tekshirish»</b> tugmasini bosing.
+</div>
+
+<div id="msg"></div>
+<div id="chats"></div>
+
+<div class="check-wrap">
+  <button id="check" class="btn btn-primary">🔄 Tekshirish</button>
+</div>
+<div class="hint">Kanal/guruhga qo'shilganingizdan so'ng shu tugmani bosing.</div>
+{% endblock %}
+
+{% block script %}
+<script>
+function openTgLink(url){
+  // Telegram WebApp ichida oddiy `window.open` / `target=_blank` ishlamaydi —
+  // Telegram tashqi navigatsiyani bloklaydi. t.me linklari uchun
+  // openTelegramLink(), boshqalari uchun openLink() dan foydalanamiz.
+  const tg = window.Telegram?.WebApp;
+  if (!url) return;
+  try {
+    if (tg && /^https?:\/\/t\.me\//i.test(url) && tg.openTelegramLink){
+      tg.openTelegramLink(url);
+      return;
+    }
+    if (tg && tg.openLink){
+      tg.openLink(url, { try_instant_view: false });
+      return;
+    }
+  } catch(e){}
+  window.open(url, '_blank', 'noopener');
+}
+
+function render(chats){
+  const box = document.getElementById('chats');
+  box.innerHTML = '';
+  if (!chats || !chats.length){
+    document.getElementById('msg').innerHTML =
+      '<div class="msg msg-ok">✅ Barchasiga a\'zosiz. Yo\'naltirilmoqda...</div>';
+    setTimeout(()=>{ location.href = '/webapp/modules'; }, 800);
+    return;
+  }
+  for (const c of chats){
+    const ico = c.type === 'channel' ? '📢' : '👥';
+    const url = c.url || '';
+    const disabled = !url ? 'disabled style="opacity:.5"' : '';
+    box.insertAdjacentHTML('beforeend',
+      `<div class="chat-card">
+        <div class="chat-name"><span class="ico">${ico}</span><span class="t">${c.title||''}</span></div>
+        <button class="join-btn" data-url="${url}" ${disabled}>Qo'shilish</button>
+      </div>`);
+  }
+  box.querySelectorAll('.join-btn[data-url]').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.preventDefault();
+      openTgLink(btn.getAttribute('data-url'));
+    });
+  });
+}
+
+async function refresh(){
+  const btn = document.getElementById('check');
+  const msg = document.getElementById('msg');
+  btn.disabled = true;
+  btn.textContent = 'Tekshirilmoqda...';
+  msg.innerHTML = '';
+  try {
+    const r = await fetch('/api/v1/webapp/subscription/check', {
+      headers: MK.authHeaders(),
+      credentials: 'same-origin',
+    });
+    if (!r.ok){
+      msg.innerHTML = '<div class="msg msg-err">Xato: qayta urinib ko\'ring.</div>';
+      return;
+    }
+    const data = await r.json();
+    if (!data.must_subscribe){
+      // Keshni tozalaymiz — yangi holat bilan qayta olinsin.
+      try { for (const k of Object.keys(sessionStorage)) if (k.startsWith('mk_user_')) sessionStorage.removeItem(k); } catch(e){}
+      render([]);
+      return;
+    }
+    render(data.missing_chats || []);
+    msg.innerHTML = '<div class="msg msg-err">👀 Hali sizni ba\'zi kanallarda ko\'rmayapman. Obuna bo\'ling va qayta tekshiring.</div>';
+  } catch(e){
+    msg.innerHTML = '<div class="msg msg-err">Tarmoq xatosi. Qayta urinib ko\'ring.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Tekshirish';
+  }
+}
+
+(async function(){
+  // Auth qilamiz va boshlang'ich ro'yxatni chizamiz. Agar allaqachon
+  // a'zo bo'lsa, ensureAuth uni asosiy sahifaga qaytaradi.
+  const user = await MK.ensureAuth();
+  if (!user) return;
+  if (user.must_subscribe === false){
+    location.href = '/webapp/modules';
+    return;
+  }
+  render(user.missing_chats || []);
+})();
+
+document.getElementById('check').addEventListener('click', refresh);
+</script>
+{% endblock %}

@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samandar Market — POS</title>
+<style>
+    :root {
+        --bg: #f3f4f6;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #16a34a;
+        --success-dark: #15803d;
+        --danger: #dc2626;
+        --warning: #f59e0b;
+        --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+        --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+                     Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 16px;
+        overflow: hidden;
+    }
+
+    .app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    /* ---------- Header ---------- */
+    .header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--shadow);
+        z-index: 10;
+    }
+    .brand {
+        font-size: 22px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .brand .dot { color: var(--primary); }
+    .search {
+        flex: 1;
+        max-width: 560px;
+        position: relative;
+    }
+    .search input {
+        width: 100%;
+        font-size: 17px;
+        padding: 12px 14px 12px 44px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface-2);
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .search input:focus { border-color: var(--primary); background: #fff; }
+    .search::before {
+        content: "🔍";
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: 0.55;
+    }
+    .btn-new {
+        font-size: 15px;
+        font-weight: 600;
+        background: var(--surface-2);
+        color: var(--text);
+        border: 2px solid var(--border);
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-new:hover { background: #e2e8f0; }
+
+    .scan-indicator {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #ecfeff;
+        color: #0e7490;
+        border: 1px solid #a5f3fc;
+        white-space: nowrap;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: all 0.2s;
+    }
+    .scan-indicator.scan-ok {
+        background: #dcfce7;
+        color: #15803d;
+        border-color: #86efac;
+    }
+    .scan-indicator.scan-err {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    /* ---------- Main ---------- */
+    .main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+    }
+
+    /* ---------- Products ---------- */
+    .products-pane {
+        flex: 0 0 65%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        border-right: 1px solid var(--border);
+    }
+    .categories {
+        display: flex;
+        gap: 8px;
+        padding: 16px 20px 12px;
+        overflow-x: auto;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+    }
+    .categories::-webkit-scrollbar { height: 6px; }
+    .categories::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .cat-btn {
+        flex: 0 0 auto;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 10px 18px;
+        border: 2px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
+        border-radius: 999px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+    }
+    .cat-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .cat-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .product-grid {
+        flex: 1;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 14px;
+        padding: 20px;
+        align-content: start;
+    }
+    .product-card {
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 14px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.12s;
+        user-select: none;
+    }
+    .product-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    .product-card:active { transform: translateY(0); }
+    .product-card .emoji { font-size: 38px; line-height: 1; }
+    .product-card .name {
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.3;
+        min-height: 39px;
+        display: flex;
+        align-items: center;
+    }
+    .product-card .price {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-top: auto;
+    }
+    .stock-chip {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        margin-top: 4px;
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: 999px;
+    }
+    .stock-chip-low {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .stock-chip-out {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .product-card.out-of-stock {
+        opacity: 0.55;
+        background: #fafafa;
+        cursor: not-allowed;
+    }
+    .product-card.out-of-stock:hover {
+        opacity: 0.75;
+        transform: none;
+        border-color: var(--border);
+        box-shadow: var(--shadow);
+    }
+    .product-card.low-stock {
+        border-color: #fbbf24;
+    }
+    .empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        font-size: 16px;
+    }
+
+    /* ---------- Basket ---------- */
+    .basket-pane {
+        flex: 0 0 35%;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        min-height: 0;
+        min-width: 0;
+    }
+    .basket-header {
+        padding: 18px 22px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .basket-header h2 {
+        margin: 0;
+        font-size: 19px;
+    }
+    .basket-count {
+        background: var(--primary);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+    }
+
+    .basket-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 18px;
+    }
+    .basket-item {
+        padding: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px 12px;
+        align-items: center;
+    }
+    .item-name {
+        font-size: 15px;
+        font-weight: 600;
+        grid-column: 1;
+    }
+    .item-remove {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        font-size: 18px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--danger);
+        padding: 4px 8px;
+        border-radius: 6px;
+        align-self: start;
+    }
+    .item-remove:hover { background: #fee2e2; }
+    .item-controls {
+        grid-column: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .qty-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .qty-btn {
+        width: 32px;
+        height: 32px;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--text);
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .qty-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .qty-val {
+        min-width: 28px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 15px;
+    }
+    .item-line-total {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text);
+    }
+    .basket-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+    .basket-empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ---------- Totals / Checkout ---------- */
+    .basket-footer {
+        border-top: 1px solid var(--border);
+        padding: 16px 22px 18px;
+        background: var(--surface-2);
+    }
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 14px;
+    }
+    .total-row .label {
+        font-size: 15px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .total-row .value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text);
+    }
+    .cash-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .cash-row label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+    }
+    .cash-row input {
+        width: 100%;
+        font-size: 18px;
+        font-weight: 700;
+        padding: 10px 12px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        outline: none;
+        background: #fff;
+    }
+    .cash-row input:focus { border-color: var(--primary); }
+    .change-display {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fff;
+        border: 2px solid var(--border);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--success);
+    }
+    .change-display.negative { color: var(--danger); }
+    .exact-cash-btn {
+        width: 100%;
+        padding: 11px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        background: #fff;
+        color: var(--text);
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .exact-cash-btn:hover:not(:disabled) {
+        border-color: var(--success);
+        color: var(--success);
+        background: #f0fdf4;
+    }
+    .exact-cash-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .checkout-btn {
+        width: 100%;
+        padding: 16px;
+        font-size: 18px;
+        font-weight: 700;
+        background: var(--success);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .checkout-btn:hover:not(:disabled) { background: var(--success-dark); }
+    .checkout-btn:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+    }
+
+    /* ---------- Receipt modal ---------- */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .modal {
+        background: #fff;
+        border-radius: 16px;
+        max-width: 440px;
+        width: calc(100% - 32px);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding: 28px;
+        box-shadow: var(--shadow-lg);
+    }
+    .modal h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        text-align: center;
+    }
+    .modal .sub {
+        text-align: center;
+        color: var(--text-muted);
+        margin-bottom: 18px;
+        font-size: 14px;
+    }
+    .receipt-items {
+        border-top: 1px dashed var(--border);
+        border-bottom: 1px dashed var(--border);
+        padding: 12px 0;
+        margin-bottom: 14px;
+    }
+    .receipt-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        padding: 4px 0;
+    }
+    .receipt-line .name { color: var(--text); }
+    .receipt-line .amount { font-weight: 600; }
+    .receipt-totals .receipt-line { font-size: 15px; padding: 6px 0; }
+    .receipt-totals .receipt-line.grand {
+        font-size: 18px;
+        font-weight: 800;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+        margin-top: 6px;
+    }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+    .modal-close,
+    .modal-void {
+        padding: 14px 18px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .modal-close {
+        flex: 1;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+    }
+    .modal-close:hover { background: var(--primary-dark); }
+    .modal-void {
+        background: #fff;
+        color: var(--danger);
+        border: 2px solid var(--danger);
+    }
+    .modal-void:hover:not(:disabled) { background: #fee2e2; }
+    .modal-void:disabled { opacity: 0.55; cursor: not-allowed; }
+    .modal-print {
+        padding: 14px 18px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: #fff;
+        color: var(--text);
+        border: 2px solid var(--border);
+    }
+    .modal-print:hover { background: #f1f5f9; border-color: var(--text-muted); }
+
+    /* ---------- Thermal receipt print styles ---------- */
+    @page {
+        size: 80mm auto;
+        margin: 2mm 3mm;
+    }
+    @media print {
+        body > *:not(#printArea) { display: none !important; }
+        html, body { width: 80mm; margin: 0; padding: 0; }
+        #printArea {
+            display: block !important;
+            width: 74mm;
+            max-width: 74mm;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 9pt;
+            font-weight: 700;
+            color: #000;
+            word-break: break-word;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #printArea * { font-weight: 700; }
+        .pr-center { text-align: center; }
+        .pr-bold { font-weight: 900; }
+        .pr-divider { border: none; border-top: 1.5px dashed #000; margin: 3pt 0; }
+        .pr-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            line-height: 1.4;
+        }
+        .pr-line .pr-name { flex: 1; padding-right: 4pt; overflow-wrap: break-word; }
+        .pr-line .pr-amount { white-space: nowrap; }
+        .pr-grand { font-size: 11pt; font-weight: 900; }
+        .pr-footer { text-align: center; font-size: 8pt; margin-top: 5pt; font-weight: 700; }
+    }
+
+    /* ---------- Weight modal ---------- */
+    .weight-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+    .weight-label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+    }
+    .weight-input-wrap {
+        position: relative;
+    }
+    .weight-input-wrap input {
+        width: 100%;
+        padding: 14px 50px 14px 14px;
+        font-size: 22px;
+        font-weight: 700;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        outline: none;
+        background: #fff;
+        text-align: right;
+    }
+    .weight-input-wrap input:focus { border-color: var(--primary); }
+    .weight-suffix {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+    .weight-quick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .weight-quick button {
+        flex: 1;
+        min-width: 70px;
+        padding: 9px 12px;
+        border: 2px dashed var(--border);
+        background: #fff;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text);
+        transition: all 0.12s;
+    }
+    .weight-quick button:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #f0f7ff;
+    }
+
+    /* ---------- Toast ---------- */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--text);
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s;
+        z-index: 200;
+        max-width: 90vw;
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---------- Responsive ---------- */
+    /* 13" laptops (MacBook Air M1/M2/M3 render at ~1440-1470 effective) —
+       tighten paddings and font sizes. 1512px also covers 13" Pro defaults. */
+    @media (max-width: 1512px) {
+        body { font-size: 15px; }
+        .header { padding: 10px 18px; gap: 12px; }
+        .brand { font-size: 18px; }
+        .search input { font-size: 15px; padding: 10px 12px 10px 40px; }
+        .search::before { left: 12px; font-size: 14px; }
+        .btn-new { font-size: 14px; padding: 9px 14px; }
+
+        .products-pane { flex: 0 0 62%; }
+        .basket-pane { flex: 0 0 38%; }
+
+        .categories { padding: 12px 16px 10px; gap: 6px; }
+        .cat-btn { padding: 8px 14px; font-size: 14px; }
+
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 14px;
+        }
+        .product-card { padding: 12px 10px; gap: 6px; border-radius: 12px; }
+        .product-card .emoji { font-size: 32px; }
+        .product-card .name { font-size: 14px; min-height: 34px; }
+        .product-card .price { font-size: 15px; }
+
+        .basket-header { padding: 14px 16px 10px; }
+        .basket-header h2 { font-size: 17px; }
+        .basket-count { font-size: 12px; padding: 3px 9px; }
+        .basket-items { padding: 10px 14px; }
+        .basket-item { padding: 10px; gap: 6px 10px; margin-bottom: 8px; }
+        .item-name { font-size: 14px; }
+        .item-line-total { font-size: 14px; }
+        .qty-btn { width: 28px; height: 28px; font-size: 16px; }
+        .qty-val { font-size: 14px; min-width: 24px; }
+
+        .basket-footer { padding: 12px 16px 14px; }
+        .total-row { margin-bottom: 10px; }
+        .total-row .label { font-size: 14px; }
+        .total-row .value { font-size: 22px; }
+        .cash-row { gap: 8px; margin-bottom: 10px; }
+        .cash-row input { font-size: 16px; padding: 9px 11px; }
+        .change-display { font-size: 16px; padding: 9px 11px; }
+        .exact-cash-btn { padding: 9px; font-size: 13px; margin-bottom: 8px; }
+        .checkout-btn { padding: 13px; font-size: 15px; }
+    }
+
+    /* small laptops / large tablets — give the basket a bit more room */
+    @media (max-width: 1100px) {
+        .products-pane { flex: 0 0 58%; }
+        .basket-pane { flex: 0 0 42%; }
+        .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        .product-card .emoji { font-size: 28px; }
+    }
+
+    /* phones / Telegram side panel — stack vertically */
+    @media (max-width: 900px) {
+        body { overflow: auto; font-size: 15px; }
+        .app { height: auto; min-height: 100vh; }
+        .header { padding: 10px 14px; flex-wrap: wrap; }
+        .brand { font-size: 17px; }
+        .search { order: 3; flex-basis: 100%; max-width: none; }
+        .main { flex-direction: column; }
+        .products-pane, .basket-pane { flex: 1 1 auto; border-right: none; }
+        .products-pane { border-bottom: 1px solid var(--border); }
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 12px;
+        }
+        .product-card .emoji { font-size: 28px; }
+        .product-card .name { font-size: 13px; min-height: 32px; }
+        .basket-pane { max-height: none; }
+        .cash-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+        .product-grid { grid-template-columns: repeat(2, 1fr); }
+        .modal { padding: 20px; }
+        .modal h2 { font-size: 19px; }
+    }
+
+    /* Short-height screens (13" Air browser viewport is ~830-900px tall after
+       menu bar + chrome) — shrink vertical padding so checkout stays above fold. */
+    @media (max-height: 920px) and (min-width: 901px) {
+        .header { padding: 8px 18px; }
+        .categories { padding: 8px 16px 6px; }
+        .product-grid { padding: 12px; gap: 10px; }
+        .product-card { padding: 10px 8px; }
+        .product-card .emoji { font-size: 28px; }
+        .product-card .name { min-height: 32px; }
+        .basket-header { padding: 10px 16px 8px; }
+        .basket-items { padding: 8px 14px; }
+        .basket-footer { padding: 10px 16px 12px; }
+        .total-row { margin-bottom: 8px; }
+        .total-row .value { font-size: 20px; }
+        .checkout-btn { padding: 11px; font-size: 15px; }
+        .exact-cash-btn { padding: 8px; margin-bottom: 6px; }
+    }
+</style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="brand">🛒 Samandar<span class="dot">.</span>Market</div>
+        <div class="search">
+            <input id="search" type="text" placeholder="Mahsulot qidirish..." autocomplete="off" />
+        </div>
+        <div class="scan-indicator" id="scanIndicator" title="Shtrix-kod skaneri tayyor — mahsulotni o'qiting">📡 Scan tayyor</div>
+        <button class="btn-new" id="btnNew">🔄 Yangi mijoz</button>
+    </header>
+
+    <div class="main">
+        <section class="products-pane">
+            <div class="categories" id="categories"></div>
+            <div class="product-grid" id="productGrid"></div>
+        </section>
+
+        <aside class="basket-pane">
+            <div class="basket-header">
+                <h2>🧾 Savatcha</h2>
+                <span class="basket-count" id="basketCount">0</span>
+            </div>
+            <div class="basket-items" id="basketItems"></div>
+            <div class="basket-footer">
+                <div class="total-row">
+                    <span class="label">JAMI</span>
+                    <span class="value" id="totalValue">0 so'm</span>
+                </div>
+                <div class="cash-row">
+                    <div>
+                        <label for="cashReceived">Naqd qabul qilindi</label>
+                        <input id="cashReceived" type="text" inputmode="numeric" placeholder="0" />
+                    </div>
+                    <div>
+                        <label>Qaytim</label>
+                        <div class="change-display" id="changeDisplay">0 so'm</div>
+                    </div>
+                </div>
+                <button type="button" class="exact-cash-btn" id="exactCashBtn" disabled>💵 Qaytimsiz (aniq summa)</button>
+                <button class="checkout-btn" id="checkoutBtn" disabled>✓ To'lov qabul qilish</button>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="receiptModal">
+    <div class="modal">
+        <h2>✅ Chek</h2>
+        <div class="sub" id="receiptTime"></div>
+        <div class="receipt-items" id="receiptItems"></div>
+        <div class="receipt-totals">
+            <div class="receipt-line"><span>Soni</span><span class="amount" id="receiptQty">0</span></div>
+            <div class="receipt-line"><span>Naqd</span><span class="amount" id="receiptCash">0 so'm</span></div>
+            <div class="receipt-line"><span>Qaytim</span><span class="amount" id="receiptChange">0 so'm</span></div>
+            <div class="receipt-line grand"><span>JAMI</span><span class="amount" id="receiptTotal">0 so'm</span></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="modal-void" id="voidBtn">❌ Bekor qilish</button>
+            <button type="button" class="modal-print" id="printBtn">🖨 Chek chiqarish</button>
+            <button type="button" class="modal-close" id="modalCloseBtn">Yangi mijoz</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden area rendered only when printing -->
+<div id="printArea" style="display:none;"></div>
+
+<!-- Weight entry modal -->
+<div class="modal-backdrop" id="weightModal">
+    <form class="modal" id="weightForm">
+        <h2 id="weightTitle">Og'irlik kiriting</h2>
+        <div class="sub" id="weightSub" style="text-align: center; color: var(--text-muted); margin-bottom: 18px; font-size: 14px;"></div>
+        <div class="weight-row">
+            <div>
+                <label class="weight-label" for="weightKg">Og'irlik</label>
+                <div class="weight-input-wrap">
+                    <input id="weightKg" type="number" step="0.001" min="0" inputmode="decimal" autocomplete="off" />
+                    <span class="weight-suffix" id="weightUnit">kg</span>
+                </div>
+            </div>
+            <div>
+                <label class="weight-label" for="weightSum">Summa</label>
+                <div class="weight-input-wrap">
+                    <input id="weightSum" type="number" step="100" min="0" inputmode="decimal" autocomplete="off" />
+                    <span class="weight-suffix">so'm</span>
+                </div>
+            </div>
+        </div>
+        <div class="weight-quick" id="weightQuick"></div>
+        <div class="modal-actions">
+            <button type="button" class="modal-void" id="weightCancel">Bekor</button>
+            <button type="submit" class="modal-close" id="weightOk">Savatchaga</button>
+        </div>
+    </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Currency =====
+const fmt = (n) => {
+    if (!isFinite(n)) n = 0;
+    return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + " so'm";
+};
+const parseNum = (s) => {
+    const cleaned = String(s).replace(/[^\d.-]/g, '');
+    return cleaned ? Number(cleaned) : 0;
+};
+
+// ===== State =====
+const state = {
+    products: [],
+    productById: new Map(),
+    productByBarcode: new Map(),
+    categories: [],
+    activeCategory: 'all',
+    search: '',
+    basket: new Map(), // product_id -> { product, quantity }
+};
+
+// ===== Elements =====
+const el = (id) => document.getElementById(id);
+const categoriesEl = el('categories');
+const gridEl = el('productGrid');
+const basketEl = el('basketItems');
+const basketCountEl = el('basketCount');
+const totalEl = el('totalValue');
+const cashInput = el('cashReceived');
+const changeEl = el('changeDisplay');
+const checkoutBtn = el('checkoutBtn');
+const exactCashBtn = el('exactCashBtn');
+const searchInput = el('search');
+const toastEl = el('toast');
+
+// ===== Toast =====
+let toastTimer = null;
+function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+}
+
+// ===== Fetch products =====
+async function loadCatalog() {
+    const res = await fetch('/api/products');
+    const data = await res.json();
+    state.products = data.products || [];
+    state.categories = data.categories || [];
+    state.productById = new Map(state.products.map(p => [p.id, p]));
+    state.productByBarcode = new Map(
+        state.products
+            .filter(p => p.barcode)
+            .map(p => [String(p.barcode).trim(), p])
+    );
+    renderCategories();
+    renderProducts();
+}
+
+// ===== Render categories =====
+function renderCategories() {
+    categoriesEl.innerHTML = '';
+    const all = document.createElement('button');
+    all.className = 'cat-btn' + (state.activeCategory === 'all' ? ' active' : '');
+    all.textContent = 'Hammasi';
+    all.onclick = () => { state.activeCategory = 'all'; renderCategories(); renderProducts(); };
+    categoriesEl.appendChild(all);
+
+    state.categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn' + (state.activeCategory === cat ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => { state.activeCategory = cat; renderCategories(); renderProducts(); };
+        categoriesEl.appendChild(btn);
+    });
+}
+
+// ===== Render products =====
+function renderProducts() {
+    const q = state.search.trim().toLowerCase();
+    const filtered = state.products.filter(p => {
+        if (state.activeCategory !== 'all' && p.category !== state.activeCategory) return false;
+        if (q && !p.name.toLowerCase().includes(q) && !p.category.toLowerCase().includes(q)) return false;
+        return true;
+    });
+
+    gridEl.innerHTML = '';
+    if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = q ? `«${state.search}» bo'yicha mahsulot topilmadi` : 'Mahsulotlar yo\'q';
+        gridEl.appendChild(empty);
+        return;
+    }
+    filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const priceSuffix = p.sold_by === 'weight' ? ` / ${escapeHtml(p.unit_label || 'kg')}` : '';
+        const badge = p.sold_by === 'weight'
+            ? `<div style="position:absolute; top:8px; right:8px; background:#fef3c7; color:#78350f; font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px;">⚖ ${escapeHtml(p.unit_label || 'kg')}</div>`
+            : '';
+        const stockState = productStockState(p);
+        const stockChip = stockChipHtml(p, stockState);
+        card.style.position = 'relative';
+        if (stockState === 'out') card.classList.add('out-of-stock');
+        else if (stockState === 'low') card.classList.add('low-stock');
+        card.innerHTML = `
+            ${badge}
+            <div class="emoji">${p.emoji || '📦'}</div>
+            <div class="name">${escapeHtml(p.name)}</div>
+            <div class="price">${fmt(p.price)}${priceSuffix}</div>
+            ${stockChip}
+        `;
+        card.onclick = () => {
+            if (stockState === 'out') {
+                toast(`⛔ ${p.name}: ombor tugagan — savatchaga qo'shilmaydi`);
+                return;
+            }
+            if (stockState === 'low') {
+                toast(`⚠️ ${p.name}: kam qoldi (${fmtStock(p)})`);
+            }
+            if (p.sold_by === 'weight') {
+                openWeightModal(p);
+            } else {
+                addToBasket(p.id, 1);
+            }
+        };
+        gridEl.appendChild(card);
+    });
+}
+
+// Stock-state helpers for the cashier UI.
+function productStockState(p) {
+    const s = Number(p.stock || 0);
+    if (s <= 0) return 'out';
+    if (p.low_stock_threshold != null && s <= Number(p.low_stock_threshold)) return 'low';
+    return 'ok';
+}
+function fmtStock(p) {
+    const v = Number(p.stock || 0);
+    if (p.sold_by === 'weight') {
+        return `${v.toFixed(3).replace(/\.?0+$/, '')} ${p.unit_label || 'kg'}`;
+    }
+    return `${Math.round(v)} dona`;
+}
+function stockChipHtml(p, state) {
+    const text = state === 'out' ? '⛔ Tugadi'
+               : state === 'low' ? `📦 ${fmtStock(p)}`
+               : `📦 ${fmtStock(p)}`;
+    const cls = state === 'out' ? 'stock-chip stock-chip-out'
+              : state === 'low' ? 'stock-chip stock-chip-low'
+              : 'stock-chip';
+    return `<div class="${cls}">${text}</div>`;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
+// ===== Basket =====
+// Round a quantity to 3 decimal places (kg precision).
+const round3 = (n) => Math.round(Number(n) * 1000) / 1000;
+// Money is always whole UZS — match the server's ROUND_HALF_UP.
+const lineTotalFor = (product, qty) => Math.round(product.price * qty);
+const fmtQty = (product, qty) => {
+    if (product.sold_by === 'weight') {
+        return `${qty.toFixed(3).replace(/\.?0+$/, '')} ${product.unit_label || 'kg'}`;
+    }
+    return `× ${qty}`;
+};
+
+function addToBasket(productId, qty = 1) {
+    const product = state.productById.get(productId);
+    if (!product) return;
+    const isWeight = product.sold_by === 'weight';
+    const existing = state.basket.get(productId);
+    if (existing) {
+        existing.quantity = isWeight ? round3(existing.quantity + qty) : existing.quantity + qty;
+    } else {
+        state.basket.set(productId, {
+            product,
+            quantity: isWeight ? round3(qty) : qty,
+        });
+    }
+    renderBasket();
+}
+
+function setQty(productId, qty) {
+    const entry = state.basket.get(productId);
+    if (!entry) return;
+    const isWeight = entry.product.sold_by === 'weight';
+    const newQty = isWeight ? round3(qty) : qty;
+    if (newQty <= 0) {
+        state.basket.delete(productId);
+    } else {
+        entry.quantity = newQty;
+    }
+    renderBasket();
+}
+
+function removeFromBasket(productId) {
+    state.basket.delete(productId);
+    renderBasket();
+}
+
+function renderBasket() {
+    basketEl.innerHTML = '';
+    if (state.basket.size === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'basket-empty';
+        empty.innerHTML = `<div class="icon">🧺</div>Savatcha bo'sh<br><small>Boshlash uchun mahsulot tanlang</small>`;
+        basketEl.appendChild(empty);
+    } else {
+        for (const { product, quantity } of state.basket.values()) {
+            const lineTotal = lineTotalFor(product, quantity);
+            const isWeight = product.sold_by === 'weight';
+            const div = document.createElement('div');
+            div.className = 'basket-item';
+            const controls = isWeight ? `
+                <button class="qty-btn weight-edit" title="Tahrirlash">${escapeHtml(fmtQty(product, quantity))} ✎</button>
+            ` : `
+                <div class="qty-controls">
+                    <button class="qty-btn minus">−</button>
+                    <span class="qty-val">${quantity}</span>
+                    <button class="qty-btn plus">+</button>
+                </div>
+            `;
+            div.innerHTML = `
+                <div class="item-name">${product.emoji || ''} ${escapeHtml(product.name)}</div>
+                <button class="item-remove" title="O'chirish">✕</button>
+                <div class="item-controls">
+                    ${controls}
+                    <div class="item-line-total">${fmt(lineTotal)}</div>
+                </div>
+            `;
+            if (isWeight) {
+                div.querySelector('.weight-edit').onclick = () => openWeightModal(product, quantity);
+            } else {
+                div.querySelector('.minus').onclick = () => setQty(product.id, quantity - 1);
+                div.querySelector('.plus').onclick = () => setQty(product.id, quantity + 1);
+            }
+            div.querySelector('.item-remove').onclick = () => removeFromBasket(product.id);
+            basketEl.appendChild(div);
+        }
+    }
+    updateTotals();
+}
+
+function basketTotal() {
+    // Sum already-rounded line totals so the receipt grand total matches
+    // exactly what's displayed for each row (no off-by-one rounding drift).
+    let total = 0;
+    for (const { product, quantity } of state.basket.values()) {
+        total += lineTotalFor(product, quantity);
+    }
+    return total;
+}
+
+function basketQty() {
+    // Count distinct basket rows — clean to read for both unit and weight items.
+    return state.basket.size;
+}
+
+function updateTotals() {
+    const total = basketTotal();
+    totalEl.textContent = fmt(total);
+    basketCountEl.textContent = basketQty();
+    updateChange();
+    checkoutBtn.disabled = total <= 0;
+    exactCashBtn.disabled = total <= 0;
+}
+
+function updateChange() {
+    const total = basketTotal();
+    const cash = parseNum(cashInput.value);
+    const change = cash - total;
+    changeEl.textContent = fmt(change);
+    changeEl.classList.toggle('negative', cash > 0 && change < 0);
+}
+
+cashInput.addEventListener('input', updateChange);
+
+exactCashBtn.addEventListener('click', () => {
+    const total = basketTotal();
+    if (total <= 0) return;
+    cashInput.value = String(total);
+    updateChange();
+});
+
+searchInput.addEventListener('input', (e) => {
+    state.search = e.target.value;
+    renderProducts();
+});
+
+// ===== Weight modal =====
+// State for the modal — which product we're editing and (optionally) the
+// existing basket quantity if we're editing an already-added row.
+let _weightProduct = null;
+let _weightEditingExisting = false;
+
+function openWeightModal(product, existingQty = null) {
+    _weightProduct = product;
+    _weightEditingExisting = existingQty !== null;
+    const unit = product.unit_label || 'kg';
+    el('weightTitle').textContent = `${product.emoji || ''} ${product.name}`.trim();
+    el('weightSub').textContent = `${fmt(product.price)} / ${unit}`;
+    el('weightUnit').textContent = unit;
+
+    const kgInput = el('weightKg');
+    const sumInput = el('weightSum');
+
+    // Prefill: editing → current qty; adding → 1 kg starting point.
+    const startKg = existingQty !== null ? existingQty : 1;
+    kgInput.value = String(startKg);
+    sumInput.value = String(Math.round(product.price * startKg));
+
+    // Render quick-pick chips: common money amounts + common kg.
+    const quick = el('weightQuick');
+    quick.innerHTML = '';
+    const moneyChips = [5000, 10000, 20000, 50000];
+    const kgChips = [0.5, 1, 2];
+    moneyChips.forEach(amount => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = fmt(amount);
+        btn.onclick = () => {
+            sumInput.value = String(amount);
+            syncFromSum();
+        };
+        quick.appendChild(btn);
+    });
+    kgChips.forEach(k => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = `${k} ${unit}`;
+        btn.onclick = () => {
+            kgInput.value = String(k);
+            syncFromKg();
+        };
+        quick.appendChild(btn);
+    });
+
+    el('weightModal').classList.add('open');
+    setTimeout(() => { kgInput.focus(); kgInput.select(); }, 50);
+}
+
+function closeWeightModal() {
+    el('weightModal').classList.remove('open');
+    _weightProduct = null;
+    _weightEditingExisting = false;
+}
+
+function syncFromKg() {
+    if (!_weightProduct) return;
+    const kg = Number(el('weightKg').value) || 0;
+    el('weightSum').value = String(Math.round(_weightProduct.price * kg));
+}
+
+function syncFromSum() {
+    if (!_weightProduct || _weightProduct.price <= 0) return;
+    const sum = Number(el('weightSum').value) || 0;
+    const kg = round3(sum / _weightProduct.price);
+    el('weightKg').value = String(kg);
+}
+
+el('weightKg').addEventListener('input', syncFromKg);
+el('weightSum').addEventListener('input', syncFromSum);
+el('weightCancel').addEventListener('click', closeWeightModal);
+el('weightModal').addEventListener('click', (e) => {
+    if (e.target === el('weightModal')) closeWeightModal();
+});
+el('weightForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!_weightProduct) return;
+    const kg = round3(Number(el('weightKg').value));
+    if (!isFinite(kg) || kg <= 0) {
+        toast("⚠️ Og'irlik 0 dan katta bo'lishi kerak");
+        return;
+    }
+    if (_weightEditingExisting) {
+        setQty(_weightProduct.id, kg);
+    } else {
+        // Replace existing entry with the absolute kg, not add to it.
+        state.basket.set(_weightProduct.id, { product: _weightProduct, quantity: kg });
+        renderBasket();
+    }
+    closeWeightModal();
+});
+
+// ===== Barcode scanner (HID keyboard-wedge) =====
+// Most retail USB scanners emit each character as a fast keystroke, then
+// send Enter. We detect that pattern: tight gap between keys + Enter
+// terminator. Manual typing has 100ms+ gaps so it won't trip the heuristic.
+const SCAN_MAX_GAP_MS = 80;     // max gap between scanner keystrokes
+const SCAN_MIN_LENGTH = 4;      // shortest plausible barcode (EAN-8 is 8 digits)
+let _scanBuffer = '';
+let _scanLastKeyAt = 0;
+let _scanIndicatorTimer = null;
+
+function isEditableTarget(t) {
+    if (!t) return false;
+    const tag = (t.tagName || '').toUpperCase();
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
+}
+
+function flashScanIndicator(text, kind) {
+    const ind = el('scanIndicator');
+    if (!ind) return;
+    ind.classList.remove('scan-ok', 'scan-err');
+    if (kind === 'ok') ind.classList.add('scan-ok');
+    if (kind === 'err') ind.classList.add('scan-err');
+    ind.textContent = text;
+    clearTimeout(_scanIndicatorTimer);
+    _scanIndicatorTimer = setTimeout(() => {
+        ind.classList.remove('scan-ok', 'scan-err');
+        ind.textContent = '📡 Scan tayyor';
+    }, 2500);
+}
+
+function handleBarcodeScan(code) {
+    const product = state.productByBarcode.get(code);
+    if (!product) {
+        flashScanIndicator(`❌ ${code} topilmadi`, 'err');
+        toast(`⚠️ Shtrix-kod topilmadi: ${code}`);
+        return;
+    }
+    if (productStockState(product) === 'out') {
+        flashScanIndicator(`⛔ ${product.name}: tugagan`, 'err');
+        toast(`⛔ ${product.name}: ombor tugagan — savatchaga qo'shilmaydi`);
+        return;
+    }
+    if (product.sold_by === 'weight') {
+        // Can't infer weight from a regular EAN — pop the modal so the
+        // cashier types the weighed amount. If this product is already
+        // in the basket, prefill the modal with its current weight so a
+        // second scan means "edit" rather than "reset to 1 kg".
+        const existing = state.basket.get(product.id);
+        openWeightModal(product, existing ? existing.quantity : null);
+        const label = existing
+            ? `✎ ${product.name} (${fmtQty(product, existing.quantity)})`
+            : `⚖ ${product.name}`;
+        flashScanIndicator(label, 'ok');
+    } else {
+        addToBasket(product.id, 1);
+        // Surface the running count so a stacked scan is obvious.
+        const entry = state.basket.get(product.id);
+        const newQty = entry ? entry.quantity : 1;
+        flashScanIndicator(`✓ ${product.name} × ${newQty}`, 'ok');
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    // Let the user type freely in inputs / textareas / selects.
+    if (isEditableTarget(e.target)) return;
+
+    const now = performance.now();
+    const gap = now - _scanLastKeyAt;
+    _scanLastKeyAt = now;
+
+    // Stale buffer? Reset if too much time passed since the last char.
+    if (gap > SCAN_MAX_GAP_MS && _scanBuffer.length > 0) {
+        _scanBuffer = '';
+    }
+
+    if (e.key === 'Enter' || e.key === 'Tab') {
+        if (_scanBuffer.length >= SCAN_MIN_LENGTH) {
+            const code = _scanBuffer;
+            _scanBuffer = '';
+            e.preventDefault();
+            handleBarcodeScan(code);
+        } else {
+            _scanBuffer = '';
+        }
+        return;
+    }
+
+    // Buffer single printable characters (digits, occasionally letters for Code-128).
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        _scanBuffer += e.key;
+        // Cap buffer length to avoid runaway accumulation.
+        if (_scanBuffer.length > 40) _scanBuffer = _scanBuffer.slice(-40);
+    }
+});
+
+// ===== Checkout =====
+// ID of the receipt currently shown in the modal — used by the Void button.
+let currentReceiptTxId = null;
+
+function renderReceipt(tx) {
+    // tx is the server response: { id, total_amount, cash_received, change_amount, created_at, items: [...] }
+    currentReceiptTxId = tx.id;
+    _lastTx = tx;
+    const itemsEl = el('receiptItems');
+    itemsEl.innerHTML = '';
+    for (const it of tx.items) {
+        const row = document.createElement('div');
+        row.className = 'receipt-line';
+        const qtyLabel = it.sold_by === 'weight'
+            ? `${Number(it.quantity).toFixed(3).replace(/\.?0+$/, '')} ${it.unit_label || 'kg'}`
+            : `× ${it.quantity}`;
+        row.innerHTML = `<span class="name">${escapeHtml(it.product_name)} ${qtyLabel}</span><span class="amount">${fmt(it.line_total)}</span>`;
+        itemsEl.appendChild(row);
+    }
+    el('receiptQty').textContent = tx.items.length;
+    el('receiptCash').textContent = fmt(tx.cash_received);
+    el('receiptChange').textContent = fmt(tx.change_amount);
+    el('receiptTotal').textContent = fmt(tx.total_amount);
+
+    const ts = new Date(tx.created_at);
+    el('receiptTime').textContent = `№${tx.id} · ` + ts.toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    el('voidBtn').disabled = false;
+    el('receiptModal').classList.add('open');
+}
+
+async function voidCurrentTransaction() {
+    if (currentReceiptTxId === null) return;
+    if (!confirm(`№${currentReceiptTxId} tranzaksiya bekor qilinsinmi?`)) return;
+    const btn = el('voidBtn');
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = 'Bekor qilinmoqda...';
+    try {
+        const res = await fetch(`/api/transactions/${currentReceiptTxId}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 204) {
+            const err = await res.json().catch(() => ({ detail: 'Xato' }));
+            toast(`❌ ${err.detail || 'Bekor qilinmadi'}`);
+            btn.disabled = false;
+            return;
+        }
+        toast('🗑 Tranzaksiya bekor qilindi');
+        newCustomer();
+    } catch (err) {
+        console.error(err);
+        toast('❌ Tarmoq xato');
+        btn.disabled = false;
+    } finally {
+        btn.textContent = prev;
+    }
+}
+
+async function submitCheckout() {
+    const total = basketTotal();
+    const cash = parseNum(cashInput.value);
+    if (cash < total) {
+        toast(`⚠️ Naqd yetarli emas: ${fmt(total - cash)} kam`);
+        cashInput.focus();
+        return;
+    }
+    const items = [];
+    for (const { product, quantity } of state.basket.values()) {
+        items.push({ product_id: product.id, quantity });
+    }
+
+    checkoutBtn.disabled = true;
+    const prevText = checkoutBtn.textContent;
+    checkoutBtn.textContent = 'Saqlanmoqda...';
+    try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items, cash_received: cash }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Xato' }));
+            toast(`❌ ${err.detail || 'Checkout xato'}`);
+            return;
+        }
+        const tx = await res.json();
+        renderReceipt(tx);
+    } catch (err) {
+        console.error(err);
+        toast('❌ Tarmoq xato — qayta urinib ko\'ring');
+    } finally {
+        checkoutBtn.textContent = prevText;
+        updateTotals();
+    }
+}
+
+function newCustomer() {
+    state.basket.clear();
+    cashInput.value = '';
+    currentReceiptTxId = null;
+    _lastTx = null;
+    renderBasket();
+    el('receiptModal').classList.remove('open');
+    searchInput.value = '';
+    state.search = '';
+    renderProducts();
+}
+
+checkoutBtn.addEventListener('click', () => {
+    if (state.basket.size === 0) return;
+    submitCheckout();
+});
+el('modalCloseBtn').addEventListener('click', newCustomer);
+el('voidBtn').addEventListener('click', voidCurrentTransaction);
+el('btnNew').addEventListener('click', () => {
+    if (state.basket.size > 0 && !confirm("Savatchani bo'shatish?")) return;
+    newCustomer();
+});
+
+// ===== Receipt printing =====
+function printReceipt(tx) {
+    const area = el('printArea');
+    const ts = new Date(tx.created_at);
+    const dateStr = ts.toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    let itemRows = '';
+    for (const it of tx.items) {
+        const qtyLabel = it.sold_by === 'weight'
+            ? `${Number(it.quantity).toFixed(3).replace(/\.?0+$/, '')} ${it.unit_label || 'kg'}`
+            : `x${it.quantity}`;
+        itemRows += `
+            <div class="pr-line">
+                <span class="pr-name">${escapeHtml(it.product_name)}</span>
+            </div>
+            <div class="pr-line">
+                <span class="pr-name" style="padding-left:8pt">${qtyLabel}</span>
+                <span class="pr-amount">${fmt(it.line_total)}</span>
+            </div>`;
+    }
+
+    area.innerHTML = `
+        <div class="pr-center pr-bold" style="font-size:14pt;">Samandar Market</div>
+        <div class="pr-center" style="font-size:9pt;">Chek №${tx.id}</div>
+        <div class="pr-center" style="font-size:9pt;">${dateStr}</div>
+        <hr class="pr-divider"/>
+        ${itemRows}
+        <hr class="pr-divider"/>
+        <div class="pr-line"><span class="pr-name">Jami:</span><span class="pr-amount pr-bold">${fmt(tx.total_amount)}</span></div>
+        <div class="pr-line"><span class="pr-name">Naqd:</span><span class="pr-amount">${fmt(tx.cash_received)}</span></div>
+        <div class="pr-line"><span class="pr-name">Qaytim:</span><span class="pr-amount">${fmt(tx.change_amount)}</span></div>
+        <hr class="pr-divider"/>
+        <div class="pr-footer">Xarid uchun rahmat!</div>
+    `;
+
+    window.print();
+}
+
+let _lastTx = null;
+
+el('printBtn').addEventListener('click', () => {
+    if (_lastTx) printReceipt(_lastTx);
+});
+
+// ===== Boot =====
+(async function init() {
+    try {
+        await loadCatalog();
+    } catch (err) {
+        console.error(err);
+        gridEl.innerHTML = `<div class="empty">Mahsulotlarni yuklashda xato</div>`;
+    }
+    renderBasket();
+})();
+</script>
+</body>
+</html>

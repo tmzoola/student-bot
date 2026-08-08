@@ -1,0 +1,100 @@
+{% extends "_base.html" %}
+{% block title %}Ro'yxatdan o'tish — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.form-card{background:#fff;border-radius:18px;padding:22px;box-shadow:var(--shadow);margin-bottom:14px}
+.form-lbl{font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+.form-inp{width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.95rem;background:#F9FAFB;color:#111;font-family:inherit}
+.form-inp:focus{outline:none;border-color:var(--green);background:#fff}
+.form-hint{font-size:.72rem;color:var(--muted);margin-top:6px}
+.msg{padding:12px 14px;border-radius:12px;font-size:.85rem;margin-bottom:12px;font-weight:600}
+.msg-ok{background:#E4F3EB;color:var(--green-dark)}
+.msg-err{background:#FDE8E8;color:#c0392b}
+.mb{margin-bottom:14px}
+.title{font-size:1.35rem;font-weight:800;margin-bottom:6px;color:#111}
+.sub{font-size:.85rem;color:var(--muted);margin-bottom:18px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <div style="width:38px"></div>
+  <div class="hdr-title">Ro'yxatdan o'tish</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="title">👋 Xush kelibsiz!</div>
+<div class="sub">Davom etish uchun quyidagi ma'lumotlarni to'ldiring.</div>
+
+<div id="msg"></div>
+
+<div class="form-card">
+  <div class="mb">
+    <div class="form-lbl">Ism Familya</div>
+    <input id="full_name" class="form-inp" placeholder="Ism Familya" maxlength="100" autocomplete="name">
+  </div>
+
+  <div class="mb">
+    <div class="form-lbl">Telefon raqam</div>
+    <input id="phone" class="form-inp" placeholder="+998XXXXXXXXX" inputmode="tel" autocomplete="tel">
+    <div class="form-hint">Masalan: +998901234567</div>
+  </div>
+
+  <button id="save" class="btn btn-primary">Ro'yxatdan o'tish</button>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch('/api/v1/webapp/me', { headers: MK.authHeaders() });
+    if (r.ok) {
+        const d = await r.json();
+        if (d.is_registered) { location.href = '/webapp/modules'; return; }
+        const full = [d.first_name, d.last_name].filter(Boolean).join(' ');
+        if (full) document.getElementById('full_name').value = full;
+        if (d.phone) document.getElementById('phone').value = d.phone;
+    }
+})();
+
+document.getElementById('save').addEventListener('click', async () => {
+    const full_name = document.getElementById('full_name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    if (full_name.length < 2) { showMsg('err', "Ism Familyani kiriting"); return; }
+    if (!/^(\+?998)?\s?(9[0-9]|33|55|77|88)\s?\d{3}\s?\d{2}\s?\d{2}$/.test(phone)) {
+        showMsg('err', "Telefon raqam noto'g'ri. Format: +998 XX XXX XX XX (90–99, 33, 55, 77, 88)");
+        return;
+    }
+
+    const btn = document.getElementById('save');
+    btn.disabled = true; btn.textContent = 'Yuborilmoqda…';
+
+    try {
+        const r = await fetch('/api/v1/webapp/me/update', {
+            method: 'POST',
+            headers: Object.assign({'Content-Type':'application/json'}, MK.authHeaders()),
+            body: JSON.stringify({ full_name, phone })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Xatolik');
+        MK.haptic('success');
+        showMsg('ok', "✅ Ro'yxatdan o'tdingiz");
+        setTimeout(() => { location.href = '/webapp/modules'; }, 700);
+    } catch(e){
+        MK.haptic('error');
+        showMsg('err', e.message || 'Xatolik');
+        btn.disabled = false; btn.textContent = "Ro'yxatdan o'tish";
+    }
+});
+
+function showMsg(kind, text){
+    const el = document.getElementById('msg');
+    el.className = 'msg ' + (kind === 'ok' ? 'msg-ok' : 'msg-err');
+    el.textContent = text;
+}
+</script>
+{% endblock %}

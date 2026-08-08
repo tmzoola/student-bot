@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Muslima Darmonova</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-0:#0a1734;
+  --navy-1:#0b1c3f;
+  --navy-2:#132a55;
+  --gold:#e6c667;
+  --gold-hi:#f6df97;
+  --gold-lo:#c29a3a;
+  --ink:#eaf0fb;
+  --muted:#a9b6d4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+a{text-decoration:none;color:inherit}
+button{border:none;background:none;cursor:pointer;font-family:inherit}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  background:
+    radial-gradient(120% 60% at 82% 20%, rgba(38,64,120,.55) 0%, rgba(38,64,120,0) 55%),
+    radial-gradient(90% 50% at 15% 8%, rgba(28,52,104,.5) 0%, rgba(28,52,104,0) 50%),
+    linear-gradient(170deg, var(--navy-1) 0%, var(--navy-0) 45%, #060f26 100%);
+  background-attachment:fixed;
+}
+
+.wrap{max-width:480px;margin:0 auto;position:relative;overflow:hidden;min-height:100vh;
+  padding:34px 26px calc(150px + env(safe-area-inset-bottom));}
+
+/* Decorative dotted grid (top-left) */
+.dots{position:absolute;top:26px;left:20px;width:96px;height:70px;opacity:.5;
+  background-image:radial-gradient(rgba(230,198,103,.55) 1.4px, transparent 1.6px);
+  background-size:13px 13px;pointer-events:none}
+/* Decorative gold arcs (right) */
+.arc{position:absolute;border:1.5px solid rgba(230,198,103,.16);border-radius:50%;pointer-events:none}
+.arc.a1{width:360px;height:360px;top:-120px;right:-150px}
+.arc.a2{width:230px;height:230px;top:-70px;right:-90px;border-color:rgba(230,198,103,.1)}
+
+/* ── Brand header ──────────────────────────── */
+.brand{position:relative;text-align:center;margin-bottom:30px}
+.logo-mark{width:66px;height:66px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:100%;height:100%}
+.brand-name{font-family:'Playfair Display',serif;font-weight:800;letter-spacing:.16em;
+  font-size:23px;color:var(--gold);text-shadow:0 1px 10px rgba(230,198,103,.18)}
+.brand-rule{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 0}
+.brand-rule::before,.brand-rule::after{content:"";height:1px;width:44px;
+  background:linear-gradient(90deg,transparent,rgba(230,198,103,.6))}
+.brand-rule::after{background:linear-gradient(90deg,rgba(230,198,103,.6),transparent)}
+.brand-sub{font-size:9.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;
+  font-weight:600;white-space:nowrap}
+
+/* ── Hero ──────────────────────────────────── */
+.hero-photo{position:relative;margin:0 -26px 20px;height:min(62vh,430px);overflow:hidden}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:52% 12%;display:block}
+.hero-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(180deg, rgba(6,15,38,.05) 0%, rgba(6,15,38,.28) 42%, rgba(6,15,38,.88) 80%, #060f26 100%),
+  linear-gradient(90deg, rgba(6,15,38,.55) 0%, rgba(6,15,38,0) 50%)}
+.hero-title{font-family:'Playfair Display',serif;font-weight:800;line-height:1.12;
+  font-size:40px;letter-spacing:.005em}
+.hero-photo .hero-title{position:absolute;left:26px;right:26px;bottom:22px;z-index:2;margin:0;
+  text-shadow:0 2px 20px rgba(0,0,0,.55)}
+.hero-title .gold{color:var(--gold);
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold));-webkit-background-clip:text;
+  background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:15px;line-height:1.7;color:var(--muted);max-width:340px;margin-bottom:28px}
+.hero-sub .em{color:var(--gold);font-weight:700}
+
+/* ── Features ──────────────────────────────── */
+.feats{display:flex;flex-direction:column;gap:12px;margin-bottom:30px}
+.feat{display:flex;align-items:center;gap:15px;padding:13px 16px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  border:1px solid rgba(230,198,103,.14);
+  box-shadow:0 8px 24px rgba(4,10,26,.35)}
+.feat-ic{width:50px;height:50px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--gold);
+  border:1.5px solid rgba(230,198,103,.5);
+  background:radial-gradient(circle at 50% 35%,rgba(230,198,103,.16),rgba(230,198,103,.03))}
+.feat-ic svg{width:24px;height:24px;fill:currentColor}
+.feat-b{min-width:0}
+.feat-t{font-family:'Playfair Display',serif;font-weight:700;font-size:14px;letter-spacing:.06em;
+  color:var(--gold-hi);text-transform:uppercase;margin-bottom:3px}
+.feat-d{font-size:12.5px;line-height:1.4;color:var(--muted)}
+
+/* ── Signature ─────────────────────────────── */
+.sign{text-align:center;margin-bottom:26px}
+.sign-name{font-family:'Great Vibes',cursive;font-size:34px;color:var(--gold);
+  line-height:1;margin-bottom:6px;text-shadow:0 2px 12px rgba(230,198,103,.2)}
+.sign-tag{font-size:13px;color:var(--muted)}
+
+/* ── Fixed CTA ─────────────────────────────── */
+.cta-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;
+  padding:16px 26px calc(18px + env(safe-area-inset-bottom));
+  max-width:480px;margin:0 auto;
+  background:linear-gradient(180deg,rgba(6,15,38,0),rgba(6,15,38,.85) 32%,#060f26 72%)}
+.btn-start{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;
+  padding:19px;border-radius:16px;
+  font-family:'Playfair Display',serif;font-weight:800;font-size:19px;letter-spacing:.14em;
+  color:#0a1734;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--gold-hi) 0%,var(--gold) 48%,var(--gold-lo) 100%);
+  box-shadow:0 10px 30px rgba(230,198,103,.34), inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .15s, box-shadow .15s}
+.btn-start:active{transform:translateY(1px) scale(.99);box-shadow:0 6px 18px rgba(230,198,103,.3)}
+.btn-start .arw{display:flex;font-size:22px;line-height:1}
+
+@media (max-width:360px){
+  .hero-title{font-size:34px}
+  .brand-name{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dots"></div>
+  <div class="arc a1"></div>
+  <div class="arc a2"></div>
+
+  {# ── Brand ─────────────────────────────────── #}
+  <div class="brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- graduation cap -->
+        <path d="M32 6 L58 17 L32 28 L6 17 Z" fill="#e6c667"/>
+        <path d="M32 10.5 L49 17 L32 23.5 L15 17 Z" fill="#0b1c3f"/>
+        <path d="M18 20 V31 C18 36 25 39 32 39 C39 39 46 36 46 31 V20 L32 25.8 Z" fill="#e6c667" opacity=".9"/>
+        <path d="M18 22.5 V31 C18 35 25 37.5 32 37.5 C39 37.5 46 35 46 31 V22.5 L32 27.8 Z" fill="#0b1c3f"/>
+        <line x1="58" y1="17" x2="58" y2="34" stroke="#e6c667" stroke-width="1.6"/>
+        <circle cx="58" cy="35.5" r="2.4" fill="#e6c667"/>
+        <!-- MD monogram -->
+        <text x="32" y="55" text-anchor="middle" font-family="'Playfair Display',serif"
+              font-size="20" font-weight="800" fill="#e6c667" letter-spacing="1">MD</text>
+      </svg>
+    </div>
+    <div class="brand-name">MUSLIMA DARMONOVA</div>
+    <div class="brand-rule">
+      <span class="brand-sub">{{ content.badge_text if content else 'Attestatsiyaga tayyorlov platformasi' }}</span>
+    </div>
+  </div>
+
+  {# ── Hero ──────────────────────────────────── #}
+  <div class="hero-photo">
+    <img id="hero-img" alt="Muslima Darmonova" fetchpriority="high">
+    <h1 class="hero-title">{{ content.hero_title_before if content else 'Ilm bilan' }}
+      <span class="gold">{{ content.hero_title_highlight if content else 'yuksalish' }}</span>
+      {{ content.hero_title_after if content else "sening qo‘linda!" }}</h1>
+  </div>
+  <p class="hero-sub">{% if content %}{{ content.hero_subtitle }}{% else %}Attestatsiyada yuqori natijaga erishish uchun eng <span class="em">ishonchli platforma!</span>{% endif %}</p>
+
+  {# ── Features ──────────────────────────────── #}
+  <div class="feats">
+    <div class="feat">
+      <div class="feat-ic">
+        <svg viewBox="0 0 24 24"><path d="M6 3h12v2h3v3a5 5 0 0 1-5 5 5 5 0 0 1-3 1.9V18h3v2H8v-2h3v-3.1A5 5 0 0 1 8 13a5 5 0 0 1-5-5V5h3V3zm0 4H5v1a3 3 0 0 0 1 2.2V7zm12 0v3.2A3 3 0 0 0 19 8V7h-1z"/></svg>
+      </div>
+      <div class="feat-b">
+        <div class="feat-t">Yuqori natija</div>
+        <div class="feat-d">Sifatli darslar va tajribali mutaxassislar</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">
+        <svg viewBox="0 0 24 24"><path d="M4 20V4h2v14h14v2H4zm4-2V9h3v9H8zm5 0V6h3v12h-3zm5 0v-6h3v6h-3z"/></svg>
+      </div>
+      <div class="feat-b">
+        <div class="feat-t">100 ball maqsad</div>
+        <div class="feat-d">Strategiya, testlar va tahlillar bilan</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.9 5.9 21.4l1.4-6.8L2.2 9.9l6.9-.8L12 2z"/></svg>
+      </div>
+      <div class="feat-b">
+        <div class="feat-t">Kafolatli yondashuv</div>
+        <div class="feat-d">Natijangiz biz uchun muhim!</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Signature ─────────────────────────────── #}
+  <div class="sign">
+    <div class="sign-name">Muslima Darmonova</div>
+    <div class="sign-tag">Sizning yutuqlaringiz — bizning faxrimiz! 🧡</div>
+  </div>
+</div>
+
+{# ── Fixed BOSHLASH button ─────────────────────── #}
+<div class="cta-bar">
+  <a href="/webapp/modules" class="btn-start">
+    {{ content.primary_btn_label if content else 'Boshlash' }}
+    <span class="arw">→</span>
+  </a>
+</div>
+
+<script>
+(function(){
+  var authPromise = null;
+  var tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready(); tg.expand();
+    try { tg.setHeaderColor('#0b1c3f'); tg.setBackgroundColor('#060f26'); } catch(e){}
+    // Session cookie'ni o'rnatish uchun /auth chaqiramiz — ichki sahifalarda
+    // Telegram.WebApp.initData yo'qolib qolsa ham (iOS'da xarakterli), server
+    // cookie orqali sizni tanib oladi.
+    var payload = tg.initData
+      ? { init_data: tg.initData }
+      : (tg.initDataUnsafe?.user ? { user: tg.initDataUnsafe.user } : null);
+    if (payload) {
+      authPromise = fetch('/api/v1/webapp/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify(payload),
+        credentials: 'same-origin',
+      }).catch(function(){});
+    }
+  }
+
+  // "Boshlash" bosilganda auth tugashini kutib turamiz — cookie o'rnatilib
+  // ulgurmasa, keyingi sahifa 401 oladi.
+  document.addEventListener('click', function(ev){
+    var a = ev.target.closest && ev.target.closest('a.btn-start');
+    if (!a || !authPromise) return;
+    ev.preventDefault();
+    var href = a.getAttribute('href');
+    authPromise.finally(function(){ location.href = href; });
+  }, true);
+})();
+// "Boshlash" bosilganda ichki sahifaga URL hash'ni (#tgWebAppData=...) meros
+// qilib beramiz — Telegram SDK yangi sahifada initData'ni qayta o'qishi uchun.
+(function(){
+  const currentHash = location.hash || '';
+  if (!currentHash) return;
+  document.addEventListener('click', function(ev){
+    const a = ev.target.closest && ev.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (!href || href.startsWith('#') || /^[a-z]+:/i.test(href)) return;
+    try {
+      const u = new URL(href, location.href);
+      if (u.origin !== location.origin) return;
+      if (!u.hash) {
+        u.hash = currentHash;
+        a.setAttribute('href', u.pathname + u.search + u.hash);
+      }
+    } catch(e){}
+  }, true);
+})();
+
+/* Load hero photo via fetch so we can pass ngrok-skip-browser-warning
+   (an <img> tag can't send headers, and ngrok-free otherwise returns its
+   interstitial HTML instead of the image). Falls back to a direct src in
+   production / non-ngrok environments. */
+(function(){
+  var img=document.getElementById('hero-img');
+  if(!img)return;
+  var url='/static/muslima_darmon.jpg';
+  fetch(url,{headers:{'ngrok-skip-browser-warning':'true'}})
+    .then(function(r){return r.ok?r.blob():Promise.reject(r.status);})
+    .then(function(b){img.src=URL.createObjectURL(b);})
+    .catch(function(){img.src=url;});
+})();
+</script>
+</body>
+</html>

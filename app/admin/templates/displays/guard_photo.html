@@ -1,0 +1,10 @@
+{% if data %}
+    <a href="{{ data }}" target="_blank">
+        <img src="{{ data }}"
+             style="max-width: 220px; max-height: 220px; object-fit: cover; border-radius: 8px;"
+             class="img-fluid d-block"
+             alt="profil rasmi"/>
+    </a>
+{% else %}
+    <span class="text-muted">rasm yo'q</span>
+{% endif %}

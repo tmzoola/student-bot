@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excel orqali test — Muslima Darmonova Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f6fa;color:#3b4256;min-height:100vh}
+.top{background:#fff;border-bottom:1px solid rgba(0,0,0,.07);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#111827;font-weight:700;font-size:1rem;text-decoration:none}
+.brand-ic{width:32px;height:32px;background:linear-gradient(135deg,#6c63f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.back-link{color:#6b7280;text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;transition:.15s}
+.back-link:hover{background:rgba(0,0,0,.04);color:#111827}
+
+.wrap{max-width:820px;margin:0 auto;padding:28px}
+.page-title{font-size:1.7rem;font-weight:800;color:#111827;margin:0 0 4px;display:flex;align-items:center;gap:12px}
+.page-sub{color:#6b7280;font-size:.9rem;margin:0 0 20px}
+
+.card{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:22px;box-shadow:0 1px 3px rgba(16,24,40,.06);margin-bottom:16px}
+.card h3{margin:0 0 4px;font-size:1.05rem;color:#111827}
+.card p.desc{margin:0 0 16px;color:#6b7280;font-size:.86rem;line-height:1.5}
+
+.row{margin-bottom:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:.78rem;font-weight:700;color:#4b5563;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+input[type=text],input[type=number],select{width:100%;padding:11px 13px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:.92rem;font-family:inherit;background:#fff;color:#1f2430;transition:.15s}
+input:focus,select:focus{outline:none;border-color:#6c63f6;box-shadow:0 0 0 3px rgba(108,99,246,.12)}
+input[type=file]{width:100%;padding:12px 14px;border:1.5px dashed rgba(0,0,0,.18);border-radius:10px;font-size:.9rem;background:#fbfbfe;cursor:pointer}
+.hint{font-size:.72rem;color:#6b7280;margin-top:5px}
+.req{color:#ef4444}
+.checkbox-row{display:flex;align-items:center;gap:8px;margin:14px 0}
+.checkbox-row input{width:16px;height:16px}
+.checkbox-row label{margin:0;text-transform:none;letter-spacing:0;font-weight:600;color:#4b5563}
+
+.btn{padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,#6c63f6,#8b5cf6);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(108,99,246,.35)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-outline{background:#fff;color:#6c63f6;border:1.5px solid rgba(108,99,246,.4)}
+.btn-outline:hover{background:rgba(108,99,246,.06)}
+
+.msg{padding:14px 16px;border-radius:10px;font-size:.88rem;margin-bottom:16px;font-weight:600;display:none}
+.msg.show{display:block}
+.msg-ok{background:rgba(34,197,138,.12);border:1px solid rgba(34,197,138,.3);color:#15803d}
+.msg-err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#b91c1c}
+.msg-info{background:rgba(108,140,255,.1);border:1px solid rgba(108,140,255,.25);color:#4f46e5}
+
+.summary{display:none;margin-top:8px}
+.summary.show{display:block}
+.stats-bar{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.stat{flex:1;min-width:120px;padding:12px 14px;background:rgba(108,99,246,.06);border:1px solid rgba(108,99,246,.15);border-radius:10px}
+.stat .v{font-size:1.35rem;font-weight:800;color:#6c63f6}
+.stat .l{font-size:.72rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.errors{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:12px 14px;max-height:220px;overflow:auto;margin:0;list-style:none}
+.errors li{font-size:.82rem;color:#b91c1c;margin:2px 0}
+
+.cols{background:rgba(0,0,0,.03);border-radius:8px;padding:12px 14px;font-size:.8rem;color:#4b5563;line-height:1.7}
+.cols code{background:rgba(108,99,246,.1);color:#6c63f6;padding:1px 6px;border-radius:5px;font-weight:600}
+
+html[data-theme="dark"] body{background:#0b0e18;color:#cdd3e0}
+html[data-theme="dark"] .top{background:#0b0e18;border-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .brand,html[data-theme="dark"] .page-title,html[data-theme="dark"] .card h3{color:#fff}
+html[data-theme="dark"] .back-link{color:#7c8aa8}
+html[data-theme="dark"] .page-sub,html[data-theme="dark"] .card p.desc{color:#7c8aa8}
+html[data-theme="dark"] .card{background:#141824;border-color:rgba(255,255,255,.06)}
+html[data-theme="dark"] input[type=text],html[data-theme="dark"] input[type=number],html[data-theme="dark"] select{background:#131828;border-color:rgba(255,255,255,.08);color:#fff}
+html[data-theme="dark"] input[type=file]{background:#131828;border-color:rgba(255,255,255,.12);color:#cdd3e0}
+html[data-theme="dark"] label,html[data-theme="dark"] .checkbox-row label{color:#a3adc2}
+html[data-theme="dark"] .hint{color:#7c8aa8}
+html[data-theme="dark"] .cols{background:rgba(255,255,255,.04);color:#a3adc2}
+html[data-theme="dark"] .btn-outline{background:#141824;color:#a78bfa}
+</style>
+</head>
+<body>
+
+<div class="top">
+    <div class="top-left">
+        <a href="/admin" class="brand">
+            <div class="brand-ic"><i class="fa fa-file-excel"></i></div>
+            Muslima Darmonova
+        </a>
+        <a href="/admin" class="back-link"><i class="fa fa-arrow-left"></i> Admin</a>
+    </div>
+    <button class="back-link" id="theme-toggle" title="Yorug'/Tungi rejim" style="border:none;background:transparent;cursor:pointer;font-family:inherit"><i class="fa fa-moon"></i></button>
+</div>
+
+<div class="wrap">
+    <h1 class="page-title"><i class="fa fa-file-excel" style="color:#22c58a"></i> Excel orqali test yuklash</h1>
+    <p class="page-sub">Modul, mavzu va test nomini shu yerdan kiriting, savollarni esa Excel orqali yuklang.</p>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="card">
+        <h3>1-qadam · Savollar shablonini yuklab oling</h3>
+        <p class="desc">Faylda faqat savollar bo'ladi. Har qator — bitta savol.</p>
+        <a href="/admin-tools/quiz-import/template" class="btn btn-outline"><i class="fa fa-download"></i> Namuna shablon (.xlsx)</a>
+        <div class="cols" style="margin-top:14px">
+            Ustunlar:
+            <code>Savol</code> · <code>A</code> · <code>B</code> · <code>C</code> · <code>D</code> ·
+            <code>To'g'ri javob</code> (A-D) · <code>Izoh</code>
+        </div>
+        <div class="hint" style="margin-top:8px"><i class="fa fa-image"></i> Rasmli savollar: avval matnli savolni yuklang, keyin admin panel → <b>Savollar</b> bo'limida o'sha savolni tahrirlab rasm yuklaysiz.</div>
+    </div>
+
+    <div class="card">
+        <h3>2-qadam · Test ma'lumotini kiriting va faylni yuklang</h3>
+        <p class="desc">Barcha savollar shu bitta test ostiga yuklanadi.</p>
+
+        <div class="row two">
+            <div>
+                <label for="module_id">Modul (ixtiyoriy)</label>
+                <select id="module_id">
+                    <option value="">— Modulsiz —</option>
+                    {% for m in modules %}<option value="{{ m.id }}">{{ m.title }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="new_module_title">yoki yangi modul nomi</label>
+                <input id="new_module_title" type="text" placeholder="Masalan: Matematika">
+            </div>
+        </div>
+
+        <div class="row two">
+            <div>
+                <label for="topic_id">Mavzu <span class="req">*</span></label>
+                <select id="topic_id">
+                    <option value="">— tanlang —</option>
+                    {% for t in topics %}<option value="{{ t.id }}" data-module="{{ t.module_id or '' }}">{{ t.title }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="new_topic_title">yoki yangi mavzu nomi</label>
+                <input id="new_topic_title" type="text" placeholder="Masalan: Arifmetika">
+            </div>
+        </div>
+        <div class="hint" style="margin-top:-6px;margin-bottom:14px">Mavjud mavzuni tanlang <b>yoki</b> yangi nom kiriting (yangi nom kiritilsa u ustun oladi).</div>
+
+        <div class="row two">
+            <div>
+                <label for="quiz_title">Test nomi <span class="req">*</span></label>
+                <input id="quiz_title" type="text" placeholder="Masalan: 1-bo'lim testi" maxlength="255">
+            </div>
+            <div>
+                <label for="time_limit">Vaqt (soniya)</label>
+                <input id="time_limit" type="number" value="300" min="10" step="10">
+            </div>
+        </div>
+
+        <div class="row">
+            <label for="file">Excel fayl (.xlsx) <span class="req">*</span></label>
+            <input id="file" type="file" accept=".xlsx">
+        </div>
+
+        <div class="checkbox-row">
+            <input id="notify" type="checkbox">
+            <label for="notify">Yaratilgach foydalanuvchilarga bildirishnoma yuborilsin</label>
+        </div>
+        <button id="upload" class="btn btn-primary"><i class="fa fa-cloud-arrow-up"></i> Yuklash va yaratish</button>
+
+        <div id="summary" class="summary">
+            <div class="stats-bar" style="margin-top:18px">
+                <div class="stat"><div class="v" id="s-quizzes">0</div><div class="l">Test</div></div>
+                <div class="stat"><div class="v" id="s-questions">0</div><div class="l">Savol</div></div>
+            </div>
+            <div id="err-box" style="display:none">
+                <label>O'tkazib yuborilgan qatorlar</label>
+                <ul class="errors" id="err-list"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function showMsg(kind, html){
+    const el = $('msg');
+    el.className = 'msg show msg-' + kind;
+    el.innerHTML = html;
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Modul tanlanganda mavzu ro'yxatini shu modulga qarab filtrlaymiz.
+function filterTopics(){
+    const mid = $('module_id').value;
+    const sel = $('topic_id');
+    let hidden = 0;
+    for (const opt of sel.options){
+        if (!opt.value) continue;
+        const om = opt.getAttribute('data-module') || '';
+        const show = !mid || om === mid;
+        opt.hidden = !show;
+        if (!show && opt.selected) { sel.value = ''; }
+    }
+}
+$('module_id').addEventListener('change', filterTopics);
+
+$('upload').addEventListener('click', async () => {
+    const f = $('file').files[0];
+    const quiz_title = $('quiz_title').value.trim();
+    const topic_id = $('topic_id').value;
+    const new_topic = $('new_topic_title').value.trim();
+
+    if (!quiz_title) { showMsg('err', "Test nomini kiriting"); return; }
+    if (!topic_id && !new_topic) { showMsg('err', "Mavzuni tanlang yoki yangi mavzu nomini kiriting"); return; }
+    if (!f) { showMsg('err', ".xlsx faylni tanlang"); return; }
+
+    const fd = new FormData();
+    fd.append('file', f);
+    fd.append('module_id', $('module_id').value);
+    fd.append('new_module_title', $('new_module_title').value.trim());
+    fd.append('topic_id', topic_id);
+    fd.append('new_topic_title', new_topic);
+    fd.append('quiz_title', quiz_title);
+    fd.append('time_limit_seconds', $('time_limit').value || '300');
+    fd.append('notify', $('notify').checked ? 'true' : 'false');
+
+    const btn = $('upload');
+    btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Yuklanmoqda…';
+    $('summary').className = 'summary';
+    showMsg('info', "Fayl o'qilmoqda va test yaratilmoqda…");
+
+    try {
+        const r = await fetch('/admin-tools/quiz-import/upload', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Xatolik');
+
+        const c = d.created;
+        $('s-quizzes').textContent = c.quizzes;
+        $('s-questions').textContent = c.questions;
+        $('summary').className = 'summary show';
+
+        const errs = d.errors || [];
+        if (errs.length){
+            $('err-box').style.display = 'block';
+            $('err-list').innerHTML = errs.map(e => `<li>${e}</li>`).join('');
+        } else {
+            $('err-box').style.display = 'none';
+        }
+
+        let extra = errs.length ? ` · <b>${errs.length}</b> qator o'tkazib yuborildi` : '';
+        showMsg('ok', `✅ Tayyor! <b>${c.questions}</b> ta savolli test yaratildi${extra}. Rasm qo'shish uchun admin panel → Savollar bo'limidan tahrirlang.`);
+        $('file').value = '';
+    } catch(e){
+        showMsg('err', e.message || 'Xatolik');
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa fa-cloud-arrow-up"></i> Yuklash va yaratish';
+    }
+});
+
+(function(){
+    const KEY='malaka-admin-theme';
+    function ico(t){return t==='dark'?'fa-sun':'fa-moon';}
+    const btn=document.getElementById('theme-toggle');
+    btn.querySelector('i').className='fa '+ico(document.documentElement.getAttribute('data-theme')||'light');
+    btn.addEventListener('click',()=>{
+        const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+        document.documentElement.setAttribute('data-theme',next);
+        try{localStorage.setItem(KEY,next);}catch(e){}
+        btn.querySelector('i').className='fa '+ico(next);
+    });
+})();
+</script>
+</body>
+</html>

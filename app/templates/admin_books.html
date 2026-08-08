@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('malaka-admin-theme')||'light');}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitob yuklash — Muslima Darmonova Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f6fa;color:#3b4256;min-height:100vh}
+
+.top{background:#ffffff;border-bottom:1px solid rgba(0,0,0,.07);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#111827;font-weight:700;font-size:1rem;text-decoration:none}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#6c63f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff}
+.back-link{color:#6b7280;text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;transition:.15s;border:none;background:transparent;cursor:pointer;font-family:inherit}
+.back-link:hover{background:rgba(0,0,0,.04);color:#111827}
+
+.wrap{max-width:1100px;margin:0 auto;padding:28px}
+.page-title{font-size:1.75rem;font-weight:800;color:#111827;margin:0 0 4px}
+.page-sub{color:#6b7280;font-size:.9rem;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+.card{background:#ffffff;border:1px solid rgba(0,0,0,.07);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.card-head{padding:14px 20px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between}
+.card-head h3{margin:0;color:#111827;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.card-head .dot{width:6px;height:6px;background:#6c63f6;border-radius:50%}
+.card-body{padding:18px 20px}
+
+.label{display:block;font-size:.75rem;color:#6b7280;font-weight:600;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.label:first-child{margin-top:0}
+.input,.textarea,.select{width:100%;background:#ffffff;border:1px solid rgba(0,0,0,.14);border-radius:9px;padding:10px 14px;color:#1f2430;font-size:.9rem;font-family:inherit;transition:.15s}
+.input:focus,.textarea:focus,.select:focus{outline:none;border-color:#6c63f6;box-shadow:0 0 0 3px rgba(108,99,246,.15)}
+.textarea{resize:vertical;min-height:70px}
+
+.drop{border:2px dashed rgba(0,0,0,.14);border-radius:12px;padding:26px 16px;text-align:center;color:#6b7280;cursor:pointer;transition:.15s;font-size:.85rem}
+.drop:hover,.drop.over{border-color:#6c63f6;background:rgba(108,99,246,.05);color:#6c63f6}
+.drop i{font-size:1.5rem;display:block;margin-bottom:8px}
+.drop .fname{color:#111827;font-weight:700;word-break:break-all}
+.drop small{display:block;margin-top:6px;color:#9aa2b8}
+
+.btn{border:none;cursor:pointer;font-weight:600;border-radius:9px;padding:11px 18px;font-size:.88rem;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s;font-family:inherit;width:100%}
+.btn-primary{background:linear-gradient(135deg,#6c63f6,#8b5cf6);color:#fff;margin-top:18px}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,99,246,.35)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+table{width:100%;border-collapse:collapse}
+thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:#8b91a5;font-weight:600;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.07);text-align:left;background:#f7f8fc}
+tbody td{padding:12px 16px;font-size:.85rem;color:#4b5563;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.b-title{color:#111827;font-weight:600}
+.b-meta{font-size:.73rem;color:#8b91a5;margin-top:2px}
+.chip{display:inline-block;background:rgba(108,99,246,.12);color:#6c63f6;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:12px}
+.del{background:transparent;border:none;color:#aab0c0;cursor:pointer;padding:7px;border-radius:7px;transition:.15s}
+.del:hover{background:rgba(220,58,58,.12);color:#dc2626}
+.empty{padding:40px 16px;text-align:center;color:#9aa2b8;font-size:.85rem}
+
+.toast{position:fixed;top:24px;right:24px;background:#ffffff;border:1px solid rgba(0,0,0,.1);color:#111827;padding:12px 18px;border-radius:10px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(16,24,40,.18);transform:translateX(calc(100% + 40px));transition:transform .25s;z-index:200}
+.toast.show{transform:translateX(0)}
+.toast.ok{border-left:3px solid #22c98a}
+.toast.err{border-left:3px solid #dc2626}
+
+#theme-toggle{font-size:1rem}
+
+/* ─── Dark mode overrides ─────────────────────────────────────── */
+html[data-theme="dark"] body{background:#0f1420;color:#cdd3e0}
+html[data-theme="dark"] .top{background:#0a0e18;border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .brand{color:#fff}
+html[data-theme="dark"] .back-link{color:#7c8aa8}
+html[data-theme="dark"] .back-link:hover{background:rgba(255,255,255,.05);color:#fff}
+html[data-theme="dark"] .page-title{color:#fff}
+html[data-theme="dark"] .page-sub{color:#7c8aa8}
+html[data-theme="dark"] .card{background:#1a2035;border-color:rgba(255,255,255,.05);box-shadow:none}
+html[data-theme="dark"] .card-head{border-bottom-color:rgba(255,255,255,.05)}
+html[data-theme="dark"] .card-head h3{color:#fff}
+html[data-theme="dark"] .label{color:#a3adc2}
+html[data-theme="dark"] .input,html[data-theme="dark"] .textarea,html[data-theme="dark"] .select{background-color:#131828;border-color:rgba(255,255,255,.08);color:#fff}
+html[data-theme="dark"] .drop{border-color:rgba(255,255,255,.12);color:#7c8aa8}
+html[data-theme="dark"] .drop:hover,html[data-theme="dark"] .drop.over{border-color:#6c63f6;color:#a78bfa;background:rgba(108,99,246,.08)}
+html[data-theme="dark"] .drop .fname{color:#fff}
+html[data-theme="dark"] thead th{color:#6d7a94;border-bottom-color:rgba(255,255,255,.05);background:#131828}
+html[data-theme="dark"] tbody td{color:#b8c1d3;border-bottom-color:rgba(255,255,255,.03)}
+html[data-theme="dark"] .b-title{color:#fff}
+html[data-theme="dark"] .del{color:#4c5776}
+html[data-theme="dark"] .del:hover{background:rgba(220,58,58,.15);color:#f87171}
+html[data-theme="dark"] .toast{background:#1e2439;border-color:rgba(255,255,255,.08);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="top">
+    <div class="top-left">
+        <a href="/admin/" class="brand"><span class="brand-icon"><i class="fa fa-bolt"></i></span>Muslima Darmonova</a>
+        <a href="/admin/" class="back-link"><i class="fa fa-arrow-left"></i> Dashboardga qaytish</a>
+    </div>
+    <button class="back-link" id="theme-toggle" title="Yorug‘/Tungi rejim"><i class="fa fa-moon"></i></button>
+</div>
+
+<div class="wrap">
+    <h1 class="page-title"><i class="fa fa-book-open" style="color:#6c63f6;margin-right:8px"></i>Kitoblar</h1>
+    <p class="page-sub">Kitob va qo'llanmalarni yuklang — foydalanuvchilar webview'da ko'rib, yuklab olishadi.</p>
+
+    <div class="grid">
+        {# ── Upload form ─────────────────────────────────────── #}
+        <div class="card">
+            <div class="card-head"><h3><span class="dot"></span>Yangi kitob yuklash</h3></div>
+            <div class="card-body">
+                <div class="drop" id="drop">
+                    <i class="fa fa-file-arrow-up"></i>
+                    <span id="drop-txt">Faylni tanlang yoki shu yerga tashlang</span>
+                    <small>PDF, DOC(X), PPT(X), XLS(X), EPUB, DJVU, TXT · maks. 100 MB</small>
+                </div>
+                <input type="file" id="file" style="display:none"
+                       accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.epub,.djvu,.txt">
+
+                <label class="label">Sarlavha *</label>
+                <input class="input" id="f-title" placeholder="Masalan: Ilk qadam davlat o'quv dasturi">
+
+                <label class="label">Muallif</label>
+                <input class="input" id="f-author" placeholder="Ixtiyoriy">
+
+                <label class="label">Yo'nalish *</label>
+                <input class="input" id="f-category" list="cats"
+                       placeholder="Tarbiyachilar / Direktor o'rinbosari / Psixologlar / Logopedlar…">
+                <datalist id="cats">
+                    {% for c in categories %}<option value="{{ c }}">{% endfor %}
+                </datalist>
+                <div style="margin-top:6px;font-size:.72rem;color:#6b7280">
+                    Asosiy yo'nalishlar:
+                    {% for c in default_categories %}<b style="color:#111827">{{ c }}</b>{% if not loop.last %} · {% endif %}{% endfor %}.
+                    Boshqa fanlar uchun o'zingiz kiriting.
+                </div>
+
+                <label class="label">Mavzu (ixtiyoriy)</label>
+                <select class="select" id="f-topic">
+                    <option value="">— bog'lanmagan —</option>
+                    {% for t in topics %}<option value="{{ t.id }}">{{ t.title }}</option>{% endfor %}
+                </select>
+
+                <label class="label">Tavsif</label>
+                <textarea class="textarea" id="f-desc" placeholder="Qisqacha tavsif (ixtiyoriy)"></textarea>
+
+                <button class="btn btn-primary" id="btn-save"><i class="fa fa-check"></i> Yuklash</button>
+            </div>
+        </div>
+
+        {# ── Existing books ──────────────────────────────────── #}
+        <div class="card">
+            <div class="card-head"><h3><span class="dot"></span>Yuklangan kitoblar ({{ books|length }})</h3></div>
+            {% if books %}
+            <table>
+                <thead><tr><th>Kitob</th><th>Turi</th><th>Yuklab olishlar</th><th></th></tr></thead>
+                <tbody>
+                {% for b in books %}
+                    <tr id="row-{{ b.id }}">
+                        <td>
+                            <div class="b-title">{{ b.title }}</div>
+                            <div class="b-meta">{{ b.file_name }} · {{ '%.1f'|format(b.file_size/1048576) }} MB{% if b.author %} · {{ b.author }}{% endif %}</div>
+                        </td>
+                        <td>{% if b.category %}<span class="chip">{{ b.category }}</span>{% else %}—{% endif %}</td>
+                        <td>{{ b.downloads }}</td>
+                        <td><button class="del" onclick="delBook({{ b.id }})" title="O'chirish"><i class="fa fa-trash"></i></button></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty">Hozircha kitoblar yuklanmagan</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+let picked = null;
+
+drop.onclick = () => fileInput.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => {
+    e.preventDefault(); drop.classList.remove('over');
+    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+};
+fileInput.onchange = () => { if (fileInput.files.length) setFile(fileInput.files[0]); };
+
+function setFile(f){
+    picked = f;
+    document.getElementById('drop-txt').innerHTML =
+        `<span class="fname">${esc(f.name)}</span> · ${(f.size/1048576).toFixed(1)} MB`;
+    const t = document.getElementById('f-title');
+    if (!t.value.trim()) t.value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+}
+
+document.getElementById('btn-save').onclick = async () => {
+    const title = document.getElementById('f-title').value.trim();
+    if (!picked) return toast('Fayl tanlanmagan', false);
+    if (!title) return toast('Sarlavha kiritilmagan', false);
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Yuklanmoqda…';
+
+    const fd = new FormData();
+    fd.append('file', picked);
+    fd.append('title', title);
+    fd.append('author', document.getElementById('f-author').value);
+    fd.append('category', document.getElementById('f-category').value);
+    fd.append('description', document.getElementById('f-desc').value);
+    fd.append('topic_id', document.getElementById('f-topic').value);
+
+    try {
+        const r = await fetch('/admin-tools/books/upload', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || 'Xatolik');
+        toast('Kitob yuklandi ✓', true);
+        setTimeout(() => location.reload(), 700);
+    } catch (e) {
+        toast(e.message, false);
+        btn.disabled = false; btn.innerHTML = '<i class="fa fa-check"></i> Yuklash';
+    }
+};
+
+async function delBook(id){
+    if (!confirm("Kitob o'chirilsinmi? Fayl ham o'chadi.")) return;
+    try {
+        const r = await fetch(`/admin-tools/books/${id}/delete`, { method: 'POST' });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Xatolik');
+        document.getElementById('row-' + id)?.remove();
+        toast("O'chirildi", true);
+    } catch (e) { toast(e.message, false); }
+}
+
+function toast(msg, ok){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (ok ? 'ok' : 'err');
+    setTimeout(() => t.classList.remove('show'), 2600);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+(function(){var KEY='malaka-admin-theme';function ico(t){return t==='dark'?'fa-sun':'fa-moon';}
+function apply(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem(KEY,t);}catch(e){}var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(t);}
+document.addEventListener('DOMContentLoaded',function(){var cur=document.documentElement.getAttribute('data-theme')||'light';var i=document.querySelector('#theme-toggle i');if(i)i.className='fa '+ico(cur);var b=document.getElementById('theme-toggle');if(b)b.addEventListener('click',function(e){e.preventDefault();apply(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});});})();
+</script>
+</body>
+</html>

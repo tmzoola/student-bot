@@ -1,0 +1,101 @@
+{% extends "_base.html" %}
+{% set nav_active = 'me' %}
+{% block title %}Sozlamalar — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.form-card{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-bottom:14px}
+.form-lbl{font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+.form-inp{width:100%;padding:14px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.95rem;background:#F9FAFB;color:#111;transition:.15s;font-family:inherit}
+.form-inp:focus{outline:none;border-color:var(--green);background:#fff}
+.form-inp[readonly]{color:var(--muted);background:#F4F5F2}
+.form-hint{font-size:.72rem;color:var(--muted);margin-top:6px}
+.msg{padding:12px 14px;border-radius:12px;font-size:.85rem;margin-bottom:12px;font-weight:600}
+.msg-ok{background:#E4F3EB;color:var(--green-dark)}
+.msg-err{background:#FDE8E8;color:#c0392b}
+.mb{margin-bottom:14px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/me" class="hdr-back">←</a>
+  <div class="hdr-title">Sozlamalar</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="msg"></div>
+
+<div class="form-card">
+  <div class="mb">
+    <div class="form-lbl">Ism Familya</div>
+    <input id="full_name" class="form-inp" placeholder="Ism Familya" maxlength="100" autocomplete="name">
+    <div class="form-hint">Bo'sh joy bilan ajrating. Masalan: <b>Muslima Darmonova</b></div>
+  </div>
+
+  <div class="mb">
+    <div class="form-lbl">Telefon raqam</div>
+    <input id="phone" class="form-inp" placeholder="+998XXXXXXXXX" readonly>
+    <div class="form-hint">Raqamni o'zgartirish uchun botga /start yuboring.</div>
+  </div>
+
+  <button id="save" class="btn btn-primary">Saqlash</button>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(async function(){
+    await MK.ensureAuth();
+    const r = await fetch('/api/v1/webapp/me', { headers: MK.authHeaders() });
+    if (!r.ok) {
+        showMsg('err', "Ma'lumot yuklanmadi");
+        return;
+    }
+    const d = await r.json();
+    const full = [d.first_name, d.last_name].filter(Boolean).join(' ');
+    document.getElementById('full_name').value = full;
+    document.getElementById('phone').value = d.phone || '';
+})();
+
+document.getElementById('save').addEventListener('click', async () => {
+    const full_name = document.getElementById('full_name').value.trim();
+    if (full_name.length < 2) { showMsg('err', "Ism Familyani kiriting"); return; }
+
+    const btn = document.getElementById('save');
+    btn.disabled = true; btn.textContent = 'Saqlanmoqda…';
+
+    try {
+        const r = await fetch('/api/v1/webapp/me/update', {
+            method: 'POST',
+            headers: Object.assign({'Content-Type':'application/json'}, MK.authHeaders()),
+            body: JSON.stringify({ full_name })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Xatolik');
+        if (MK.user) {
+            MK.user.first_name = d.first_name;
+            MK.user.last_name = d.last_name;
+            const key = `mk_user_${MK.user.telegram_id}`;
+            try { sessionStorage.setItem(key, JSON.stringify(MK.user)); } catch(e){}
+        }
+        MK.haptic('success');
+        showMsg('ok', "✅ Saqlandi");
+    } catch(e){
+        MK.haptic('error');
+        showMsg('err', e.message || 'Xatolik');
+    } finally {
+        btn.disabled = false; btn.textContent = 'Saqlash';
+    }
+});
+
+function showMsg(kind, text){
+    const el = document.getElementById('msg');
+    el.className = 'msg ' + (kind === 'ok' ? 'msg-ok' : 'msg-err');
+    el.textContent = text;
+    if (kind === 'ok') setTimeout(() => { el.className=''; el.textContent=''; }, 2500);
+}
+</script>
+{% endblock %}

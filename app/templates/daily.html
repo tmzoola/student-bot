@@ -1,0 +1,405 @@
+{% extends "_base.html" %}
+{% set nav_active = 'daily' %}
+{% block title %}Kunlik test — Muslima Darmonova{% endblock %}
+
+{% block head %}
+<style>
+.timer{background:#111;color:#fff;padding:7px 14px;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.timer svg{width:14px;height:14px}
+.timer.warn{background:#B5812E}.timer.danger{background:#dc2626;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* Intro */
+.daily-hero{background:linear-gradient(135deg,#F59E0B 0%,#EA580C 100%);border-radius:22px;padding:24px 22px;color:#fff;box-shadow:0 10px 28px rgba(234,88,12,.28);margin-bottom:18px}
+.streak-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:.82rem;font-weight:700;margin-bottom:16px;backdrop-filter:blur(6px)}
+.daily-h1{font-size:1.5rem;font-weight:800;line-height:1.2;margin-bottom:6px}
+.daily-p{font-size:.88rem;opacity:.92;line-height:1.5}
+.daily-meta{display:flex;gap:10px;margin:18px 0 4px}
+.dm{flex:1;background:rgba(255,255,255,.15);border-radius:13px;padding:11px 12px;backdrop-filter:blur(6px)}
+.dm .v{font-size:1.1rem;font-weight:800}
+.dm .l{font-size:.68rem;opacity:.85}
+
+/* Today's result summary + countdown */
+.today-res{display:flex;align-items:center;gap:14px;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.tr-ring{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
+.tr-ring::before{content:'';position:absolute;inset:5px;background:#fff;border-radius:50%}
+.tr-ring span{position:relative;font-weight:800;font-size:.8rem;color:#111}
+.tr-t{font-size:.88rem;font-weight:700;color:#111}
+.tr-s{font-size:.76rem;color:var(--muted);margin-top:3px}
+.tr-s b{color:#EA580C;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.progress-wrap{margin-bottom:18px}
+.progress-info{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px}
+.progress-info b{color:var(--amber)}
+.progress-bar{background:#EAD9C0;height:6px;border-radius:4px;overflow:hidden}
+.progress-fill{background:#EA580C;height:100%;border-radius:4px;transition:width .3s}
+.q-num{font-size:.75rem;color:var(--muted);font-weight:600;margin:8px 0}
+.q-text{font-size:1.15rem;font-weight:700;line-height:1.4;color:#111;margin-bottom:20px;animation:fadeUp .25s ease}
+.q-img{display:block;max-width:100%;max-height:280px;border-radius:14px;margin-bottom:16px;animation:fadeUp .25s ease}
+.rev-img{display:block;max-width:100%;max-height:180px;border-radius:10px;margin:8px 0}
+.opts{display:flex;flex-direction:column;gap:10px;animation:fadeUp .28s ease}
+.opt{background:#fff;border:2px solid transparent;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
+.opt:active{transform:scale(.99)}
+.opt.sel{border-color:#EA580C;background:#FFF4EC}
+.opt-letter{width:34px;height:34px;border-radius:10px;background:#f4f5f2;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;transition:.15s}
+.opt.sel .opt-letter{background:#EA580C;color:#fff}
+.opt-text{flex:1;font-size:.92rem;color:#111;line-height:1.35}
+/* review-locked states */
+.opt.ok{border-color:var(--green);background:#F0FAF3}
+.opt.ok .opt-letter{background:var(--green);color:#fff}
+.opt.bad{border-color:#dc2626;background:#FDECEC}
+.opt.bad .opt-letter{background:#dc2626;color:#fff}
+.nav-btns{display:flex;gap:10px;margin-top:22px}
+.nav-btns .btn{flex:1;padding:14px}
+.btn-prev{background:#f4f5f2;color:#333}
+.btn-prev:disabled{opacity:.4}
+.btn-amber{background:#EA580C;color:#fff;box-shadow:0 4px 14px rgba(234,88,12,.32)}
+.btn-amber:active{transform:scale(.98)}
+
+/* Result */
+.res-card{background:#fff;border-radius:20px;padding:26px 20px;text-align:center;box-shadow:var(--shadow);margin-bottom:16px}
+.res-ring{width:136px;height:136px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;animation:pop .45s cubic-bezier(.175,.885,.32,1.35)}
+.res-ring::before{content:'';position:absolute;inset:11px;background:#fff;border-radius:50%}
+.res-inner{position:relative;text-align:center}
+.res-inner .rv{font-size:1.95rem;font-weight:800;line-height:1}
+.res-inner .rl{font-size:.74rem;color:var(--muted);margin-top:3px;font-weight:600}
+.res-title{font-size:1.2rem;font-weight:800;color:#111;margin-bottom:4px}
+.res-sub{font-size:.85rem;color:var(--muted);margin-bottom:16px}
+.res-stats{display:flex;gap:10px}
+.res-stat{flex:1;background:#F7F8F5;border-radius:13px;padding:12px}
+.res-stat .v{font-size:1.15rem;font-weight:800;color:#111}
+.res-stat .l{font-size:.68rem;color:var(--muted);margin-top:2px}
+.res-flag{display:inline-flex;align-items:center;gap:7px;border-radius:20px;padding:7px 14px;font-size:.8rem;font-weight:700;margin-bottom:14px}
+.res-flag.official{background:#FEF3C7;color:#B45309}
+.res-flag.practice{background:#EEF2F7;color:#64748B}
+
+.rev-title{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:22px 4px 12px}
+.rev{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px}
+.rev-q{font-size:.9rem;font-weight:700;color:#111;line-height:1.4;margin-bottom:10px;display:flex;gap:8px}
+.rev-badge{flex-shrink:0;width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700}
+.rev-badge.ok{background:var(--green)}.rev-badge.bad{background:#dc2626}
+.rev-line{font-size:.82rem;line-height:1.5;padding-left:30px}
+.rev-line .a{font-weight:600}
+.rev-line .a.ok{color:var(--green-dark)}
+.rev-line .a.bad{color:#dc2626;text-decoration:line-through}
+.rev-exp{padding-left:30px;font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.5}
+
+.loader{text-align:center;padding:60px 20px;color:var(--muted)}
+
+/* Modullar ro'yxati (Kunlik test ostida) */
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mod{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--shadow);transition:.15s;display:flex;flex-direction:column}
+.mod:active{transform:scale(.98)}
+.mod-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;margin-bottom:12px}
+.mod-t{font-size:.95rem;font-weight:700;line-height:1.25;margin-bottom:3px;color:#111}
+.mod-s{font-size:.72rem;color:var(--muted)}
+.mod-go{margin-top:14px;font-size:.76rem;font-weight:700;color:var(--green);display:flex;align-items:center;gap:5px}
+.mod-go svg{width:13px;height:13px}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/webapp/modules" class="hdr-back" id="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="hdr-title" style="flex:1;padding:0 12px">Kunlik test</div>
+  <div class="timer" id="timer" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="timer-t">--:--</span>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="view-intro"><div class="loader">Yuklanmoqda…</div></div>
+<div id="view-quiz" style="display:none"></div>
+<div id="view-result" style="display:none"></div>
+
+<div id="view-modules">
+  <div class="section-t big" style="margin-top:22px">Modullar</div>
+  <div id="mods" class="mod-grid"></div>
+  <div id="mods-empty" class="empty" style="display:none">
+    <div class="empty-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+    <div class="empty-t">Hozircha modullar yo'q</div>
+    <div class="empty-d">Admin panelidan yangi modullar qo'shiladi</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+let D = null;            // daily payload
+let idx = 0;
+let answers = {};
+let startedAt = 0, timeLeft = 0, timerHandle = null;
+
+async function init(){
+    await MK.ensureAuth();
+    loadModules();  // Kunlik test holatidan qat'i nazar modullarni ko'rsatamiz.
+    const r = await fetch('/api/v1/webapp/daily', { headers: MK.authHeaders() });
+    D = await r.json().catch(() => null);
+    if (!D || !D.available) {
+        document.getElementById('view-intro').innerHTML =
+            `<div class="empty"><div class="empty-ic">🗓️</div>
+             <div class="empty-t">Kunlik test hozircha yo'q</div>
+             <div class="empty-d">Savollar qo'shilgach, bu yerda paydo bo'ladi</div></div>`;
+        show('intro');
+        return;
+    }
+    renderIntro();
+}
+
+const MOD_COLORS = [
+  {bg:'rgba(61,182,106,.12)', fg:'#3DB66A'},
+  {bg:'rgba(58,109,181,.12)', fg:'#3A6DB5'},
+  {bg:'rgba(139,92,246,.12)', fg:'#8B5CF6'},
+  {bg:'rgba(233,78,119,.12)', fg:'#E94E77'},
+  {bg:'rgba(181,129,46,.12)', fg:'#B5812E'},
+  {bg:'rgba(14,165,233,.12)', fg:'#0EA5E9'},
+];
+const MOD_ICONS = ['🧮','📚','🌍','🔬','🎨','⚛️','🧬','📖'];
+
+async function loadModules(){
+    try {
+        const r = await fetch('/api/v1/webapp/modules');
+        const mods = await r.json();
+        if (!Array.isArray(mods) || !mods.length){
+            document.getElementById('mods-empty').style.display = '';
+            return;
+        }
+        document.getElementById('mods').innerHTML = mods.map((m, i) => {
+            const c = MOD_COLORS[i % MOD_COLORS.length];
+            const icon = m.icon || MOD_ICONS[i % MOD_ICONS.length];
+            const iconInner = m.icon?.startsWith('fa ') ? `<i class="${m.icon}"></i>` : icon;
+            return `
+            <a href="/webapp/modules/${m.id}" class="mod">
+                <div class="mod-ic" style="background:${c.bg};color:${c.fg}">${iconInner}</div>
+                <div class="mod-t">${esc(m.title)}</div>
+                <div class="mod-s">${(m.quiz_count ?? 0)} ta test</div>
+                <div class="mod-go">Boshlash
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+            </a>`;
+        }).join('');
+    } catch(e){
+        document.getElementById('mods-empty').style.display = '';
+    }
+}
+
+function show(view){
+    ['intro','quiz','result'].forEach(v =>
+        document.getElementById('view-'+v).style.display = (v===view?'':'none'));
+    // Modullar ro'yxati faqat intro (test boshlanmagan) holatida ko'rinadi.
+    document.getElementById('view-modules').style.display = (view==='intro' ? '' : 'none');
+    window.scrollTo(0,0);
+}
+
+function renderIntro(){
+    const done = D.today_done;
+    const tr = D.today_result;
+    const pct = tr ? tr.percentage : 100;
+    const doneBlock = done ? `
+        <div class="today-res">
+            <div class="tr-ring" style="background:conic-gradient(${ringColor(pct)} ${pct}%, #F1E8DC 0)">
+                <span>${tr ? tr.score + '/' + tr.total : '✓'}</span>
+            </div>
+            <div>
+                <div class="tr-t">Bugungi test bajarildi ✅</div>
+                <div class="tr-s">Yangi test: <b id="cd">--:--:--</b> dan so'ng</div>
+            </div>
+        </div>` : '';
+    document.getElementById('view-intro').innerHTML = `
+        <div class="daily-hero">
+            <div class="streak-badge">🔥 ${D.streak} kunlik seriya</div>
+            <div class="daily-h1">Bugungi challenge</div>
+            <div class="daily-p">“${esc(D.topic_title)}” mavzusidan ${D.total} ta savol. Har kuni yechib, seriyangizni uzaytiring!</div>
+            <div class="daily-meta">
+                <div class="dm"><div class="v">${D.total}</div><div class="l">savol</div></div>
+                <div class="dm"><div class="v">🔥 ${D.streak}</div><div class="l">seriya</div></div>
+                <div class="dm"><div class="v">${Math.floor(D.time_limit_seconds/60)} daq</div><div class="l">vaqt</div></div>
+            </div>
+        </div>
+        ${doneBlock}
+        <button class="btn btn-amber" id="btn-start">${done ? 'Yana mashq qilish' : 'Boshlash'}</button>
+        ${done ? '<div class="daily-p" style="color:var(--muted);text-align:center;margin-top:10px;font-size:.78rem">Qayta yechish mashq uchun — ballar hisoblanmaydi</div>' : ''}
+    `;
+    document.getElementById('btn-start').onclick = () => { MK.haptic('medium'); start(); };
+    if (done) startCountdown();
+    show('intro');
+}
+
+let cdHandle = null;
+function startCountdown(){
+    const tick = () => {
+        const el = document.getElementById('cd');
+        if (!el) { clearInterval(cdHandle); return; }
+        // Tashkent yarim tunigacha qolgan vaqt (brauzer tz'idan qat'i nazar)
+        const now = new Date();
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Tashkent', hour12: false,
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        }).formatToParts(now).reduce((a,p) => (a[p.type]=p.value, a), {});
+        const tashkentSecs = (+parts.hour)*3600 + (+parts.minute)*60 + (+parts.second);
+        let s = Math.max(0, 86400 - tashkentSecs);
+        const h = String(Math.floor(s/3600)).padStart(2,'0');
+        const m = String(Math.floor(s%3600/60)).padStart(2,'0');
+        const sec = String(s%60).padStart(2,'0');
+        el.textContent = `${h}:${m}:${sec}`;
+    };
+    clearInterval(cdHandle);
+    tick();
+    cdHandle = setInterval(tick, 1000);
+}
+
+function start(){
+    idx = 0; answers = {};
+    startedAt = Date.now();
+    timeLeft = D.time_limit_seconds;
+    document.getElementById('timer').style.display = '';
+    document.getElementById('hdr-back').onclick = (e) => {
+        if (!confirm('Testni tark etmoqchimisiz?')) e.preventDefault();
+    };
+    startTimer();
+    renderQ();
+    show('quiz');
+}
+
+function renderQ(){
+    const q = D.questions[idx];
+    document.getElementById('view-quiz').innerHTML = `
+        <div class="progress-wrap">
+            <div class="progress-info">
+                <span>Savol ${idx+1} / ${D.questions.length}</span>
+                <span><b>${Object.keys(answers).length}</b> / ${D.questions.length} javob berildi</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${((idx+1)/D.questions.length)*100}%"></div></div>
+        </div>
+        <div class="q-num">Savol ${idx+1}</div>
+        ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+        ${q.text ? `<div class="q-text">${esc(q.text)}</div>` : ''}
+        <div class="opts">
+            ${['A','B','C','D'].map(L => `
+                <div class="opt ${answers[q.id]===L?'sel':''}" data-l="${L}">
+                    <div class="opt-letter">${L}</div>
+                    <div class="opt-text">${esc(q['option_'+L.toLowerCase()])}</div>
+                </div>`).join('')}
+        </div>
+        <div class="nav-btns">
+            <button class="btn btn-prev" id="b-prev" ${idx===0?'disabled':''}>Oldingi</button>
+            <button class="btn btn-amber" id="b-next">${idx===D.questions.length-1?'Tugatish':'Keyingi'}</button>
+        </div>`;
+    document.querySelectorAll('#view-quiz .opt').forEach(el => {
+        el.onclick = () => {
+            MK.haptic('light');
+            answers[q.id] = el.dataset.l;
+            // toggle in place — re-render would replay the fade animation
+            document.querySelectorAll('#view-quiz .opt').forEach(o => o.classList.toggle('sel', o === el));
+            const b = document.querySelector('#view-quiz .progress-info b');
+            if (b) b.textContent = Object.keys(answers).length;
+        };
+    });
+    document.getElementById('b-prev').onclick = () => { if (idx>0){ idx--; renderQ(); } };
+    document.getElementById('b-next').onclick = () => {
+        if (idx < D.questions.length-1){ idx++; renderQ(); } else finish();
+    };
+}
+
+function startTimer(){
+    tick();
+    timerHandle = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0){ finish(true); return; }
+        tick();
+    }, 1000);
+}
+function tick(){
+    const el = document.getElementById('timer');
+    el.classList.remove('warn','danger');
+    if (timeLeft <= 15) el.classList.add('danger');
+    else if (timeLeft <= 60) el.classList.add('warn');
+    document.getElementById('timer-t').textContent = MK.fmtTime(Math.max(0,timeLeft));
+}
+
+async function finish(auto=false){
+    if (!auto && Object.keys(answers).length < D.questions.length){
+        if (!confirm(`${D.questions.length - Object.keys(answers).length} ta savolga javob berilmadi. Baribir yakunlaymizmi?`)) return;
+    }
+    clearInterval(timerHandle);
+    document.getElementById('timer').style.display = 'none';
+    document.getElementById('hdr-back').onclick = null;
+    const btn = document.getElementById('b-next');
+    if (btn){ btn.disabled = true; btn.textContent = 'Yuborilmoqda…'; }
+    const timeTaken = Math.round((Date.now()-startedAt)/1000);
+    try {
+        const r = await fetch('/api/v1/webapp/daily/submit', {
+            method:'POST',
+            headers:{'Content-Type':'application/json', ...MK.authHeaders()},
+            body: JSON.stringify({ answers, time_taken_seconds: timeTaken }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || 'Xatolik');
+        renderResult(data);
+    } catch(e){
+        alert(e.message);
+        if (btn){ btn.disabled = false; btn.textContent = 'Tugatish'; }
+    }
+}
+
+function ringColor(p){ return p>=80?'#3DB66A':p>=50?'#EA580C':'#dc2626'; }
+
+function renderResult(res){
+    const flag = res.official
+        ? `<div class="res-flag official">✓ Hisobga olindi · +${res.points_awarded} ball</div>`
+        : `<div class="res-flag practice">Mashq · ballar hisoblanmadi</div>`;
+    const rev = res.review.map((q,i) => {
+        const L = {A:'option_a',B:'option_b',C:'option_c',D:'option_d'};
+        const ua = q.user_answer, ca = q.correct_answer;
+        const userTxt = ua ? `${ua}) ${esc(q[L[ua]])}` : 'Javob berilmadi';
+        const corrTxt = `${ca}) ${esc(q[L[ca]])}`;
+        return `
+        <div class="rev">
+            <div class="rev-q"><span class="rev-badge ${q.is_correct?'ok':'bad'}">${q.is_correct?'✓':'✕'}</span>${i+1}. ${esc(q.text || '[rasm]')}</div>
+            ${q.image_url ? `<img class="rev-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+            <div class="rev-line">Siz: <span class="a ${q.is_correct?'ok':'bad'}">${userTxt}</span></div>
+            ${!q.is_correct ? `<div class="rev-line">To'g'ri: <span class="a ok">${corrTxt}</span></div>` : ''}
+            ${q.explanation ? `<div class="rev-exp">${esc(q.explanation)}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    MK.haptic(res.percentage >= 50 ? 'success' : 'warning');
+    const C = ringColor(res.percentage);
+    document.getElementById('view-result').innerHTML = `
+        <div class="res-card">
+            ${flag}
+            <div class="res-ring" style="background:conic-gradient(${C} ${res.percentage}%, #EEF0EA 0)">
+                <div class="res-inner">
+                    <div class="rv" style="color:${C}">${res.percentage}%</div>
+                    <div class="rl">${res.score}/${res.total}</div>
+                </div>
+            </div>
+            <div class="res-title">${res.percentage>=80?'Ajoyib! 🎉':res.percentage>=50?'Yaxshi! 👍':'Mashq davom etsin 💪'}</div>
+            <div class="res-sub">${res.official ? `Seriya: 🔥 ${res.streak} kun — ertaga yana keling!` : `Joriy seriya: 🔥 ${res.streak} kun`}</div>
+            <div class="res-stats">
+                <div class="res-stat"><div class="v">${res.score}</div><div class="l">To'g'ri</div></div>
+                <div class="res-stat"><div class="v">${res.total-res.score}</div><div class="l">Xato</div></div>
+                <div class="res-stat"><div class="v">🔥 ${res.streak}</div><div class="l">Seriya</div></div>
+            </div>
+        </div>
+        <div class="nav-btns">
+            <a class="btn btn-prev" href="/webapp/modules">Bosh sahifa</a>
+            <button class="btn btn-amber" id="b-again">Qayta ishlash</button>
+        </div>
+        <div class="rev-title">Savollar tahlili</div>
+        ${rev}
+    `;
+    document.getElementById('b-again').onclick = () => { MK.haptic('medium'); D.today_done = true; start(); };
+    show('result');
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+init();
+</script>
+{% endblock %}
