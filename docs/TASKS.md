@@ -321,12 +321,14 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-407 · Kunlik backup skripti
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-406
 - **Acceptance:**
-  - [ ] `deploy/scripts/backup.sh` — pg_dump + media tar.gz
-  - [ ] 7 kunlik retention (`find -mtime +7 -delete`)
-  - [ ] Cron qatori hujjatlashtirilgan
+  - [x] `deploy/scripts/backup.sh` — pg_dump + media tar.gz
+  - [x] 7 kunlik retention (`find -mtime +7 -delete`)
+  - [x] Cron qatori DEPLOY_NOTES.md 6-bo'limda hujjatlashtirilgan
+  - [x] Idempotent (`.tmp` orqali atomik yozish)
+  - [x] `bash -n` sintaksis check o'tdi
 
 ---
 
