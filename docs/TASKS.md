@@ -154,15 +154,15 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-202 · Admin approve/reject flow
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-201
 - **Acceptance:**
-  - [ ] `app/bot/handlers/admin_approval.py` yaratildi
-  - [ ] T-201 tugagach `ADMIN_CHAT_ID` ga profil ma'lumotlari va tugmalar bilan xabar
-  - [ ] Approve: `is_approved=True`, `approved_at`, `approved_by`; foydalanuvchi xabar oladi va menyu ko'radi
-  - [ ] Reject: profil o'chiriladi; foydalanuvchi rad xabari oladi
-  - [ ] Faqat `ADMIN_CHAT_ID` dan kelgan callback'lar qabul qilinadi
-  - [ ] `ADMIN_CHAT_ID=0` bo'lsa notify o'tkazib yuboriladi (log warn)
+  - [x] `app/bot/handlers/admin_approval.py` yaratildi
+  - [x] T-201 tugagach `ADMIN_CHAT_ID` ga profil ma'lumotlari va tugmalar bilan xabar
+  - [x] Approve: `is_approved=True`, `approved_at`, `approved_by`; foydalanuvchi xabar oladi va menyu ko'radi
+  - [x] Reject: profil o'chiriladi; foydalanuvchi rad xabari oladi
+  - [x] Faqat `ADMIN_CHAT_ID` dan kelgan callback'lar qabul qilinadi
+  - [x] `ADMIN_CHAT_ID=0` bo'lsa notify o'tkazib yuboriladi (log warn)
 
 ### T-203 · Asosiy menyu
 - **Owner:** solutions-architect
