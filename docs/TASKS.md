@@ -290,16 +290,16 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-404 · Nginx reverse proxy config
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-403
 - **Acceptance:**
-  - [ ] `deploy/nginx/student-bot.conf` yaratildi
-  - [ ] HTTP → HTTPS 301 redirect
-  - [ ] `/` → `127.0.0.1:8002` (app)
-  - [ ] `/logs/` → Dozzle (basic auth), `/grafana/` → Grafana
-  - [ ] X-Forwarded-* header'lar, WebSocket upgrade
-  - [ ] `client_max_body_size 100M`
-  - [ ] Certbot komandasi hujjatlashtirilgan
+  - [x] `deploy/nginx/student-bot.conf` yaratildi
+  - [x] HTTP → HTTPS 301 redirect (Let's Encrypt challenge path saqlangan)
+  - [x] `/` → `127.0.0.1:8002` (app)
+  - [x] `/logs/` → Dozzle (basic auth), `/grafana/` → Grafana (subpath, slashsiz proxy_pass)
+  - [x] X-Forwarded-* header'lar, WebSocket upgrade map
+  - [x] `client_max_body_size 100M`
+  - [x] Certbot komandasi + htpasswd komandasi izohda
 
 ### T-405 · GitHub Actions deploy audit
 - **Owner:** devops
