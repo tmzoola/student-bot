@@ -83,14 +83,14 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-107 · `Subject` modeli (`course_number`, `semester`) + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-106
 - **Acceptance:**
-  - [ ] `app/models/subject.py`: `Subject(id, faculty_id FK, name, code, course_number 1..4, semester 1..2, description, is_active, created_at, updated_at)`
-  - [ ] `CheckConstraint` `course_number in (1,2,3,4)`, `semester in (1,2)`
-  - [ ] UNIQUE `(faculty_id, code)`
-  - [ ] Alembic migratsiya
-  - [ ] `Faculty.subjects` back-populates aloqasi
+  - [x] `app/models/subject.py`: `Subject(id, faculty_id FK, name, code, course_number 1..4, semester 1..2, description, is_active, created_at, updated_at)`
+  - [x] `CheckConstraint` `course_number in (1,2,3,4)`, `semester in (1,2)`
+  - [x] UNIQUE `(faculty_id, code)`
+  - [ ] ~~Alembic migratsiya~~ — T-111 da squash
+  - [x] `Faculty.subjects` back-populates aloqasi
 
 ### T-108 · `Topic` va `Quiz` ni Subject ga moslash + migratsiya
 - **Owner:** solutions-architect
