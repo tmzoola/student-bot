@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     BOT_USERNAME: str = "muslima_darmonova_bot"
     WEBAPP_URL: str = "http://localhost:8000"
 
+    # Ro'yxatdan o'tgan talaba arizasi shu chat_id ga yuboriladi (admin guruhi
+    # yoki shaxsiy admin). 0 bo'lsa notify o'tkazib yuboriladi (log warn).
+    ADMIN_CHAT_ID: int = 0
+
     # Multi-worker umumiy kesh (subscription state va h.k.) — Redis URL.
     REDIS_URL: str = "redis://redis:6379/0"
 

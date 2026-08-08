@@ -135,14 +135,109 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ---
 
-## Bosqich 2 — Bot auth va student flow (kelajakda)
+## Bosqich 2 — Bot auth va student flow
 
-Rejalashtirilishi kerak:
-- Student ID kiritish FSM
-- Admin approve dialog (`is_approved=True`)
-- Fakultet/kurs/semester tanlash → mavjud fanlar ro'yxati
-- Testni yechish (WebApp)
-- Urinishlar tarixi va statistika
+Har bir vazifa bitta commit. Tartib qat'iy.
+
+### T-201 · Ro'yxatdan o'tish FSM
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-111
+- **Acceptance:**
+  - [x] `app/bot/handlers/registration.py` yaratildi (FSM `waiting_student_id → waiting_full_name → waiting_faculty → waiting_course → waiting_semester`)
+  - [x] `/start`: `StudentProfile` mavjud bo'lmasa FSM boshlanadi
+  - [x] Fakultet DB'dan (`Faculty.is_active=True`) inline keyboard
+  - [x] Kurs 1..4, semestr 1..2 inline
+  - [x] Tugagach `StudentProfile(is_approved=False)` yaratiladi
+  - [x] `bot/setup.py` da router include qilindi
+  - [x] `ADMIN_CHAT_ID` config va `.env.example` ga qo'shildi
+
+### T-202 · Admin approve/reject flow
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-201
+- **Acceptance:**
+  - [ ] `app/bot/handlers/admin_approval.py` yaratildi
+  - [ ] T-201 tugagach `ADMIN_CHAT_ID` ga profil ma'lumotlari va tugmalar bilan xabar
+  - [ ] Approve: `is_approved=True`, `approved_at`, `approved_by`; foydalanuvchi xabar oladi va menyu ko'radi
+  - [ ] Reject: profil o'chiriladi; foydalanuvchi rad xabari oladi
+  - [ ] Faqat `ADMIN_CHAT_ID` dan kelgan callback'lar qabul qilinadi
+  - [ ] `ADMIN_CHAT_ID=0` bo'lsa notify o'tkazib yuboriladi (log warn)
+
+### T-203 · Asosiy menyu
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-202
+- **Acceptance:**
+  - [ ] `app/bot/handlers/menu.py` yaratildi
+  - [ ] Tasdiqlangan foydalanuvchi uchun reply keyboard `[📚 Fanlar (WebApp)] [👤 Profil] [📊 Statistika]`
+  - [ ] `📚 Fanlar` — WebApp tugmasi (`web_app=WebAppInfo(url=WEBAPP_URL+'/subjects')`)
+  - [ ] `👤 Profil` — F.I.Sh, ID, fakultet, kurs, semestr
+  - [ ] `📊 Statistika` — urinishlar soni, umumiy ball, o'rtacha foiz
+  - [ ] Tasdiqlanmagan/ro'yxatdan o'tmagan foydalanuvchilarga menyu ko'rinmaydi
+
+### T-204 · Reg-gate middleware
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-203
+- **Acceptance:**
+  - [ ] `RegistrationGateMiddleware` `bot/middlewares.py` ga qo'shildi
+  - [ ] `StudentProfile` yo'q → faqat `/start` va FSM update'lari o'tadi
+  - [ ] `is_approved=False` → faqat `/start` o'tadi
+  - [ ] `setup.py` da middleware register qilindi
+
+### T-205 · WebApp /subjects endpoint + sahifa
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-204
+- **Acceptance:**
+  - [ ] `GET /subjects` HTML — foydalanuvchi profiliga mos fanlar
+  - [ ] `GET /api/v1/subjects` JSON
+  - [ ] WebApp initData HMAC-SHA256 validation (`app/utils/webapp_auth.py`)
+  - [ ] Template `subjects.html`
+  - [ ] Profil topilmasa/tasdiqlanmasa 403
+
+### T-206 · WebApp fan detail (mavzular va testlar)
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-205
+- **Acceptance:**
+  - [ ] `GET /subjects/{id}` HTML — mavzular + har birida testlar
+  - [ ] `GET /api/v1/subjects/{id}` JSON
+  - [ ] Foydalanuvchi profili fan bilan mos kelishi (403 aks holda)
+  - [ ] Template `subject_detail.html`
+
+### T-207 · Test yechish
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-206
+- **Acceptance:**
+  - [ ] `GET /quiz/{id}` HTML (`quiz.html` qayta ishlatildi)
+  - [ ] `GET /api/v1/quiz/{id}` JSON (correct_option qaytmaydi)
+  - [ ] `POST /api/v1/quiz/{id}/submit` — QuizAttempt yaratiladi, score hisoblanadi
+  - [ ] Fan foydalanuvchi profiliga mosligi tekshiriladi
+
+### T-208 · Profil sahifasi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-207
+- **Acceptance:**
+  - [ ] `GET /profile` HTML
+  - [ ] `GET /api/v1/profile` JSON (profil + statistika)
+  - [ ] `GET /api/v1/profile/attempts` JSON (so'nggi 20)
+  - [ ] Template'da urinishlar tarixi
+
+### T-209 · Smoke testlar
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-208
+- **Acceptance:**
+  - [ ] `requirements-dev.txt` yaratildi
+  - [ ] `tests/conftest.py` (async SQLite fixture)
+  - [ ] `tests/test_registration.py`
+  - [ ] `tests/test_quiz_submit.py`
+  - [ ] `Makefile` da `test:` target
+  - [ ] `pytest -q` yashil
 
 ## Bosqich 3 — AI taxlil (kelajakda)
 

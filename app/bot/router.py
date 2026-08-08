@@ -1,25 +1,21 @@
-"""Asosiy bot router — minimal `/start` handler.
+"""Umumiy bot util'lari.
 
-Refaktor bosqichi: T-102–T-105 doirasida legacy FSM va handler'lar olib
-tashlandi. Student-bot uchun to'liq student ID + admin approve flow keyingi
-bosqichlarda yoziladi.
+`/start` va boshqa handler'lar `bot/handlers/` ichidagi router'larda joylashgan.
+Bu modul faqat umumiy yordamchi funksiyalar (`get_or_create_user`) uchun ishlatiladi.
 """
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from aiogram import Router
-from aiogram.filters import CommandStart
-from aiogram.types import Message
 from sqlalchemy import select
 
 from db.session import session_factory
 from models.telegram_user import TelegramUser
 
 _TZ = ZoneInfo("Asia/Tashkent")
-
 logger = logging.getLogger(__name__)
-router = Router()
 
 
 async def get_or_create_user(tg_user) -> TelegramUser:
@@ -44,12 +40,3 @@ async def get_or_create_user(tg_user) -> TelegramUser:
         await session.commit()
         await session.refresh(user)
         return user
-
-
-@router.message(CommandStart())
-async def cmd_start(msg: Message) -> None:
-    await get_or_create_user(msg.from_user)
-    await msg.answer(
-        "Assalomu alaykum! Student bot ishga tushmoqda.\n\n"
-        "Batafsil funksionallik keyingi bosqichlarda qo'shiladi."
-    )

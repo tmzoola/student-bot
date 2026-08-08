@@ -5,8 +5,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from bot.handlers.registration import router as registration_router
 from bot.middlewares import BlacklistMiddleware
-from bot.router import router as main_router
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ dp = Dispatcher(storage=_storage)
 _blacklist = BlacklistMiddleware()
 dp.message.outer_middleware(_blacklist)
 dp.callback_query.outer_middleware(_blacklist)
-dp.include_router(main_router)
+dp.include_router(registration_router)
 
 # Refaktor bosqichi: referral bilan bog'liq router'lar (chat_member, join
 # request, inline) T-105 doirasida olib tashlandi. Student-bot uchun kerakli
