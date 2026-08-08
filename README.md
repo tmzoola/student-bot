@@ -1,127 +1,178 @@
-# Muslima Darmonova — Edu Bot
+# Student Bot
 
-Telegram Mini App + Admin Panel for an Uzbek educational platform. Users solve quizzes, track scores on a leaderboard, buy books, and participate in timed competitions — all inside Telegram. Admins manage content through a full-featured web panel.
+Universitet talabalari uchun mid-term va yakuniy imtihonlarga tayyorgarlik yordamchisi. Telegram bot orqali ro'yxatdan o'tib, WebApp'da fakultet/kurs/semestrga mos test bankasidan foydalanish, urinishlar tarixi va statistika, admin tomonidan kontent boshqaruvi.
 
-## Features
+## Asosiy imkoniyatlar
 
 ### Bot
-- Persistent reply keyboard with **Test ishlash** (opens Mini App), **Kitoblar do'koni**, **Ma'lumot**
-- Daily quiz notifications
-- Re-engagement notifications — users inactive for 3+ days get a personalized message at 10:00 Tashkent time
-- Book shop: admin posts books with prices; users pay via card, admin confirms payment, bot collects delivery info via FSM, order tracking in Mini App
+- **Ro'yxatdan o'tish FSM** — student ID → F.I.Sh → fakultet → kurs → semestr
+- **Admin approve/reject** — yangi ariza admin chat'iga inline tugma bilan yuboriladi
+- **Reg-gate middleware** — ro'yxatsizlar va tasdiqlanmaganlar cheklangan
+- **Asosiy menyu** — Fanlar (WebApp), Profil, Statistika
 
-### Mini App (WebApp)
-- Module → Topic → Quiz flow with a timer and score tracking
-- Leaderboard (day / week / month / all-time)
-- Daily quiz with a countdown to the next one
-- Timed competitions (contests) with a live scoreboard
-- Profile page with order history
-- Dark mode, fully mobile-friendly
+### WebApp
+- **Fanlar ro'yxati** — foydalanuvchi profiliga mos (fakultet/kurs/semestr filtri)
+- **Fan → mavzular → testlar** navigatsiyasi
+- **Test yechish** — timer, savol-javob, submit; correct answer serverdan chiqmaydi
+- **Profil** — urinishlar tarixi, o'rtacha ball, statistika
+- Telegram WebApp `initData` validation (HMAC-SHA256)
 
-### Admin Panel (`/admin/`)
-- **Test yaratish** — rich quiz builder: create/edit quizzes with bulk-paste support
-- **Yutuqli testlar** — create and manage timed contest quizzes with winner boards and Excel export
-- **Kitob yuklash** — upload PDF/EPUB books for in-app reading
-- **Do'kon kitoblari** — manage shop books with cover image upload
-- **Buyurtmalar boshqaruvi** — order management with confirm/ship actions that message the buyer
-- **Reyting** — live leaderboard across all periods
-- **Motivatsiya** — manage motivational quotes shown on the home screen
-- **Xabar yuborish** — broadcast messages to all active users
-- **Foydalanuvchilar** — user list with registration stats
-- Consistent dark/light theme across all pages
+### Admin panel (`/admin/`)
+- **Universitet** — Fakultetlar, Fanlar
+- **Kontent** — Mavzular, Testlar, Savollar
+- **Foydalanuvchilar** — Talaba profillari (approve, ban), Telegram foydalanuvchilar
 
-## Tech Stack
+## Domen modeli
 
-| Layer        | Technology                                                  |
-|--------------|-------------------------------------------------------------|
-| Bot          | aiogram 3.x, aiogram FSM                                   |
-| Web          | FastAPI + Jinja2 templates + uvicorn                       |
-| Admin panel  | starlette-admin with custom template overrides              |
-| Database     | PostgreSQL + SQLAlchemy 2.x async + asyncpg                |
-| Migrations   | Alembic (async)                                             |
-| Scheduling   | asyncio background task (lifespan)                         |
-| Time zone    | `zoneinfo` — Asia/Tashkent (UTC+5)                        |
-| Media        | Local filesystem (`/media/`), served as static files        |
-| Deployment   | Docker Compose (db + app)                                   |
+```
+Faculty ──► Subject (course_number 1..4, semester 1..2) ──► Topic ──► Quiz ──► Question
+                                                                           ▲
+TelegramUser ◄── 1:1 ── StudentProfile ─────── QuizAttempt ────────────────┘
+                        (is_approved)
+```
 
-## Quick Start
+## Stack
+
+| Qatlam        | Texnologiya                                        |
+|---------------|----------------------------------------------------|
+| Bot           | aiogram 3.15, Redis FSM storage                    |
+| Web           | FastAPI 0.115 + Jinja2 + uvicorn                   |
+| Admin panel   | starlette-admin (o'zbek locale)                    |
+| Database      | PostgreSQL 15 + SQLAlchemy 2.0 async + asyncpg     |
+| Migratsiya    | Alembic (async)                                    |
+| Kesh/FSM      | Redis 7                                            |
+| Vaqt zonasi   | Asia/Tashkent (UTC+5)                              |
+| Deploy        | Docker Compose + nginx + certbot                   |
+| Monitoring    | Grafana + Loki + Promtail + Dozzle                 |
+
+## Ishga tushirish (lokal)
 
 ```bash
-git clone <repo-url> edu-bot
-cd edu-bot
+git clone <repo-url> student-bot
+cd student-bot
 
 cp .env.example .env
-# Fill in BOT_TOKEN, WEBAPP_URL, DATABASE_URL, etc.
+# .env ichida SECRET_KEY, BOT_TOKEN, ADMIN_PASSWORD, ADMIN_CHAT_ID to'ldiring
 
-docker compose up -d --build
+make install          # pip install -r requirements.txt
+make migrate          # alembic upgrade head
+make run              # cd app && uvicorn main:app --reload --port 8000
 ```
 
-After startup:
-- **Mini App**: `WEBAPP_URL/webapp/`
-- **Admin panel**: `http://localhost:8000/admin/`
-
-### Rebuild after code changes
+Docker orqali:
 
 ```bash
 docker compose up -d --build
 ```
 
-## Environment Variables
+Ishga tushgach:
+- **WebApp**: `WEBAPP_URL/`
+- **Admin panel**: `http://localhost:8002/admin/`
 
-| Variable            | Purpose                                              |
-|---------------------|------------------------------------------------------|
-| `BOT_TOKEN`         | Telegram bot token from @BotFather                  |
-| `WEBAPP_URL`        | Public HTTPS URL where the Mini App is served        |
-| `DATABASE_URL`      | `postgresql+asyncpg://user:pass@host:port/db`        |
-| `POSTGRES_USER`     | Postgres container user                              |
-| `POSTGRES_PASSWORD` | Postgres container password                          |
-| `POSTGRES_DB`       | Postgres database name                               |
-| `ADMIN_USERNAME`    | Default admin login                                  |
-| `ADMIN_PASSWORD`    | Default admin password                               |
+## Muhit o'zgaruvchilari (asosiy)
 
-## Project Layout
+| O'zgaruvchi          | Vazifasi                                             |
+|----------------------|------------------------------------------------------|
+| `SECRET_KEY`         | Session cookie va CSRF uchun                         |
+| `BOT_TOKEN`          | @BotFather'dan olingan token                         |
+| `BOT_USERNAME`       | Bot username (`@` siz) — deep-link uchun             |
+| `WEBAPP_URL`         | Public HTTPS URL (Telegram WebApp uchun)             |
+| `ADMIN_CHAT_ID`      | Ro'yxatdan o'tish arizasi yuboriladigan chat         |
+| `POSTGRES_*`         | DB user/password/host/db                             |
+| `ADMIN_USERNAME`     | Admin panel login                                    |
+| `ADMIN_PASSWORD`     | Admin panel parol                                    |
+| `REDIS_URL`          | Redis (FSM storage + kesh)                           |
+| `GRAFANA_ADMIN_*`    | Grafana admin credentials                            |
+
+To'liq ro'yxat — `.env.example` da.
+
+## Loyiha strukturasi
 
 ```
 app/
-├── main.py                  FastAPI app entrypoint, lifespan, re-engagement scheduler
+├── main.py                 FastAPI entrypoint, lifespan
 ├── bot/
-│   └── router.py            aiogram handlers, FSM states, reply keyboard, shop flow
+│   ├── setup.py            Dispatcher, Redis storage, router include
+│   ├── router.py           /start, minimal handler'lar
+│   ├── middlewares.py      Blacklist + RegistrationGate
+│   └── handlers/
+│       ├── registration.py Ro'yxatdan o'tish FSM
+│       ├── admin_approval.py  Approve/reject callback flow
+│       └── menu.py         Fanlar/Profil/Statistika
 ├── api/v1/
-│   ├── webapp.py            Mini App pages + REST API (quizzes, leaderboard, orders…)
-│   └── admin_tools.py       Custom admin tool endpoints (builder, shop, orders, …)
-├── admin/
-│   ├── __init__.py          starlette-admin setup, view registration
-│   ├── views/               Per-model admin views (quiz, book, user, shop, …)
-│   └── templates/           starlette-admin base.html override (theme, dark mode)
-├── models/                  SQLAlchemy ORM models
-├── migrations/              Alembic migration versions
-├── services/
-│   └── notifications.py     Re-engagement & daily quiz notification logic
-├── templates/               Jinja2 HTML templates (Mini App + admin tools)
-│   ├── admin_builder.html
-│   ├── admin_shop_books.html
-│   ├── admin_orders.html
-│   └── …
-└── db/
-    └── session.py           Async engine + session factory
-docker-compose.yml
-Dockerfile
+│   ├── student.py          WebApp REST API (fanlar, quiz submit, profil)
+│   └── webapp.py           WebApp HTML sahifalar
+├── admin/                  starlette-admin view'lar
+├── models/                 SQLAlchemy modellari
+│   ├── faculty.py subject.py topic.py quiz.py question.py
+│   ├── student_profile.py telegram_user.py attempt.py
+├── migrations/versions/    Alembic (bitta initial)
+├── templates/              Jinja2 (subjects, subject_detail, quiz, profile, ...)
+├── utils/webapp_auth.py    Telegram WebApp initData HMAC validation
+└── db/session.py           Async engine + session factory
+
+deploy/
+├── nginx/student-bot.conf  Reverse proxy + TLS + subpath
+└── scripts/backup.sh       Kunlik pg_dump + media backup
+
+docs/
+├── TASKS.md                Vazifalar reestri
+└── DEPLOY_NOTES.md         Deploy qo'llanmasi
 ```
 
-## Migrations
+## Testlar
 
 ```bash
-# Inside the container
-docker exec -it malaka_app alembic upgrade head
-
-# Or generate a new migration after model changes
-docker exec -it malaka_app alembic revision --autogenerate -m "description"
+pip install -r requirements-dev.txt
+pytest -q
 ```
 
-## Notes
+Testlar `aiosqlite` bilan ishlaydi (Postgres shart emas). Qamrov:
+- Ro'yxatdan o'tish (StudentProfile constraint'lari)
+- Quiz submit — score hisoblash, correct_option yashirinligi
 
-- All money amounts are stored as integer UZS — no floats.
-- Day boundaries for leaderboard/reports use Tashkent local time (UTC+5).
-- Re-engagement notifications fire once daily at 10:00 Tashkent time via an asyncio loop; the scheduler runs inside the FastAPI lifespan, no Celery needed.
-- The shop order FSM state is set programmatically from the admin panel (via `StorageKey` + `FSMContext`) so the bot picks up delivery info collection immediately after admin confirms payment.
-- Media files (book covers, question images) are stored under `MEDIA_ROOT` and served at `/media/`.
+## Migratsiyalar
+
+```bash
+# Yangi migratsiya autogenerate
+alembic revision --autogenerate -m "description"
+
+# Upgrade/downgrade
+alembic upgrade head
+alembic downgrade -1
+```
+
+Yoki Docker ichida:
+
+```bash
+docker compose exec app alembic upgrade head
+```
+
+## Deploy
+
+Server: **13.140.165.210**, domain: **student-13-140-165-210.sslip.io**, port: **8002**.
+
+Batafsil qo'llanma — [`docs/DEPLOY_NOTES.md`](docs/DEPLOY_NOTES.md). Qisqacha:
+
+1. Serverda `docker`, `nginx`, `certbot` o'rnatish + `deploy` foydalanuvchisi
+2. `git clone` `/opt/student-bot`, `.env` to'ldirish
+3. `docker compose up -d --build`
+4. Nginx config + `certbot --nginx -d student-13-140-165-210.sslip.io`
+5. GitHub Secrets: `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `DEPLOY_PATH`
+6. Crontab: kunlik backup
+
+Yangilanish avtomatik — `main` branch'ga push → GitHub Actions SSH deploy.
+
+## Muhim eslatmalar
+
+- **Kod konventsiyasi** — CLAUDE.md ga qarang
+- **Yupqa handler'lar** — biznes mantiq `services/` da
+- **Vaqt zonasi** — hamma sanalar `Asia/Tashkent`
+- **Sirlar** — faqat `.env` orqali, hech qachon commit qilinmaydi
+- **Commit va PR xabarlari o'zbek tilida**
+
+## Hujjatlar
+
+- [`CLAUDE.md`](CLAUDE.md) — Claude sessiyalari uchun orientatsiya
+- [`docs/TASKS.md`](docs/TASKS.md) — joriy va bajarilgan vazifalar
+- [`docs/DEPLOY_NOTES.md`](docs/DEPLOY_NOTES.md) — deploy va monitoring qo'llanmasi
