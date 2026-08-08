@@ -4,9 +4,6 @@ set -e
 echo "▶ Running database migrations..."
 alembic upgrade head
 
-echo "▶ Collecting static files..."
-python app/collect_static.py
-
 echo "▶ Starting server..."
 cd app
 # --proxy-headers + --forwarded-allow-ips make uvicorn honor the reverse

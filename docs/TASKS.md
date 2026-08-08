@@ -246,12 +246,86 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 - Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash
 - Mavzular bo'yicha tavsiyalar
 
-## Bosqich 4 — Deploy va CI/CD (kelajakda)
+## Bosqich 4 — Deploy va CI/CD
 
-- Server: `13.140.165.210`, port `8002`
-- Domain: `student-13-140-165-210.sslip.io` (yoki alohida)
-- GitHub Actions workflow
-- Backup strategiyasi
+Server: **13.140.165.210** (Contabo VPS, Ubuntu). Tashqi port **8002**
+(edu-bot 8001, samandar_market 8000 bilan konflikt yo'q). Domen —
+**student-13-140-165-210.sslip.io** (sslip.io orqali IP'ga avtomatik).
+
+Har vazifa bitta commit bilan yakunlanadi.
+
+### T-401 · Dockerfile va entrypoint tozalash
+- **Owner:** devops
+- **Status:** done
+- **Depends on:** T-209
+- **Acceptance:**
+  - [x] `Dockerfile` dan NudeNet RUN satri olib tashlandi
+  - [x] `app/collect_static.py` olib tashlandi (placeholder edi) va `entrypoint.sh` dan chaqiruv chiqarildi
+  - [x] `apt` kesh tozalanadi (`apt-get clean && rm -rf /var/lib/apt/lists/*`)
+  - [x] `requirements.txt` da nudenet/onnxruntime yo'qligi tasdiqlandi
+  - [x] `docker compose config` xatosiz
+
+### T-402 · docker-compose port va domain sozlash
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-401
+- **Acceptance:**
+  - [ ] `app` porti `8000:8000` → `8002:8000`
+  - [ ] Grafana `GF_SERVER_ROOT_URL` → `https://student-13-140-165-210.sslip.io/grafana`
+  - [ ] Barcha container_name'lar `student_*` prefiks bilan
+  - [ ] `depends_on` va `healthcheck` audit qilindi
+  - [ ] Loki/Promtail/Grafana/Dozzle konfiguratsiyasi tekshirildi
+  - [ ] `docker compose config` xatosiz
+
+### T-403 · `.env.example` ni deploy uchun to'liq yangilash
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-402
+- **Acceptance:**
+  - [ ] Barcha kerakli o'zgaruvchilar guruhlangan (App, DB, Admin, Bot, WebApp, Redis, Grafana, AI, University)
+  - [ ] `WEBAPP_URL=https://student-13-140-165-210.sslip.io`
+  - [ ] Har guruh uchun izoh (o'zbek)
+  - [ ] Deploy uchun majburiy o'zgaruvchilar `# REQUIRED` bilan belgilangan
+
+### T-404 · Nginx reverse proxy config
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-403
+- **Acceptance:**
+  - [ ] `deploy/nginx/student-bot.conf` yaratildi
+  - [ ] HTTP → HTTPS 301 redirect
+  - [ ] `/` → `127.0.0.1:8002` (app)
+  - [ ] `/logs/` → Dozzle (basic auth), `/grafana/` → Grafana
+  - [ ] X-Forwarded-* header'lar, WebSocket upgrade
+  - [ ] `client_max_body_size 100M`
+  - [ ] Certbot komandasi hujjatlashtirilgan
+
+### T-405 · GitHub Actions deploy audit
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-404
+- **Acceptance:**
+  - [ ] `.github/workflows/deploy.yml` student-bot uchun moslashtirildi (path, secrets)
+  - [ ] Talab qilinadigan secretslar ro'yxati DEPLOY_NOTES.md ga yozildi
+  - [ ] Trigger: `push` to `main` + `workflow_dispatch`
+  - [ ] SSH orqali `git pull && docker compose up -d --build`
+
+### T-406 · `docs/DEPLOY_NOTES.md` qayta yozish
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-405
+- **Acceptance:**
+  - [ ] Server sozlash, klonlash, `.env`, dastlabki up, Nginx+TLS, Actions, backup, monitoring, yangilash, rollback bo'limlari
+  - [ ] Barcha domain/IP student-bot uchun (`13.140.165.210`, `student-13-140-165-210.sslip.io`)
+
+### T-407 · Kunlik backup skripti
+- **Owner:** devops
+- **Status:** todo
+- **Depends on:** T-406
+- **Acceptance:**
+  - [ ] `deploy/scripts/backup.sh` — pg_dump + media tar.gz
+  - [ ] 7 kunlik retention (`find -mtime +7 -delete`)
+  - [ ] Cron qatori hujjatlashtirilgan
 
 ---
 

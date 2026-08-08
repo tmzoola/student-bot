@@ -7,6 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# curl — HEALTHCHECK uchun kerak. apt kesh'ini tozalaymiz, image kichik bo'lsin.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
  && apt-get clean \
@@ -14,9 +15,6 @@ RUN apt-get update \
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
-# Guard boti uchun NudeNet modelini image ichiga oldindan yuklab olish
-RUN python -c "from nudenet import NudeDetector; NudeDetector()"
 
 COPY alembic.ini .
 COPY app/ ./app/
