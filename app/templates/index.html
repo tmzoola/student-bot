@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Muslima Darmonova</title>
+<title>Student Bot</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -147,7 +147,7 @@ body{
 
   {# ── Hero ──────────────────────────────────── #}
   <div class="hero-photo">
-    <img id="hero-img" alt="Muslima Darmonova" fetchpriority="high">
+    <img id="hero-img" alt="Student Bot" fetchpriority="high">
     <h1 class="hero-title">{{ content.hero_title_before if content else 'Ilm bilan' }}
       <span class="gold">{{ content.hero_title_highlight if content else 'yuksalish' }}</span>
       {{ content.hero_title_after if content else "sening qo‘linda!" }}</h1>
@@ -187,7 +187,7 @@ body{
 
   {# ── Signature ─────────────────────────────── #}
   <div class="sign">
-    <div class="sign-name">Muslima Darmonova</div>
+    <div class="sign-name">Student Bot</div>
     <div class="sign-tag">Sizning yutuqlaringiz — bizning faxrimiz! 🧡</div>
   </div>
 </div>
@@ -261,7 +261,7 @@ body{
 (function(){
   var img=document.getElementById('hero-img');
   if(!img)return;
-  var url='/static/muslima_darmon.jpg';
+  var url='/static/hero.jpg';
   fetch(url,{headers:{'ngrok-skip-browser-warning':'true'}})
     .then(function(r){return r.ok?r.blob():Promise.reject(r.status);})
     .then(function(b){img.src=URL.createObjectURL(b);})

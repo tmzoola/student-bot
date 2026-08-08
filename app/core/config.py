@@ -47,7 +47,7 @@ class Settings(BaseSettings):
 
     BOT_TOKEN: str
     # Deep-link URL'lari (`https://t.me/<BOT_USERNAME>?start=...`) uchun kerak.
-    BOT_USERNAME: str = "muslima_darmonova_bot"
+    BOT_USERNAME: str = "student_bot"
     WEBAPP_URL: str = "http://localhost:8000"
 
     # Ro'yxatdan o'tgan talaba arizasi shu chat_id ga yuboriladi (admin guruhi

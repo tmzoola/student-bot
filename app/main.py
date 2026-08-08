@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Muslima Darmonova",
+    title="Student Bot",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
     redoc_url=None,
