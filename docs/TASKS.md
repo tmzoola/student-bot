@@ -303,13 +303,13 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-405 · GitHub Actions deploy audit
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-404
 - **Acceptance:**
-  - [ ] `.github/workflows/deploy.yml` student-bot uchun moslashtirildi (path, secrets)
-  - [ ] Talab qilinadigan secretslar ro'yxati DEPLOY_NOTES.md ga yozildi
-  - [ ] Trigger: `push` to `main` + `workflow_dispatch`
-  - [ ] SSH orqali `git pull && docker compose up -d --build`
+  - [x] `.github/workflows/deploy.yml` student-bot uchun moslashtirildi (path secret orqali)
+  - [x] Talab qilinadigan secretslar ro'yxati DEPLOY_NOTES.md ga yozildi (T-406)
+  - [x] Trigger: `push` to `main` + `workflow_dispatch`, concurrency guard
+  - [x] SSH orqali `git pull && docker compose up -d --build` + post-deploy log grep
 
 ### T-406 · `docs/DEPLOY_NOTES.md` qayta yozish
 - **Owner:** devops

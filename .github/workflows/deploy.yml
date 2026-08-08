@@ -1,12 +1,13 @@
-name: Deploy to Contabo
+name: Deploy student-bot to Contabo
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# Bir vaqtning o'zida bitta deploy — race hosil qilmaymiz.
 concurrency:
-  group: deploy-production
+  group: deploy-student-bot
   cancel-in-progress: false
 
 jobs:
@@ -19,20 +20,29 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Deploy over SSH
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" bash -s <<'REMOTE'
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+              DEPLOY_PATH="$DEPLOY_PATH" bash -s <<'REMOTE'
             set -euo pipefail
-            cd /opt/edu-bot
+            cd "$DEPLOY_PATH"
             git fetch --all --prune
             git reset --hard origin/main
+            # Migratsiya entrypoint.sh ichida (alembic upgrade head) avtomatik.
             docker compose pull --ignore-pull-failures || true
             docker compose up -d --build --remove-orphans
             docker compose ps
+            # Post-deploy smoke: 60 sek log kuzat, xatolarni ushla.
+            sleep 5
+            docker compose logs --since 60s app bot | \
+                grep -iE '(error|traceback|timeout|conflict|pool exhausted)' && \
+                { echo "!! Post-deploy log'da xatolik topildi"; exit 1; } || \
+                echo "OK: post-deploy log toza"
             docker image prune -f
           REMOTE
