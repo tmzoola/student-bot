@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from models.base import Base
 from sqlalchemy import BigInteger, Boolean, String
 from sqlalchemy import TIMESTAMP
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from models.student_profile import StudentProfile
 
 
 class TelegramUser(Base):
@@ -15,13 +19,16 @@ class TelegramUser(Base):
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     language_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    # Bot could not deliver messages (user blocked the bot) — auto-managed.
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Admin blacklist — user is forbidden from using the bot and WebApp.
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Last time the user actively used the bot or WebApp.
     last_active_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True, index=True
+    )
+
+    profile: Mapped["StudentProfile | None"] = relationship(
+        back_populates="telegram_user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     @property

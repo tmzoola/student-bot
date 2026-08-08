@@ -106,12 +106,13 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-109 · `StudentProfile` modeli + `TelegramUser` bog'lanishi + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-108
 - **Acceptance:**
-  - [ ] `app/models/student_profile.py`: `StudentProfile(id, telegram_user_id FK unique, student_id_number unique, full_name, faculty_id FK, course_number, semester, is_approved bool default False, approved_at nullable, approved_by nullable, created_at, updated_at)`
-  - [ ] `TelegramUser.profile` back-populates 1:1
-  - [ ] Alembic migratsiya
+  - [x] `app/models/student_profile.py` yaratildi (barcha maydonlar + CheckConstraint)
+  - [x] `TelegramUser.profile` back-populates 1:1
+  - [x] Admin view (`StudentProfileAdminView`) qo'shildi
+  - [ ] ~~Alembic migratsiya~~ — T-111 da squash
 
 ### T-110 · `Attempt` ni `student_profile_id` ga o'tkazish + migratsiya
 - **Owner:** solutions-architect

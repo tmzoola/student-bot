@@ -10,6 +10,7 @@ from models.topic import Topic  # noqa: F401
 from models.quiz import Quiz  # noqa: F401
 from models.question import Question  # noqa: F401
 from models.telegram_user import TelegramUser  # noqa: F401
+from models.student_profile import StudentProfile  # noqa: F401
 from models.attempt import QuizAttempt  # noqa: F401
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection

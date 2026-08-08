@@ -5,6 +5,7 @@ from admin.i18n_uz import install_uzbek
 from admin.views.faculty import FacultyAdminView
 from admin.views.question import QuestionAdminView
 from admin.views.quiz import QuizAdminView
+from admin.views.student_profile import StudentProfileAdminView
 from admin.views.subject import SubjectAdminView
 from admin.views.telegram_user import TelegramUserAdminView
 from admin.views.topic import TopicAdminView
@@ -13,6 +14,7 @@ from fastapi import FastAPI
 from models.faculty import Faculty
 from models.question import Question
 from models.quiz import Quiz
+from models.student_profile import StudentProfile
 from models.subject import Subject
 from models.telegram_user import TelegramUser
 from models.topic import Topic
@@ -57,7 +59,10 @@ def setup_admin(app: FastAPI) -> None:
     admin.add_view(DropDown(
         label="Foydalanuvchilar",
         icon="fa fa-users",
-        views=[TelegramUserAdminView(TelegramUser, identity="foydalanuvchi")],
+        views=[
+            StudentProfileAdminView(StudentProfile, identity="talaba-profili"),
+            TelegramUserAdminView(TelegramUser, identity="foydalanuvchi"),
+        ],
     ))
 
     admin.mount_to(app)
