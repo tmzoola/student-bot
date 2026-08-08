@@ -125,13 +125,13 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-111 · Migratsiyalarni bitta `0001_initial.py` ga squash qilish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-110
 - **Acceptance:**
-  - [ ] `app/migrations/versions/` tozalandi
-  - [ ] Yangi `0001_initial.py` autogenerate qilindi va yangi domenning to'liq schemasini yaratadi
-  - [ ] Bo'sh DB da `alembic upgrade head` xatosiz o'tadi
-  - [ ] `alembic downgrade base` ham xatosiz
+  - [x] `app/migrations/versions/` tozalandi (22 eski migratsiya o'chirildi)
+  - [x] Yangi `0001_initial.py` autogenerate qilindi — faculties, subjects, topics, quizzes, questions, quiz_attempts, telegram_users, student_profiles
+  - [x] Bo'sh Postgres 15 da `alembic upgrade head` xatosiz o'tdi
+  - [x] `alembic downgrade base` ham xatosiz
 
 ---
 
@@ -169,4 +169,4 @@ Rejalashtirilishi kerak:
 
 ---
 
-**Joriy fokus:** T-101 (bu fayl) → T-102. Har bir vazifa alohida commit bilan bajariladi.
+**Joriy fokus:** Bosqich 1 (T-101…T-111) tugatildi. Keyingi bosqich — Bosqich 2 (bot auth va student flow).
