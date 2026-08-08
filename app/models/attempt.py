@@ -1,29 +1,35 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from models.base import Base
-from sqlalchemy import ForeignKey, Integer, JSON, TIMESTAMP
+from sqlalchemy import JSON, TIMESTAMP, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from models.quiz import Quiz
+    from models.student_profile import StudentProfile
 
 
 class QuizAttempt(Base):
     __tablename__ = "quiz_attempts"
 
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("telegram_users.id", ondelete="CASCADE")
+    student_profile_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("student_profiles.id", ondelete="CASCADE"),
+        index=True,
     )
     quiz_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("quizzes.id", ondelete="CASCADE")
+        Integer, ForeignKey("quizzes.id", ondelete="CASCADE"), index=True
     )
     score: Mapped[int] = mapped_column(Integer, default=0)
     total: Mapped[int] = mapped_column(Integer, default=0)
     time_taken_seconds: Mapped[int] = mapped_column(Integer, default=0)
-    # {str(question_id): "A"/"B"/"C"/"D"}
     answers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )
 
-    user: Mapped["TelegramUser"] = relationship("TelegramUser")
+    student_profile: Mapped["StudentProfile"] = relationship("StudentProfile")
     quiz: Mapped["Quiz"] = relationship("Quiz")
 
     @property
@@ -34,5 +40,4 @@ class QuizAttempt(Base):
 
     @property
     def points(self) -> int:
-        # 2 points per correct answer (business rule)
         return self.score * 2

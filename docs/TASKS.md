@@ -116,12 +116,12 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-110 · `Attempt` ni `student_profile_id` ga o'tkazish + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-109
 - **Acceptance:**
-  - [ ] `Attempt.telegram_user_id` → `student_profile_id` (FK StudentProfile)
-  - [ ] Repository/service/handler yangilandi
-  - [ ] Alembic migratsiya
+  - [x] `QuizAttempt.user_id` (telegram_users FK) → `student_profile_id` (student_profiles FK, CASCADE)
+  - [x] Repository/service/handler yangilandi (yo'q — hali ishlatilmagan)
+  - [ ] ~~Alembic migratsiya~~ — T-111 da squash
 
 ### T-111 · Migratsiyalarni bitta `0001_initial.py` ga squash qilish
 - **Owner:** solutions-architect
