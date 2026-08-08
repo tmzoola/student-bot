@@ -19,6 +19,3 @@ openpyxl==3.1.5
 
 # Multi-worker uchun umumiy kesh (subscription state, va h.k.)
 redis[hiredis]==5.2.1
-
-# Guruh guard boti — 18+ profil aniqlash (NudeNet, lokal)
-nudenet==3.4.2

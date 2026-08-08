@@ -103,34 +103,6 @@ services:
     healthcheck:
       disable: true
 
-  # 18+ rasm aniqlash guard boti (@tozakanal_bot) — hozircha kerak emas,
-  # `profiles`ga tayinlab qo'ydik. Kerak bo'lganda:
-  #     docker compose --profile guard up -d
-  # bilan ishga tushiring. Oddiy `docker compose up -d` bunga tegmaydi.
-  guard:
-    profiles: ["guard"]
-    build: .
-    container_name: student_guard
-    restart: always
-    logging: *default-logging
-    depends_on:
-      db:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST: db
-      TZ: Asia/Tashkent
-    working_dir: /project/app
-    # entrypoint.sh (uvicorn) o'rniga guard botni to'g'ridan-to'g'ri ishga tushiramiz
-    entrypoint: ["python", "-m", "guard.main"]
-    volumes:
-      # Flag rasmlari app bilan umumiy media'da (admin panel ko'rsatishi uchun)
-      - media_data:/project/app/media
-    # Image'dagi HEALTHCHECK web server uchun — guard'da web yo'q, o'chiramiz
-    healthcheck:
-      disable: true
-
   # ─────────────────────────────────────────────────────────────────
   # Log kuzatuv stack: Dozzle (real-vaqt UI) + Loki + Promtail + Grafana
   # (tarix + qidiruv + alerting). Nginx tarafda subpath'ga proxy:

@@ -53,11 +53,6 @@ class Settings(BaseSettings):
     # Multi-worker umumiy kesh (subscription state va h.k.) — Redis URL.
     REDIS_URL: str = "redis://redis:6379/0"
 
-    # --- Guruh guard boti (@tozakanal_bot) ---
-    GUARD_BOT_TOKEN: str = "8955731141:AAG29R0HzIvHoPNXGrN4-RhaaHkyZlPFcmM"
-    GUARD_ADMIN_CHAT_ID: int = 765001726
-    NSFW_THRESHOLD: float = 0.6
-
     # --- T-022 · Referral anti-fraud ---
     # Yangi a'zo shu daqiqadan kamroq turib chiqib ketsa, join hisoblanmaydi.
     # Grace period tugagach background worker `is_counted=True` qiladi.

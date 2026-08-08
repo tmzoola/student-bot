@@ -44,14 +44,14 @@ Har bir vazifa **bitta commit** bo'lib bajariladi. Tartib qat'iy — bir-birini 
 
 ### T-103 · Guard modulini o'chirish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-102
 - **Acceptance:**
-  - [ ] `app/guard/` katalogi o'chirildi
-  - [ ] `app/services/nsfw_detector.py` o'chirildi
-  - [ ] `app/models/guard.py` o'chirildi
-  - [ ] `.env.example`, `docker-compose.yml`, `requirements.txt` dan NudeNet/guard konfiguratsiyasi olib tashlandi
-  - [ ] `app.main` import xatosiz
+  - [x] `app/guard/` katalogi o'chirildi
+  - [x] `app/services/nsfw_detector.py` o'chirildi
+  - [x] `app/models/guard.py` o'chirildi
+  - [x] `.env.example`, `docker-compose.yml`, `requirements.txt` dan NudeNet/guard konfiguratsiyasi olib tashlandi
+  - [x] `app.main` import xatosiz
 
 ### T-104 · Contest modulini o'chirish
 - **Owner:** solutions-architect

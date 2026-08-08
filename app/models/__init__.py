@@ -1,7 +1,6 @@
 from models.attempt import QuizAttempt
 from models.base import Base
 from models.contest import Contest, ContestAttempt, ContestQuestion
-from models.guard import FlaggedUser, JoinEvent
 from models.module import Module
 from models.question import CorrectOption, Question
 from models.quiz import Quiz
@@ -26,8 +25,6 @@ __all__ = [
     "Contest",
     "ContestQuestion",
     "ContestAttempt",
-    "JoinEvent",
-    "FlaggedUser",
     "TrackedChat",
     "InviteLink",
     "InviteJoin",

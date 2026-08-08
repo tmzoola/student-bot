@@ -2,7 +2,6 @@ from pathlib import Path
 
 from admin.auth import AdminAuth
 from admin.i18n_uz import install_uzbek
-from admin.views.guard import FlaggedUserAdminView, JoinEventAdminView
 from admin.views.module import ModuleAdminView
 from admin.views.question import QuestionAdminView
 from admin.views.quiz import QuizAdminView
@@ -18,7 +17,6 @@ from admin.views.telegram_user import TelegramUserAdminView
 from admin.views.topic import TopicAdminView
 from db.session import engine
 from fastapi import FastAPI
-from models.guard import FlaggedUser, JoinEvent
 from models.module import Module
 from models.question import Question
 from models.quiz import Quiz
@@ -78,15 +76,6 @@ def setup_admin(app: FastAPI) -> None:
             TrackedChatAdminView(TrackedChat, identity="referral-tracked-chat"),
             InviteLinkAdminView(InviteLink, identity="referral-invite-link"),
             InviteJoinAdminView(InviteJoin, identity="referral-invite-join"),
-        ],
-    ))
-
-    admin.add_view(DropDown(
-        label="Guard",
-        icon="fa fa-shield-halved",
-        views=[
-            JoinEventAdminView(JoinEvent, identity="guard-qoshilish"),
-            FlaggedUserAdminView(FlaggedUser, identity="guard-ogohlantirish"),
         ],
     ))
 

@@ -11,7 +11,6 @@ from models.question import Question  # noqa: F401
 from models.telegram_user import TelegramUser  # noqa: F401
 from models.attempt import QuizAttempt  # noqa: F401
 from models.contest import Contest, ContestAttempt, ContestQuestion  # noqa: F401
-from models.guard import FlaggedUser, JoinEvent  # noqa: F401
 from models.referral import InviteJoin, InviteLink, TrackedChat  # noqa: F401
 from models.referral_event import (  # noqa: F401
     EventReferral,
