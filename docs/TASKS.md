@@ -280,13 +280,13 @@ Har vazifa bitta commit bilan yakunlanadi.
 
 ### T-403 · `.env.example` ni deploy uchun to'liq yangilash
 - **Owner:** devops
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-402
 - **Acceptance:**
-  - [ ] Barcha kerakli o'zgaruvchilar guruhlangan (App, DB, Admin, Bot, WebApp, Redis, Grafana, AI, University)
-  - [ ] `WEBAPP_URL=https://student-13-140-165-210.sslip.io`
-  - [ ] Har guruh uchun izoh (o'zbek)
-  - [ ] Deploy uchun majburiy o'zgaruvchilar `# REQUIRED` bilan belgilangan
+  - [x] Barcha kerakli o'zgaruvchilar guruhlangan (App, DB, Admin, Bot, WebApp, Redis, Grafana, AI, University)
+  - [x] `WEBAPP_URL=https://student-13-140-165-210.sslip.io`
+  - [x] Har guruh uchun izoh (o'zbek)
+  - [x] Deploy uchun majburiy o'zgaruvchilar `# REQUIRED` bilan belgilangan
 
 ### T-404 · Nginx reverse proxy config
 - **Owner:** devops
