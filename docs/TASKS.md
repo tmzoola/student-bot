@@ -199,13 +199,13 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ### T-206 · WebApp fan detail (mavzular va testlar)
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-205
 - **Acceptance:**
-  - [ ] `GET /subjects/{id}` HTML — mavzular + har birida testlar
-  - [ ] `GET /api/v1/subjects/{id}` JSON
-  - [ ] Foydalanuvchi profili fan bilan mos kelishi (403 aks holda)
-  - [ ] Template `subject_detail.html`
+  - [x] `GET /subjects/{id}` HTML — mavzular + har birida testlar
+  - [x] `GET /api/v1/subjects/{id}` JSON
+  - [x] Foydalanuvchi profili fan bilan mos kelishi (403 aks holda)
+  - [x] Template `subject_detail.html`
 
 ### T-207 · Test yechish
 - **Owner:** solutions-architect

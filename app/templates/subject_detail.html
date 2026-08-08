@@ -1,0 +1,63 @@
+{% extends "_base.html" %}
+{% block title %}Fan{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/subjects" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="hdr-title" id="title" style="flex:1;padding:0 12px">…</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="topics"><div class="empty"><div class="empty-t">Yuklanmoqda…</div></div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+const SUBJECT_ID = {{ subject_id }};
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function load(){
+    const r = await fetch(`/api/v1/subjects/${SUBJECT_ID}`, { headers: {'X-Init-Data': MK.initData }});
+    const box = document.getElementById('topics');
+    if (r.status === 403 || r.status === 401) {
+        box.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div></div>';
+        return;
+    }
+    if (!r.ok) {
+        box.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        return;
+    }
+    const data = await r.json();
+    document.getElementById('title').textContent = data.name;
+    if (!data.topics.length) {
+        box.innerHTML = '<div class="empty"><div class="empty-t">Mavzu topilmadi</div></div>';
+        return;
+    }
+    box.innerHTML = data.topics.map(t => `
+        <div style="margin-bottom:18px">
+          <div class="section-t big">${esc(t.title)}</div>
+          ${t.description ? `<div class="card-sub" style="margin:-8px 4px 10px">${esc(t.description)}</div>` : ''}
+          ${t.quizzes.length === 0 ? '<div class="card-sub" style="padding:8px 4px">Testlar yo\'q</div>' :
+            t.quizzes.map(q => `
+              <a href="/quiz/${q.id}" class="card" style="margin-bottom:8px">
+                <div class="card-row">
+                  <div class="card-ic" style="background:var(--green);color:#fff">✎</div>
+                  <div class="card-body">
+                    <div class="card-title">${esc(q.title)}</div>
+                    <div class="card-sub">${q.questions_count} savol · ${Math.round(q.time_limit_seconds/60)} daq</div>
+                  </div>
+                  <div class="card-arrow">›</div>
+                </div>
+              </a>
+            `).join('')}
+        </div>
+    `).join('');
+}
+load();
+</script>
+{% endblock %}
