@@ -239,9 +239,85 @@ Har bir vazifa bitta commit. Tartib qat'iy.
   - [x] `Makefile` da `test:` target
   - [x] `pytest -q` yashil (4 passed)
 
-## Bosqich 3 — AI taxlil (kelajakda)
+## Bosqich 3 — AI taxlil
 
-Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha tavsiyalar. Bosqich 5 (Material + AI test) tugagach kelinadi.
+Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha
+tavsiyalar. Bosqich 5 tugagach boshlangan. Manba: `QuizAttempt` (kanonik) +
+`GeneratedQuizAttempt` (AI Material). AI provider: Claude Sonnet 4.6 (tool use).
+Kesh: Redis `insight:<profile_id>` TTL 24 soat. Min urinish: 3.
+
+### T-301 · Statistika servisi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-510
+- **Acceptance:**
+  - [x] `app/services/insights/stats.py` — `compute_user_stats(db, profile_id)`
+  - [x] `UserStats` dataclass: `attempts_total`, `overall_accuracy_pct`, `by_topic`, `by_subject`, `recent_trend` (4 hafta), `top_weaknesses`, `top_strengths`
+  - [x] `TopicStat` (subject_name bilan), `SubjectStat`, `TrendPoint`
+  - [x] Kanonik va AI attempts birlashtiriladi (AI = "AI materiallar" virtual subject)
+  - [x] `by_topic` faqat >=2 urinishga ega mavzular
+  - [x] `tests/test_insights_stats.py` — 3 test (happy, single-attempt skip, empty)
+
+### T-302 · WebApp /insights sahifasi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-301
+- **Acceptance:**
+  - [x] `GET /insights` HTML → `templates/insights.html`
+  - [x] `GET /api/v1/insights` JSON — stats + (agar kesh bor bo'lsa) `ai_insight`
+  - [x] Statistika kartochkalar, zaif/kuchli mavzular ro'yxati, SVG trend line
+  - [x] "AI tavsiya olish" tugma (yoki "Qayta so'rash")
+  - [x] `attempts_total < 3` → "Yetarli ma'lumot yo'q" empty state
+
+### T-303 · AI insight generatsiya servisi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-301
+- **Acceptance:**
+  - [x] `app/services/insights/ai_analyze.py` — `generate_insight(stats, profile)`
+  - [x] `InsightResult` dataclass: `summary`, `weaknesses[{topic, tip, accuracy}]`, `strengths[{topic, accuracy}]`, `recommendations[str]`, `input_tokens`, `output_tokens`
+  - [x] Claude tool use (`submit_insight` schema) + prompt caching
+  - [x] O'zbek tili (system prompt), amaliy va o'lchovli tavsiyalar
+  - [x] `ai_call_cost kind=insight` structured log
+  - [x] `tests/test_insights_ai.py` — 4 test (happy mock, no tool_use, empty key, dict roundtrip)
+
+### T-304 · Bot menyuga "🧠 Tahlilim" tugma
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-302
+- **Acceptance:**
+  - [x] `bot/handlers/menu.py` `_inline_webapp_kb()` ga uchinchi qator qo'shildi
+  - [x] URL: `WEBAPP_URL/insights`
+
+### T-305 · Redis kesh + rate limit integratsiyasi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-303
+- **Acceptance:**
+  - [x] `app/services/insights/cache.py` — `get/set/invalidate_cached_insight`, TTL 24h
+  - [x] `POST /api/v1/insights/generate` — kesh bor bo'lsa qaytar (rate limit sarflanmaydi), yo'q bo'lsa `check_and_increment_daily` + `generate_insight` + `set_cached_insight`
+  - [x] `GET /api/v1/insights` — faqat keshdagi insight qaytaradi (avtomatik AI chaqirmaydi)
+  - [x] `<3` urinish → 400 "Yetarli ma'lumot yo'q"
+  - [x] `tests/test_insights_cache.py` — 3 test (no Redis miss, set/get, invalidate)
+
+### T-306 · Admin panelda talaba tahlili sahifasi
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-305
+- **Acceptance:**
+  - [x] `GET /admin-tools/insight/<profile_id>` — Jinja render
+  - [x] `templates/admin_insight.html` — statistika + kesh AI insight
+  - [x] Read-only; AI shu yerdan chaqirilmaydi (faqat keshdan)
+
+### T-307 · Testlar
+- **Owner:** solutions-architect
+- **Status:** done
+- **Depends on:** T-306
+- **Acceptance:**
+  - [x] `tests/test_insights_stats.py` (T-301 da)
+  - [x] `tests/test_insights_ai.py` (T-303 da)
+  - [x] `tests/test_insights_cache.py` (T-305 da)
+  - [x] `pytest -q` yashil (34 passed)
 
 ---
 
