@@ -19,11 +19,21 @@
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 async function load(){
+    const tg = window.Telegram?.WebApp;
+    const debugInfo = [
+        'tg=' + (tg ? 'bor' : 'YO\'Q'),
+        'initData len=' + (tg?.initData?.length ?? 'null'),
+        'user.id=' + (tg?.initDataUnsafe?.user?.id ?? 'null'),
+        'platform=' + (tg?.platform ?? '?'),
+        'version=' + (tg?.version ?? '?'),
+    ].join(' · ');
     const r = await fetch('/api/v1/subjects', { headers: MK.authHeaders() });
     const list = document.getElementById('list');
     if (r.status === 403 || r.status === 401) {
+        const body = await r.text();
         list.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div>'
-            + '<div class="empty-d">Profilingiz tasdiqlanmagan yoki topilmadi.</div></div>';
+            + '<div class="empty-d">' + esc(body) + '</div>'
+            + '<div class="empty-d" style="font-size:11px;margin-top:8px;opacity:.7">DEBUG: ' + esc(debugInfo) + '</div></div>';
         return;
     }
     if (!r.ok) {
