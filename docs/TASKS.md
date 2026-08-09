@@ -257,16 +257,16 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-501 · Material domen modellari + migratsiya
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-407
 - **Acceptance:**
-  - [ ] `app/models/material.py`: `Material(id, student_profile_id FK, title, filename, mime, size_bytes, storage_path, status ENUM(uploaded|extracting|ready|failed), extracted_text_length, created_at, updated_at)`
-  - [ ] `app/models/material_chunk.py`: `MaterialChunk(id, material_id FK CASCADE, order int, text)` — kelajakda RAG uchun ham kerak
-  - [ ] `app/models/generated_quiz.py`: `GeneratedQuiz(id, material_id FK CASCADE, student_profile_id FK, title, difficulty ENUM(easy|medium|hard), num_questions, created_at)`
-  - [ ] `app/models/generated_question.py`: `GeneratedQuestion(id, generated_quiz_id FK CASCADE, order, text, option_a, option_b, option_c, option_d, correct_option CHAR(1), explanation)`
-  - [ ] `app/models/generated_attempt.py`: `GeneratedQuizAttempt(id, generated_quiz_id FK, student_profile_id FK, score, total, answers JSON, time_taken_seconds, completed_at)`
-  - [ ] `models/__init__.py` yangilangan
-  - [ ] Alembic migratsiya `0002_bosqich_5.py` autogenerate + bo'sh Postgres da upgrade/downgrade xatosiz
+  - [x] `app/models/material.py`: `Material(id, student_profile_id FK, title, filename, mime, size_bytes, storage_path, status ENUM(uploaded|extracting|generating|ready|failed), extracted_text_length, error_message, created_at, updated_at)`
+  - [x] `app/models/material_chunk.py`: `MaterialChunk(id, material_id FK CASCADE, order int, text)`
+  - [x] `app/models/generated_quiz.py`: `GeneratedQuiz(id, material_id FK CASCADE, student_profile_id FK, title, difficulty ENUM(easy|medium|hard), language, num_questions, created_at)`
+  - [x] `app/models/generated_question.py`: `GeneratedQuestion(id, generated_quiz_id FK CASCADE, order, text, option_a..d, correct_option (correct_option_enum), explanation)`
+  - [x] `app/models/generated_attempt.py`: `GeneratedQuizAttempt(id, generated_quiz_id FK, student_profile_id FK, score, total, answers JSON, time_taken_seconds, completed_at)`
+  - [x] `models/__init__.py` yangilangan
+  - [x] Alembic migratsiya `0002_bosqich_5.py` — Postgres 15 da upgrade/downgrade xatosiz
 
 ### T-502 · File upload + text extraction
 - **Owner:** solutions-architect
