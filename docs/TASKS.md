@@ -241,10 +241,133 @@ Har bir vazifa bitta commit. Tartib qat'iy.
 
 ## Bosqich 3 — AI taxlil (kelajakda)
 
-- `app/services/ai/` — provider abstraksiyasi (Claude, OpenAI)
-- `.env` da `AI_PROVIDER`, kalitlar
-- Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash
-- Mavzular bo'yicha tavsiyalar
+Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha tavsiyalar. Bosqich 5 (Material + AI test) tugagach kelinadi.
+
+---
+
+## Bosqich 5 — Material yuklash + AI test generatsiya (MVP)
+
+**Maqsad:** Talaba PDF/DOCX/TXT material yuklaydi → server matnni ajratadi → Claude API 10 ta MCQ savol yaratadi → talaba WebApp'da yechadi. Bu Anki + ChatGPT tutor'ning boshlanishi.
+
+**Domen strategiyasi:** Admin-created `Faculty/Subject/Topic/Quiz` **saqlanadi** (kanonik test bankasi). Yangi `Material → GeneratedQuiz → GeneratedQuestion` **yonida** joylashadi. Talaba ikkisidan ham foydalanadi.
+
+**AI:** Anthropic Claude birinchi. `AI_PROVIDER=claude`, `ANTHROPIC_API_KEY=...`. Provider abstraksiyasi keyingi providerlar (OpenAI) uchun tayyor bo'lsin.
+
+**Scope v1:** faqat MCQ (4 variantli). True/false, ochiq savol keyingi versiyaga.
+
+### T-501 · Material domen modellari + migratsiya
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-407
+- **Acceptance:**
+  - [ ] `app/models/material.py`: `Material(id, student_profile_id FK, title, filename, mime, size_bytes, storage_path, status ENUM(uploaded|extracting|ready|failed), extracted_text_length, created_at, updated_at)`
+  - [ ] `app/models/material_chunk.py`: `MaterialChunk(id, material_id FK CASCADE, order int, text)` — kelajakda RAG uchun ham kerak
+  - [ ] `app/models/generated_quiz.py`: `GeneratedQuiz(id, material_id FK CASCADE, student_profile_id FK, title, difficulty ENUM(easy|medium|hard), num_questions, created_at)`
+  - [ ] `app/models/generated_question.py`: `GeneratedQuestion(id, generated_quiz_id FK CASCADE, order, text, option_a, option_b, option_c, option_d, correct_option CHAR(1), explanation)`
+  - [ ] `app/models/generated_attempt.py`: `GeneratedQuizAttempt(id, generated_quiz_id FK, student_profile_id FK, score, total, answers JSON, time_taken_seconds, completed_at)`
+  - [ ] `models/__init__.py` yangilangan
+  - [ ] Alembic migratsiya `0002_bosqich_5.py` autogenerate + bo'sh Postgres da upgrade/downgrade xatosiz
+
+### T-502 · File upload + text extraction
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-501
+- **Acceptance:**
+  - [ ] `requirements.txt` ga `pymupdf`, `python-docx` qo'shiladi
+  - [ ] `app/services/materials/extract.py`: `extract_text(path, mime) -> str` — PDF (fitz), DOCX (python-docx), TXT (plain UTF-8)
+  - [ ] `app/services/materials/chunk.py`: `chunk_text(text, max_chars=2000) -> list[str]` — paragraf chegarasida bo'lish
+  - [ ] Fayllar `MEDIA_ROOT/materials/<profile_id>/<uuid>.<ext>` ga saqlanadi
+  - [ ] Fayl hajmi cheklovi `MAX_MATERIAL_SIZE = 20 MB`
+  - [ ] Ruxsat etilgan mime'lar: `application/pdf`, DOCX, `text/plain`
+  - [ ] Extraction sinov (mock PDF/DOCX/TXT) — 3 test
+
+### T-503 · AI service — Claude provider
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-502
+- **Acceptance:**
+  - [ ] `requirements.txt` ga `anthropic` qo'shildi
+  - [ ] `app/services/ai/base.py`: `AIProvider` ABC — `async generate_quiz(text: str, num_questions: int, difficulty: str, language: str = "uz") -> QuizGenResult`
+  - [ ] `app/services/ai/schemas.py`: `QuizGenResult`, `GeneratedQuestionData` (Pydantic)
+  - [ ] `app/services/ai/claude.py`: `ClaudeProvider(AIProvider)` — Anthropic SDK ishlatadi, structured JSON output (tool use)
+  - [ ] `app/services/ai/__init__.py`: `get_ai_provider() -> AIProvider` — `.env` `AI_PROVIDER` ga qarab
+  - [ ] `settings.ANTHROPIC_API_KEY`, `settings.AI_PROVIDER`, `settings.AI_MODEL` `.env.example` ga
+  - [ ] Prompt template `app/services/ai/prompts.py` (o'zbek tilda test uchun, JSON output ko'rsatmasi bilan)
+
+### T-504 · Test generatsiya servisi
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-503
+- **Acceptance:**
+  - [ ] `app/services/materials/generate.py`: `async generate_quiz_for_material(material_id, num_questions=10, difficulty="medium") -> GeneratedQuiz`
+  - [ ] Material chunk'larni jamlab context sifatida beradi (juda uzun bo'lsa oxirgi N tokengacha qisqartiradi)
+  - [ ] AI natijasini DB'ga yozadi (`GeneratedQuiz` + `GeneratedQuestion` batch insert)
+  - [ ] Xato holida `material.status = failed`, xato log qilinadi
+  - [ ] Retry: bir marta qayta urinish (AI 5xx/timeout uchun)
+  - [ ] Test: AI response mock qilinib to'liq flow tekshiriladi
+
+### T-505 · Bot flow — material yuklash trigger
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-504
+- **Acceptance:**
+  - [ ] Menyuga inline "📄 Material yuklash" tugmasi qo'shiladi (WebApp'ga `/materials`)
+  - [ ] Bot chatda `Message.document` ni ham qabul qiladi — fayl olinadi, `Material` yaratiladi, background task extract + generatsiya
+  - [ ] Progress: "📥 Yuklandi → 🔎 Matn ajratilmoqda → 🤖 Test yaratilmoqda → ✅ Tayyor" xabar edit
+  - [ ] Tayyor bo'lgach inline "Testni ochish" tugma (WebApp `/materials/{id}/quiz`)
+  - [ ] Xatolik holida foydalanuvchiga tushunarli xabar
+
+### T-506 · WebApp `/materials` sahifasi
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-505
+- **Acceptance:**
+  - [ ] `GET /materials` HTML — foydalanuvchining materiallari + upload input
+  - [ ] `POST /api/v1/materials/upload` — multipart, `Material` yaratadi, background extract + generatsiya
+  - [ ] `GET /api/v1/materials` — JSON ro'yxat (id, title, status, quizzes_count, created_at)
+  - [ ] `GET /api/v1/materials/{id}` — JSON detail (chunk snippet, generated quiz'lar)
+  - [ ] Template `materials.html` (upload, status polling, kartochka'lar)
+
+### T-507 · WebApp — generated quiz yechish
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-506
+- **Acceptance:**
+  - [ ] `GET /materials/{material_id}/quiz/{quiz_id}` HTML — mavjud `quiz.html` reuse
+  - [ ] `GET /api/v1/generated-quiz/{id}` — savollar (correct_option YASHIRIN)
+  - [ ] `POST /api/v1/generated-quiz/{id}/submit` — javob → `GeneratedQuizAttempt` + score + tushuntirishlar bilan JSON
+  - [ ] Faqat foydalanuvchi o'zi yaratganini yechadi (`student_profile_id` mos)
+
+### T-508 · Admin panelda audit view'lari
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-507
+- **Acceptance:**
+  - [ ] `MaterialAdminView` — kim yukladi, hajm, status, xato sabab
+  - [ ] `GeneratedQuizAdminView` — savollar preview
+  - [ ] Admin panel yangi bo'limda ("AI Materiallar")
+
+### T-509 · Rate limiting + cost logging
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-508
+- **Acceptance:**
+  - [ ] `settings.AI_DAILY_LIMIT_PER_USER = 20` (test generatsiyalar soni)
+  - [ ] Redis'da counter `ai:daily:<profile_id>:<YYYY-MM-DD>`, TTL 24h
+  - [ ] Limit oshsa foydalanuvchi "Kunlik limit tugadi" xabari
+  - [ ] AI chaqiruvda `input_tokens`, `output_tokens` structured log (Loki'da qidirish uchun `ai_call_cost` label)
+  - [ ] Tests: limit hisoblash, oshirilganda 429
+
+### T-510 · Bosqich 5 testlari
+- **Owner:** solutions-architect
+- **Status:** todo
+- **Depends on:** T-509
+- **Acceptance:**
+  - [ ] `tests/test_extraction.py` — PDF, DOCX, TXT extract
+  - [ ] `tests/test_ai_provider.py` — Claude provider mock qilinib schema validation
+  - [ ] `tests/test_generate_quiz.py` — end-to-end mock (material → AI mock → DB rows)
+  - [ ] `tests/test_generated_submit.py` — javob score to'g'ri hisoblanishi
+  - [ ] `pytest -q` yashil
 
 ## Bosqich 4 — Deploy va CI/CD
 
