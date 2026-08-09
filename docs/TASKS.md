@@ -270,16 +270,15 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-502 · File upload + text extraction
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-501
 - **Acceptance:**
-  - [ ] `requirements.txt` ga `pymupdf`, `python-docx` qo'shiladi
-  - [ ] `app/services/materials/extract.py`: `extract_text(path, mime) -> str` — PDF (fitz), DOCX (python-docx), TXT (plain UTF-8)
-  - [ ] `app/services/materials/chunk.py`: `chunk_text(text, max_chars=2000) -> list[str]` — paragraf chegarasida bo'lish
-  - [ ] Fayllar `MEDIA_ROOT/materials/<profile_id>/<uuid>.<ext>` ga saqlanadi
-  - [ ] Fayl hajmi cheklovi `MAX_MATERIAL_SIZE = 20 MB`
-  - [ ] Ruxsat etilgan mime'lar: `application/pdf`, DOCX, `text/plain`
-  - [ ] Extraction sinov (mock PDF/DOCX/TXT) — 3 test
+  - [x] `requirements.txt` ga `pymupdf`, `python-docx` qo'shildi
+  - [x] `app/services/materials/extract.py`: `extract_text(path, mime) -> str` — PDF/DOCX/TXT
+  - [x] `app/services/materials/chunk.py`: `chunk_text(text, max_chars=2000)` paragraf chegarasida
+  - [x] `MAX_MATERIAL_SIZE = 20 MB`, `ALLOWED_MIMES` (PDF/DOCX/TXT)
+  - [x] `tests/test_extraction.py` — 7 test yashil (PDF/DOCX/TXT + chunk)
+  - [ ] Fayllar `MEDIA_ROOT/materials/<profile_id>/<uuid>.<ext>` — T-506 upload endpoint'da
 
 ### T-503 · AI service — Claude provider
 - **Owner:** solutions-architect
