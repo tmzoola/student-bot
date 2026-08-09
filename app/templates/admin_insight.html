@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Talaba tahlili — {{ profile.full_name }}</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f4f5f7;color:#111;margin:0;padding:24px}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:1.4rem;margin:0 0 4px}
+.sub{color:#666;font-size:.9rem;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:1rem;margin:0 0 10px;color:#333}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #eee;font-size:.9rem}
+.row:first-of-type{border-top:none}
+.row .k{color:#555}
+.row .v{font-weight:700}
+.v.bad{color:#E94E77}.v.good{color:#3DB66A}
+.tip{border-left:3px solid #E94E77;padding:8px 12px;background:#FBE5EC;border-radius:6px;margin:6px 0;font-size:.88rem}
+.strong{border-left:3px solid #3DB66A;padding:8px 12px;background:#E4F3EB;border-radius:6px;margin:6px 0;font-size:.88rem}
+.rec{padding:8px 12px;background:#f8f9fb;border-radius:6px;margin:6px 0;font-size:.88rem}
+.rec::before{content:"✓ ";color:#3DB66A;font-weight:800}
+.empty{color:#888;font-style:italic}
+.summary{background:linear-gradient(135deg,#EEE7FE,#E3EBF8);padding:14px;border-radius:10px;font-size:.92rem;line-height:1.5;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>{{ profile.full_name }}</h1>
+  <div class="sub">
+    🆔 {{ profile.student_id_number }} ·
+    {{ profile.faculty.name if profile.faculty else '—' }} ·
+    {{ profile.course_number }}-kurs · {{ profile.semester }}-semestr
+  </div>
+
+  <div class="card">
+    <h2>Umumiy statistika</h2>
+    <div class="row"><span class="k">Urinishlar</span><span class="v">{{ stats.attempts_total }}</span></div>
+    <div class="row"><span class="k">Umumiy aniqlik</span><span class="v">{{ stats.overall_accuracy_pct }}%</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Zaif mavzular</h2>
+    {% if stats.top_weaknesses %}
+      {% for t in stats.top_weaknesses %}
+        <div class="row">
+          <span class="k">{{ t.topic_title }} <small style="color:#999">· {{ t.subject_name }}</small></span>
+          <span class="v bad">{{ t.accuracy_pct }}% ({{ t.correct }}/{{ t.correct + t.wrong }})</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Yetarli ma'lumot yo'q</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Kuchli mavzular</h2>
+    {% if stats.top_strengths %}
+      {% for t in stats.top_strengths %}
+        <div class="row">
+          <span class="k">{{ t.topic_title }} <small style="color:#999">· {{ t.subject_name }}</small></span>
+          <span class="v good">{{ t.accuracy_pct }}%</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Yetarli ma'lumot yo'q</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Fanlar bo'yicha</h2>
+    {% if stats.by_subject %}
+      {% for s in stats.by_subject %}
+        <div class="row">
+          <span class="k">{{ s.subject_name }} <small style="color:#999">· {{ s.attempts }} urinish</small></span>
+          <span class="v">{{ s.accuracy_pct }}%</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Yo'q</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>🧠 AI tahlil {% if not insight %}<small style="color:#888;font-weight:400">(keshda yo'q)</small>{% endif %}</h2>
+    {% if insight %}
+      <div class="summary">{{ insight.summary }}</div>
+      {% if insight.weaknesses %}
+        <h3 style="font-size:.9rem;margin:14px 0 6px">Zaif tomonlar</h3>
+        {% for w in insight.weaknesses %}
+          <div class="tip"><b>{{ w.topic }}{% if w.accuracy is not none %} · {{ w.accuracy }}%{% endif %}</b><br>{{ w.tip }}</div>
+        {% endfor %}
+      {% endif %}
+      {% if insight.strengths %}
+        <h3 style="font-size:.9rem;margin:14px 0 6px">Kuchli tomonlar</h3>
+        {% for s in insight.strengths %}
+          <div class="strong">{{ s.topic }}{% if s.accuracy is not none %} · {{ s.accuracy }}%{% endif %}</div>
+        {% endfor %}
+      {% endif %}
+      {% if insight.recommendations %}
+        <h3 style="font-size:.9rem;margin:14px 0 6px">Tavsiyalar</h3>
+        {% for r in insight.recommendations %}
+          <div class="rec">{{ r }}</div>
+        {% endfor %}
+      {% endif %}
+    {% else %}
+      <div class="empty">Talaba hali AI tahlilni so'ramagan yoki 24 soatlik kesh yo'q.</div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
