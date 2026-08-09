@@ -349,14 +349,14 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-509 · Rate limiting + cost logging
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-508
 - **Acceptance:**
-  - [ ] `settings.AI_DAILY_LIMIT_PER_USER = 20` (test generatsiyalar soni)
-  - [ ] Redis'da counter `ai:daily:<profile_id>:<YYYY-MM-DD>`, TTL 24h
-  - [ ] Limit oshsa foydalanuvchi "Kunlik limit tugadi" xabari
-  - [ ] AI chaqiruvda `input_tokens`, `output_tokens` structured log (Loki'da qidirish uchun `ai_call_cost` label)
-  - [ ] Tests: limit hisoblash, oshirilganda 429
+  - [x] `settings.AI_DAILY_LIMIT_PER_USER = 20` (default `.env.example`)
+  - [x] `services/ai_rate_limit.py` — Redis pipeline `INCR + EXPIRE 24h`
+  - [x] Limit oshsa `HTTPException(429)`; Redis mavjud bo'lmasa log warn + bypass
+  - [x] `services/ai/claude.py` da `ai_call_cost provider=... input_tokens=... output_tokens=...` structured log
+  - [x] `tests/test_rate_limit.py` — 3 test (under limit, over limit 429, no redis bypass)
 
 ### T-510 · Bosqich 5 testlari
 - **Owner:** solutions-architect
