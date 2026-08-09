@@ -296,15 +296,15 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-504 · Test generatsiya servisi
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-503
 - **Acceptance:**
-  - [ ] `app/services/materials/generate.py`: `async generate_quiz_for_material(material_id, num_questions=10, difficulty="medium") -> GeneratedQuiz`
-  - [ ] Material chunk'larni jamlab context sifatida beradi (juda uzun bo'lsa oxirgi N tokengacha qisqartiradi)
-  - [ ] AI natijasini DB'ga yozadi (`GeneratedQuiz` + `GeneratedQuestion` batch insert)
-  - [ ] Xato holida `material.status = failed`, xato log qilinadi
-  - [ ] Retry: bir marta qayta urinish (AI 5xx/timeout uchun)
-  - [ ] Test: AI response mock qilinib to'liq flow tekshiriladi
+  - [x] `app/services/materials/generate.py`: `async generate_quiz_for_material(material_id, num_questions=10, difficulty="medium") -> GeneratedQuiz`
+  - [x] Material chunk'larni jamlab context sifatida beradi (juda uzun bo'lsa oxirgi ~200_000 char'gacha qisqartiradi)
+  - [x] AI natijasini DB'ga yozadi (`GeneratedQuiz` + `GeneratedQuestion` batch insert, bir tranzaksiya)
+  - [x] Xato holida `material.status = failed`, `error_message` yoziladi, log qilinadi
+  - [x] Retry: bir marta qayta urinish (2s sleep, `AIProviderError` uchun)
+  - [x] Test: AI response mock qilinib 3 stsenariy tekshirildi
 
 ### T-505 · Bot flow — material yuklash trigger
 - **Owner:** solutions-architect
