@@ -330,13 +330,13 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-507 · WebApp — generated quiz yechish
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-506
 - **Acceptance:**
-  - [ ] `GET /materials/{material_id}/quiz/{quiz_id}` HTML — mavjud `quiz.html` reuse
-  - [ ] `GET /api/v1/generated-quiz/{id}` — savollar (correct_option YASHIRIN)
-  - [ ] `POST /api/v1/generated-quiz/{id}/submit` — javob → `GeneratedQuizAttempt` + score + tushuntirishlar bilan JSON
-  - [ ] Faqat foydalanuvchi o'zi yaratganini yechadi (`student_profile_id` mos)
+  - [x] `GET /materials/{material_id}/quiz/{quiz_id}` HTML — yangi `generated_quiz.html` (quiz.html pattern reuse)
+  - [x] `GET /api/v1/generated-quiz/{id}` — savollar (correct_option YASHIRIN)
+  - [x] `POST /api/v1/generated-quiz/{id}/submit` — `GeneratedQuizAttempt` + score + tushuntirishlar bilan JSON
+  - [x] `student_profile_id` mosligi 403 bilan tekshiriladi
 
 ### T-508 · Admin panelda audit view'lari
 - **Owner:** solutions-architect
