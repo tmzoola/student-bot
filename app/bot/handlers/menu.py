@@ -47,7 +47,13 @@ def _inline_webapp_kb() -> InlineKeyboardMarkup:
                     text=BTN_SUBJECTS,
                     web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/subjects"),
                 )
-            ]
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📄 Material yuklash",
+                    web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/materials"),
+                )
+            ],
         ]
     )
 

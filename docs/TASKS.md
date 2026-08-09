@@ -308,14 +308,14 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-505 · Bot flow — material yuklash trigger
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-504
 - **Acceptance:**
-  - [ ] Menyuga inline "📄 Material yuklash" tugmasi qo'shiladi (WebApp'ga `/materials`)
-  - [ ] Bot chatda `Message.document` ni ham qabul qiladi — fayl olinadi, `Material` yaratiladi, background task extract + generatsiya
-  - [ ] Progress: "📥 Yuklandi → 🔎 Matn ajratilmoqda → 🤖 Test yaratilmoqda → ✅ Tayyor" xabar edit
-  - [ ] Tayyor bo'lgach inline "Testni ochish" tugma (WebApp `/materials/{id}/quiz`)
-  - [ ] Xatolik holida foydalanuvchiga tushunarli xabar
+  - [x] Menyuga inline "📄 Material yuklash" tugmasi qo'shildi (WebApp'ga `/materials`)
+  - [x] Bot chatda `Message.document` ni qabul qiladi — fayl `MEDIA_ROOT/materials/<profile_id>/<uuid>.<ext>` ga saqlanadi, `Material(status=uploaded)` yaratiladi, background task ishga tushadi
+  - [x] Progress: "📥 Yuklandi → 🔎 Matn ajratildi → 🤖 Test yaratilmoqda → ✅ Tayyor" xabar edit
+  - [x] Tayyor bo'lgach inline "🧠 Testni ochish" tugma (WebApp `/materials/{id}/quiz/{quiz_id}`)
+  - [x] Xatolik holida foydalanuvchiga tushunarli xabar (mime, hajm, extract, AI)
 
 ### T-506 · WebApp `/materials` sahifasi
 - **Owner:** solutions-architect
