@@ -54,6 +54,12 @@ def _inline_webapp_kb() -> InlineKeyboardMarkup:
                     web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/materials"),
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text="🧠 Tahlilim",
+                    web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/insights"),
+                )
+            ],
         ]
     )
 
