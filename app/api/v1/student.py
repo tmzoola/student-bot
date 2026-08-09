@@ -207,6 +207,11 @@ async def materials_page(request: Request):
     return templates.TemplateResponse("materials.html", {"request": request})
 
 
+@pages.get("/insights", response_class=HTMLResponse)
+async def insights_page(request: Request):
+    return templates.TemplateResponse("insights.html", {"request": request})
+
+
 @pages.get("/materials/{material_id}/quiz/{quiz_id}", response_class=HTMLResponse)
 async def generated_quiz_page(request: Request, material_id: int, quiz_id: int):
     return templates.TemplateResponse(
@@ -749,6 +754,175 @@ async def submit_generated_quiz(
         percentage=attempt.percentage,
         results=results,
     )
+
+
+# ─── Insights (T-302, T-303, T-305) ────────────────────────────────
+
+class InsightWeakness(BaseModel):
+    topic: str
+    tip: str
+    accuracy: int | None = None
+
+
+class InsightStrength(BaseModel):
+    topic: str
+    accuracy: int | None = None
+
+
+class InsightOut(BaseModel):
+    summary: str
+    weaknesses: list[InsightWeakness] = Field(default_factory=list)
+    strengths: list[InsightStrength] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+
+
+class TopicStatOut(BaseModel):
+    topic_title: str
+    subject_name: str
+    attempts: int
+    correct: int
+    wrong: int
+    accuracy_pct: int
+
+
+class SubjectStatOut(BaseModel):
+    subject_name: str
+    attempts: int
+    accuracy_pct: int
+
+
+class TrendPointOut(BaseModel):
+    week_start: str
+    attempts: int
+    accuracy_pct: int
+
+
+class InsightsPayloadOut(BaseModel):
+    attempts_total: int
+    overall_accuracy_pct: int
+    top_weaknesses: list[TopicStatOut]
+    top_strengths: list[TopicStatOut]
+    by_subject: list[SubjectStatOut]
+    recent_trend: list[TrendPointOut]
+    ai_insight: InsightOut | None
+    insufficient_data: bool
+    min_attempts_required: int = 3
+
+
+_MIN_ATTEMPTS_FOR_INSIGHT = 3
+
+
+def _stats_to_payload(
+    stats, insight
+) -> InsightsPayloadOut:
+    return InsightsPayloadOut(
+        attempts_total=stats.attempts_total,
+        overall_accuracy_pct=stats.overall_accuracy_pct,
+        top_weaknesses=[
+            TopicStatOut(
+                topic_title=t.topic_title, subject_name=t.subject_name,
+                attempts=t.attempts, correct=t.correct, wrong=t.wrong,
+                accuracy_pct=t.accuracy_pct,
+            ) for t in stats.top_weaknesses
+        ],
+        top_strengths=[
+            TopicStatOut(
+                topic_title=t.topic_title, subject_name=t.subject_name,
+                attempts=t.attempts, correct=t.correct, wrong=t.wrong,
+                accuracy_pct=t.accuracy_pct,
+            ) for t in stats.top_strengths
+        ],
+        by_subject=[
+            SubjectStatOut(
+                subject_name=s.subject_name, attempts=s.attempts,
+                accuracy_pct=s.accuracy_pct,
+            ) for s in stats.by_subject
+        ],
+        recent_trend=[
+            TrendPointOut(
+                week_start=t.week_start, attempts=t.attempts,
+                accuracy_pct=t.accuracy_pct,
+            ) for t in stats.recent_trend
+        ],
+        ai_insight=(
+            InsightOut(
+                summary=insight.summary,
+                weaknesses=[
+                    InsightWeakness(topic=w.topic, tip=w.tip, accuracy=w.accuracy)
+                    for w in insight.weaknesses
+                ],
+                strengths=[
+                    InsightStrength(topic=s.topic, accuracy=s.accuracy)
+                    for s in insight.strengths
+                ],
+                recommendations=list(insight.recommendations),
+            )
+            if insight is not None else None
+        ),
+        insufficient_data=stats.attempts_total < _MIN_ATTEMPTS_FOR_INSIGHT,
+        min_attempts_required=_MIN_ATTEMPTS_FOR_INSIGHT,
+    )
+
+
+@api.get("/insights", response_model=InsightsPayloadOut)
+async def get_insights(
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> InsightsPayloadOut:
+    """Statistika + (agar kesh bor bo'lsa) AI insight qaytaradi.
+
+    AI ni bu endpoint AVTOMATIK chaqirmaydi — foydalanuvchi "Tavsiya olish"
+    tugmasini bosganda `/insights/generate` orqali triggerlaydi.
+    """
+    from services.insights.cache import get_cached_insight
+    from services.insights.stats import compute_user_stats
+
+    stats = await compute_user_stats(db, profile.id)
+    insight = await get_cached_insight(profile.id)
+    return _stats_to_payload(stats, insight)
+
+
+@api.post("/insights/generate", response_model=InsightsPayloadOut)
+async def generate_insights(
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> InsightsPayloadOut:
+    """AI tavsiya ishlab chiqishga trigger. Kunlik AI limit hisobiga kiradi.
+
+    Agar kesh yangi (24h ichida) bo'lsa — qayta generatsiya QILINMAYDI,
+    keshdagi natija qaytariladi (rate limit sarflanmaydi).
+    """
+    from services.ai_rate_limit import check_and_increment_daily
+    from services.insights.ai_analyze import generate_insight
+    from services.insights.cache import get_cached_insight, set_cached_insight
+    from services.insights.stats import compute_user_stats
+
+    stats = await compute_user_stats(db, profile.id)
+    if stats.attempts_total < _MIN_ATTEMPTS_FOR_INSIGHT:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Yetarli ma'lumot yo'q. Kamida {_MIN_ATTEMPTS_FOR_INSIGHT} "
+                "urinish qiling."
+            ),
+        )
+
+    cached = await get_cached_insight(profile.id)
+    if cached is not None:
+        return _stats_to_payload(stats, cached)
+
+    # Rate limit — insight ham AI chaqiruvi, kunlik limit hisobiga kiradi.
+    await check_and_increment_daily(profile.id)
+
+    # Faculty selectinload allaqachon get_current_profile'da qilingan.
+    try:
+        insight = await generate_insight(stats, profile)
+    except Exception as exc:
+        logger.exception("insight generatsiya xatosi (profile_id=%s)", profile.id)
+        raise HTTPException(status_code=502, detail=f"AI xatosi: {exc}") from exc
+
+    await set_cached_insight(profile.id, insight)
+    return _stats_to_payload(stats, insight)
 
 
 # Faculty import shu joyda ishlatilmasligi ilova import'ni sinaydi.

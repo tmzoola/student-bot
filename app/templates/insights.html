@@ -1,0 +1,209 @@
+{% extends "_base.html" %}
+{% block title %}Tahlilim{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/subjects" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="hdr-title" style="flex:1;padding:0 12px">🧠 Tahlilim</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block head %}
+<style>
+.i-card{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.i-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f0f0f0;font-size:.88rem}
+.i-row:first-of-type{border-top:none}
+.i-row .k{color:var(--muted);min-width:0;flex:1;padding-right:8px}
+.i-row .v{font-weight:700}
+.i-row .v.good{color:var(--green)}
+.i-row .v.bad{color:var(--pink)}
+.i-tip{background:#fff;border-left:3px solid var(--pink);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem;line-height:1.4}
+.i-tip .t{font-weight:700;color:var(--pink);margin-bottom:3px;font-size:.8rem}
+.i-strong{background:#fff;border-left:3px solid var(--green);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem}
+.i-strong .t{font-weight:700;color:var(--green-dark);margin-bottom:2px;font-size:.8rem}
+.i-rec{background:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:.88rem;line-height:1.4;box-shadow:var(--shadow)}
+.i-rec::before{content:"✓ ";color:var(--green);font-weight:800}
+.svg-trend{background:#fff;border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.svg-trend svg{width:100%;height:80px;display:block}
+.summary{background:linear-gradient(135deg,#EEE7FE,#E3EBF8);padding:14px;border-radius:14px;font-size:.9rem;line-height:1.5;margin-bottom:14px;color:#222}
+.summary .lbl{font-size:.7rem;color:var(--purple);font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.btn-ai{margin-top:8px;background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.35)}
+.btn-ai:disabled{opacity:.6}
+.week-label{font-size:.65rem;color:var(--muted)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="root"><div class="empty"><div class="empty-t">Yuklanmoqda…</div></div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function renderTrend(points){
+    if (!points || !points.length) return '';
+    const w = 320, h = 80, pad = 6;
+    const max = 100;
+    const step = (w - pad*2) / Math.max(1, points.length - 1);
+    let d = '';
+    points.forEach((p, i) => {
+        const x = pad + i*step;
+        const y = h - pad - (p.accuracy_pct/max) * (h - pad*2);
+        d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+    });
+    const dots = points.map((p, i) => {
+        const x = pad + i*step;
+        const y = h - pad - (p.accuracy_pct/max) * (h - pad*2);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#3A6DB5"/>`;
+    }).join('');
+    const labels = points.map((p, i) => {
+        const x = pad + i*step;
+        const short = p.week_start.slice(5); // MM-DD
+        return `<text x="${x.toFixed(1)}" y="${h - 1}" text-anchor="middle" class="week-label" font-size="8">${short}</text>`;
+    }).join('');
+    return `<div class="section-t big">So'nggi 4 hafta</div>
+      <div class="svg-trend">
+        <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+          <path d="${d}" stroke="#3A6DB5" stroke-width="2" fill="none"/>
+          ${dots}
+          ${labels}
+        </svg>
+      </div>`;
+}
+
+function renderStats(data){
+    return `
+      <div class="stats">
+        <div class="stat-c stat-green"><div class="v">${data.attempts_total}</div><div class="l">Urinishlar</div></div>
+        <div class="stat-c stat-blue"><div class="v">${data.overall_accuracy_pct}%</div><div class="l">Aniqlik</div></div>
+        <div class="stat-c stat-amber"><div class="v">${data.top_weaknesses.length}</div><div class="l">Zaif mavzu</div></div>
+      </div>
+    `;
+}
+
+function renderTopics(data){
+    const w = data.top_weaknesses.map(t => `
+        <div class="i-row">
+          <span class="k">${esc(t.topic_title)} <span style="color:var(--muted-lt);font-size:.75rem">· ${esc(t.subject_name)}</span></span>
+          <span class="v bad">${t.accuracy_pct}%</span>
+        </div>
+    `).join('') || '<div class="card-sub">— (yetarli ma\'lumot yo\'q)</div>';
+
+    const s = data.top_strengths.map(t => `
+        <div class="i-row">
+          <span class="k">${esc(t.topic_title)} <span style="color:var(--muted-lt);font-size:.75rem">· ${esc(t.subject_name)}</span></span>
+          <span class="v good">${t.accuracy_pct}%</span>
+        </div>
+    `).join('') || '<div class="card-sub">— (yetarli ma\'lumot yo\'q)</div>';
+
+    return `
+      <div class="section-t big">Zaif mavzular</div>
+      <div class="i-card">${w}</div>
+      <div class="section-t big">Kuchli mavzular</div>
+      <div class="i-card">${s}</div>
+    `;
+}
+
+function renderAI(ins){
+    if (!ins) return '';
+    const w = (ins.weaknesses || []).map(w => `
+        <div class="i-tip"><div class="t">${esc(w.topic)}${w.accuracy != null ? ' · '+w.accuracy+'%' : ''}</div>${esc(w.tip)}</div>
+    `).join('');
+    const s = (ins.strengths || []).map(s => `
+        <div class="i-strong"><div class="t">${esc(s.topic)}${s.accuracy != null ? ' · '+s.accuracy+'%' : ''}</div></div>
+    `).join('');
+    const rec = (ins.recommendations || []).map(r => `
+        <div class="i-rec">${esc(r)}</div>
+    `).join('');
+    return `
+      <div class="summary">
+        <div class="lbl">🧠 AI xulosa</div>
+        ${esc(ins.summary)}
+      </div>
+      ${w ? `<div class="section-t big">Zaif tomonlar</div>${w}` : ''}
+      ${s ? `<div class="section-t big">Kuchli tomonlar</div>${s}` : ''}
+      ${rec ? `<div class="section-t big">Tavsiyalar</div>${rec}` : ''}
+    `;
+}
+
+let _busy = false;
+
+async function requestAI(){
+    if (_busy) return;
+    _busy = true;
+    const btn = document.getElementById('btnAI');
+    if (btn){ btn.disabled = true; btn.textContent = 'AI o\'ylayapti…'; }
+    try {
+        const r = await fetch('/api/v1/insights/generate', {
+            method: 'POST',
+            headers: MK.authHeaders(),
+        });
+        if (r.status === 429) {
+            alert("Bugungi AI limit tugadi. Ertaga urinib ko'ring.");
+            return;
+        }
+        if (r.status === 400) {
+            const b = await r.json();
+            alert(b.detail || "Yetarli ma'lumot yo'q");
+            return;
+        }
+        if (!r.ok) {
+            alert('AI xatosi. Keyinroq urinib ko\'ring.');
+            return;
+        }
+        const data = await r.json();
+        render(data);
+    } catch(e){
+        alert('Tarmoq xatosi: ' + e);
+    } finally {
+        _busy = false;
+        if (btn){ btn.disabled = false; btn.textContent = '🔄 Qayta so\'rash'; }
+    }
+}
+
+function render(data){
+    const root = document.getElementById('root');
+    if (data.insufficient_data) {
+        root.innerHTML = `
+          ${renderStats(data)}
+          <div class="empty">
+            <div class="empty-t">Yetarli ma'lumot yo'q</div>
+            <div class="empty-d">AI tahlil uchun kamida ${data.min_attempts_required} ta test urinishi kerak.<br>Hozircha: ${data.attempts_total}</div>
+          </div>
+        `;
+        return;
+    }
+    const btnLabel = data.ai_insight ? '🔄 Qayta so\'rash' : '🧠 AI tavsiya olish';
+    root.innerHTML = `
+      ${renderStats(data)}
+      ${renderTrend(data.recent_trend)}
+      ${renderAI(data.ai_insight)}
+      <button id="btnAI" class="btn btn-ai">${btnLabel}</button>
+      <div style="height:8px"></div>
+      ${renderTopics(data)}
+    `;
+    const b = document.getElementById('btnAI');
+    if (b) b.addEventListener('click', requestAI);
+}
+
+async function load(){
+    const r = await fetch('/api/v1/insights', { headers: MK.authHeaders() });
+    const root = document.getElementById('root');
+    if (r.status === 401 || r.status === 403) {
+        root.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div><div class="empty-d">Profilingiz tasdiqlanmagan.</div></div>';
+        return;
+    }
+    if (!r.ok) {
+        root.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        return;
+    }
+    render(await r.json());
+}
+load();
+</script>
+{% endblock %}
