@@ -282,16 +282,17 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-503 · AI service — Claude provider
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-502
 - **Acceptance:**
-  - [ ] `requirements.txt` ga `anthropic` qo'shildi
-  - [ ] `app/services/ai/base.py`: `AIProvider` ABC — `async generate_quiz(text: str, num_questions: int, difficulty: str, language: str = "uz") -> QuizGenResult`
-  - [ ] `app/services/ai/schemas.py`: `QuizGenResult`, `GeneratedQuestionData` (Pydantic)
-  - [ ] `app/services/ai/claude.py`: `ClaudeProvider(AIProvider)` — Anthropic SDK ishlatadi, structured JSON output (tool use)
-  - [ ] `app/services/ai/__init__.py`: `get_ai_provider() -> AIProvider` — `.env` `AI_PROVIDER` ga qarab
-  - [ ] `settings.ANTHROPIC_API_KEY`, `settings.AI_PROVIDER`, `settings.AI_MODEL` `.env.example` ga
-  - [ ] Prompt template `app/services/ai/prompts.py` (o'zbek tilda test uchun, JSON output ko'rsatmasi bilan)
+  - [x] `requirements.txt` ga `anthropic==0.42.0` qo'shildi
+  - [x] `services/ai/base.py` — `AIProvider` ABC + `AIProviderError`
+  - [x] `services/ai/schemas.py` — `QuizGenResult`, `GeneratedQuestionData`
+  - [x] `services/ai/claude.py` — `ClaudeProvider` (AsyncAnthropic + tool use + prompt caching)
+  - [x] `services/ai/__init__.py` — `get_ai_provider()` factory
+  - [x] `settings.AI_PROVIDER`, `AI_MODEL`, `ANTHROPIC_API_KEY`, `AI_DAILY_LIMIT_PER_USER`, `MAX_MATERIAL_SIZE`
+  - [x] `.env.example` yangilandi
+  - [x] `services/ai/prompts.py` — o'zbek/rus/ingliz til, difficulty hint, `submit_quiz` tool schema
 
 ### T-504 · Test generatsiya servisi
 - **Owner:** solutions-architect

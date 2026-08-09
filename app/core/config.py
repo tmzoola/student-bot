@@ -57,6 +57,13 @@ class Settings(BaseSettings):
     # Multi-worker umumiy kesh (subscription state va h.k.) — Redis URL.
     REDIS_URL: str = "redis://redis:6379/0"
 
+    # ─── AI (Bosqich 5) ──────────────────────────────────────────────
+    AI_PROVIDER: str = "claude"
+    AI_MODEL: str = "claude-sonnet-4-6"
+    ANTHROPIC_API_KEY: str = ""
+    AI_DAILY_LIMIT_PER_USER: int = 20
+    MAX_MATERIAL_SIZE: int = 20 * 1024 * 1024
+
     @property
     def DATABASE_URL(self) -> str:
         return (
