@@ -5,11 +5,14 @@ tekshiradi. Foydalanuvchi profili topilmasa yoki tasdiqlanmagan bo'lsa 403.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+import uuid
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -17,15 +20,27 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from core.config import MEDIA_ROOT
 from db.session import get_db
 from models.attempt import QuizAttempt
 from models.faculty import Faculty
+from models.generated_attempt import GeneratedQuizAttempt
+from models.generated_question import GeneratedQuestion
+from models.generated_quiz import GeneratedQuiz
+from models.material import Material, MaterialStatus
 from models.question import CorrectOption, Question
 from models.quiz import Quiz
 from models.student_profile import StudentProfile
 from models.subject import Subject
 from models.telegram_user import TelegramUser
 from models.topic import Topic
+from services.materials.extract import (
+    ALLOWED_MIMES,
+    MAX_MATERIAL_SIZE,
+    MIME_DOCX,
+    MIME_PDF,
+    MIME_TXT,
+)
 from utils.webapp_auth import extract_telegram_id
 
 logger = logging.getLogger(__name__)
@@ -185,6 +200,19 @@ async def quiz_page(request: Request, quiz_id: int):
 @pages.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
     return templates.TemplateResponse("profile.html", {"request": request})
+
+
+@pages.get("/materials", response_class=HTMLResponse)
+async def materials_page(request: Request):
+    return templates.TemplateResponse("materials.html", {"request": request})
+
+
+@pages.get("/materials/{material_id}/quiz/{quiz_id}", response_class=HTMLResponse)
+async def generated_quiz_page(request: Request, material_id: int, quiz_id: int):
+    return templates.TemplateResponse(
+        "generated_quiz.html",
+        {"request": request, "material_id": material_id, "quiz_id": quiz_id},
+    )
 
 
 # ─── JSON API ───────────────────────────────────────────────────────
@@ -427,6 +455,303 @@ async def list_attempts(
     ]
 
 
+# ─── Materials (T-506, T-509) ──────────────────────────────────────
+
+_MIME_EXT = {MIME_PDF: ".pdf", MIME_DOCX: ".docx", MIME_TXT: ".txt"}
+
+
+class MaterialOut(BaseModel):
+    id: int
+    title: str
+    status: str
+    size_bytes: int
+    quizzes_count: int
+    error_message: str | None
+    created_at: datetime
+
+
+class MaterialDetailOut(BaseModel):
+    id: int
+    title: str
+    status: str
+    size_bytes: int
+    extracted_text_length: int
+    error_message: str | None
+    created_at: datetime
+    generated_quizzes: list[dict]
+
+
+class MaterialUploadOut(BaseModel):
+    id: int
+    title: str
+    status: str
+
+
+@api.get("/materials", response_model=list[MaterialOut])
+async def list_materials(
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> list[MaterialOut]:
+    stmt = (
+        select(Material, func.count(GeneratedQuiz.id).label("qcount"))
+        .outerjoin(GeneratedQuiz, GeneratedQuiz.material_id == Material.id)
+        .where(Material.student_profile_id == profile.id)
+        .group_by(Material.id)
+        .order_by(Material.created_at.desc())
+    )
+    rows = (await db.execute(stmt)).all()
+    return [
+        MaterialOut(
+            id=m.id,
+            title=m.title,
+            status=m.status.value if hasattr(m.status, "value") else str(m.status),
+            size_bytes=m.size_bytes,
+            quizzes_count=int(qc),
+            error_message=m.error_message,
+            created_at=m.created_at,
+        )
+        for m, qc in rows
+    ]
+
+
+@api.get("/materials/{material_id}", response_model=MaterialDetailOut)
+async def material_detail(
+    material_id: int,
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> MaterialDetailOut:
+    material = await db.scalar(
+        select(Material)
+        .options(selectinload(Material.generated_quizzes))
+        .where(Material.id == material_id)
+    )
+    if material is None:
+        raise HTTPException(status_code=404, detail="Material topilmadi")
+    if material.student_profile_id != profile.id:
+        raise HTTPException(status_code=403, detail="Bu material sizga tegishli emas")
+    return MaterialDetailOut(
+        id=material.id,
+        title=material.title,
+        status=material.status.value if hasattr(material.status, "value") else str(material.status),
+        size_bytes=material.size_bytes,
+        extracted_text_length=material.extracted_text_length,
+        error_message=material.error_message,
+        created_at=material.created_at,
+        generated_quizzes=[
+            {
+                "id": q.id,
+                "title": q.title,
+                "num_questions": q.num_questions,
+                "difficulty": q.difficulty.value if hasattr(q.difficulty, "value") else str(q.difficulty),
+            }
+            for q in material.generated_quizzes
+        ],
+    )
+
+
+@api.post("/materials/upload", response_model=MaterialUploadOut)
+async def upload_material(
+    file: UploadFile = File(...),
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> MaterialUploadOut:
+    """WebApp orqali PDF/DOCX/TXT yuklash."""
+    mime = file.content_type or ""
+    if mime not in ALLOWED_MIMES:
+        raise HTTPException(status_code=400, detail="Faqat PDF, DOCX yoki TXT")
+
+    # T-509 rate limit — Redis counter (import lokal, service circular xavfsizligi)
+    try:
+        from services.ai_rate_limit import check_and_increment_daily
+        await check_and_increment_daily(profile.id)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("rate limit check xatosi — o'tkazib yuborildi")
+
+    ext = _MIME_EXT.get(mime, "")
+    target_dir = MEDIA_ROOT / "materials" / str(profile.id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}{ext}"
+    storage_path = target_dir / filename
+
+    size = 0
+    with storage_path.open("wb") as out:
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > MAX_MATERIAL_SIZE:
+                out.close()
+                storage_path.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Fayl hajmi {MAX_MATERIAL_SIZE // (1024*1024)} MB dan oshmasin",
+                )
+            out.write(chunk)
+
+    material = Material(
+        student_profile_id=profile.id,
+        title=file.filename or filename,
+        filename=filename,
+        mime=mime,
+        size_bytes=size,
+        storage_path=str(storage_path),
+        status=MaterialStatus.uploaded,
+    )
+    db.add(material)
+    await db.commit()
+    await db.refresh(material)
+
+    # Background pipeline (bot handler bilan bir xil) — chat_id yo'q,
+    # foydalanuvchi WebApp'da polling qiladi.
+    from bot.handlers.materials import _process_material_no_chat  # lazy
+    asyncio.create_task(_process_material_no_chat(material.id))
+
+    return MaterialUploadOut(
+        id=material.id,
+        title=material.title,
+        status=material.status.value,
+    )
+
+
+# ─── Generated Quiz (T-507) ────────────────────────────────────────
+
+class GeneratedQuestionOut(BaseModel):
+    id: int
+    order: int
+    text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+
+
+class GeneratedQuizOut(BaseModel):
+    id: int
+    title: str
+    num_questions: int
+    difficulty: str
+    questions: list[GeneratedQuestionOut]
+
+
+class GeneratedSubmitPayload(BaseModel):
+    answers: dict[str, str] = Field(default_factory=dict)
+    time_taken_seconds: int = Field(ge=0, default=0)
+
+
+class GeneratedQuestionResult(BaseModel):
+    id: int
+    correct_option: str
+    user_option: str | None
+    is_correct: bool
+    explanation: str | None
+
+
+class GeneratedSubmitOut(BaseModel):
+    attempt_id: int
+    score: int
+    total: int
+    percentage: int
+    results: list[GeneratedQuestionResult]
+
+
+async def _load_generated_quiz_for_profile(
+    db: AsyncSession, quiz_id: int, profile: StudentProfile
+) -> GeneratedQuiz:
+    quiz = await db.scalar(
+        select(GeneratedQuiz)
+        .options(selectinload(GeneratedQuiz.questions))
+        .where(GeneratedQuiz.id == quiz_id)
+    )
+    if quiz is None:
+        raise HTTPException(status_code=404, detail="Test topilmadi")
+    if quiz.student_profile_id != profile.id:
+        raise HTTPException(status_code=403, detail="Bu test sizga tegishli emas")
+    return quiz
+
+
+@api.get("/generated-quiz/{quiz_id}", response_model=GeneratedQuizOut)
+async def get_generated_quiz(
+    quiz_id: int,
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> GeneratedQuizOut:
+    quiz = await _load_generated_quiz_for_profile(db, quiz_id, profile)
+    return GeneratedQuizOut(
+        id=quiz.id,
+        title=quiz.title,
+        num_questions=quiz.num_questions,
+        difficulty=quiz.difficulty.value if hasattr(quiz.difficulty, "value") else str(quiz.difficulty),
+        questions=[
+            GeneratedQuestionOut(
+                id=q.id, order=q.order, text=q.text,
+                option_a=q.option_a, option_b=q.option_b,
+                option_c=q.option_c, option_d=q.option_d,
+            )
+            for q in sorted(quiz.questions, key=lambda x: x.order)
+        ],
+    )
+
+
+@api.post("/generated-quiz/{quiz_id}/submit", response_model=GeneratedSubmitOut)
+async def submit_generated_quiz(
+    quiz_id: int,
+    payload: GeneratedSubmitPayload,
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> GeneratedSubmitOut:
+    quiz = await _load_generated_quiz_for_profile(db, quiz_id, profile)
+    total = len(quiz.questions)
+    score = 0
+    normalized: dict[str, str] = {}
+    valid = {opt.value for opt in CorrectOption}
+    results: list[GeneratedQuestionResult] = []
+    for q in sorted(quiz.questions, key=lambda x: x.order):
+        given_raw = payload.answers.get(str(q.id)) or payload.answers.get(str(q.id).lower())
+        user_up: str | None = None
+        if isinstance(given_raw, str):
+            up = given_raw.strip().upper()
+            if up in valid:
+                user_up = up
+                normalized[str(q.id)] = up
+        correct_letter = q.correct_option.value if hasattr(q.correct_option, "value") else str(q.correct_option)
+        is_correct = user_up == correct_letter
+        if is_correct:
+            score += 1
+        results.append(
+            GeneratedQuestionResult(
+                id=q.id,
+                correct_option=correct_letter,
+                user_option=user_up,
+                is_correct=is_correct,
+                explanation=q.explanation,
+            )
+        )
+
+    attempt = GeneratedQuizAttempt(
+        generated_quiz_id=quiz.id,
+        student_profile_id=profile.id,
+        score=score,
+        total=total,
+        time_taken_seconds=payload.time_taken_seconds,
+        answers=normalized,
+        completed_at=datetime.now(_TZ),
+    )
+    db.add(attempt)
+    await db.commit()
+    await db.refresh(attempt)
+    return GeneratedSubmitOut(
+        attempt_id=attempt.id,
+        score=score,
+        total=total,
+        percentage=attempt.percentage,
+        results=results,
+    )
+
+
 # Faculty import shu joyda ishlatilmasligi ilova import'ni sinaydi.
 _ = Faculty
 _ = Question
+_ = GeneratedQuestion

@@ -319,14 +319,14 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-506 · WebApp `/materials` sahifasi
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-505
 - **Acceptance:**
-  - [ ] `GET /materials` HTML — foydalanuvchining materiallari + upload input
-  - [ ] `POST /api/v1/materials/upload` — multipart, `Material` yaratadi, background extract + generatsiya
-  - [ ] `GET /api/v1/materials` — JSON ro'yxat (id, title, status, quizzes_count, created_at)
-  - [ ] `GET /api/v1/materials/{id}` — JSON detail (chunk snippet, generated quiz'lar)
-  - [ ] Template `materials.html` (upload, status polling, kartochka'lar)
+  - [x] `GET /materials` HTML — upload input + kartochka'lar (5 sek polling)
+  - [x] `POST /api/v1/materials/upload` — multipart, streaming write, 20 MB limit, `_process_material_no_chat` background task
+  - [x] `GET /api/v1/materials` — JSON (id, title, status, size, quizzes_count, error_message, created_at)
+  - [x] `GET /api/v1/materials/{id}` — JSON detail + generated_quizzes
+  - [x] Template `materials.html` (drag & drop, polling)
 
 ### T-507 · WebApp — generated quiz yechish
 - **Owner:** solutions-architect

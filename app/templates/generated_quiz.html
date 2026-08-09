@@ -1,0 +1,178 @@
+{% extends "_base.html" %}
+{% block title %}AI Test — Student Bot{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+body{padding-bottom:0}
+.hdr{padding:12px 16px}
+.hdr-title{font-size:.95rem}
+.progress-wrap{background:#fff;padding:0 20px 12px}
+.progress-info{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px}
+.progress-info b{color:var(--green)}
+.progress-bar{background:#EEF3EA;height:6px;border-radius:4px;overflow:hidden}
+.progress-fill{background:var(--green);height:100%;border-radius:4px;transition:width .3s}
+
+.q-content{padding:24px 20px 100px}
+.q-num{font-size:.75rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.02em}
+.q-text{font-size:1.1rem;font-weight:700;line-height:1.4;color:#111;margin-bottom:24px;white-space:pre-line}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{background:#fff;border:2px solid transparent;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow)}
+.opt.sel{border-color:var(--green);background:#F0FAF3}
+.opt-letter{width:34px;height:34px;border-radius:10px;background:#f4f5f2;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt.sel .opt-letter{background:var(--green);color:#fff}
+.opt-text{flex:1;font-size:.92rem;line-height:1.35;white-space:pre-line}
+
+.foot{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.foot .btn{padding:14px 18px;flex:1}
+.btn-prev{background:#f4f5f2;color:#333}
+.btn-prev:disabled{opacity:.4}
+
+.loader{text-align:center;padding:60px 20px;color:var(--muted)}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/materials" class="hdr-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </a>
+  <div class="hdr-title" id="quiz-title" style="flex:1;padding:0 12px">…</div>
+</header>
+<div class="progress-wrap">
+  <div class="progress-info">
+    <span id="prog-txt">Savol 0 / 0</span>
+    <span><b id="prog-answered">0</b> / <span id="prog-total">0</span> javob berildi</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="q-content" id="q-content"><div class="loader">Yuklanmoqda…</div></div>
+<div class="foot" id="foot" style="display:none">
+  <button class="btn btn-prev" id="btn-prev">Oldingi</button>
+  <button class="btn btn-primary" id="btn-next">Keyingi</button>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+const QUIZ_ID = {{ quiz_id }};
+let quiz = null;
+let idx = 0;
+let answers = {};
+let startedAt = 0;
+
+async function init(){
+  const r = await fetch(`/api/v1/generated-quiz/${QUIZ_ID}`, { headers: MK.authHeaders() });
+  if (!r.ok) {
+    document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi yoki ruxsat yo\'q</div>';
+    return;
+  }
+  quiz = await r.json();
+  document.getElementById('quiz-title').textContent = quiz.title;
+  document.getElementById('prog-total').textContent = quiz.questions.length;
+  document.getElementById('foot').style.display = '';
+  startedAt = Date.now();
+  render();
+}
+
+function render(){
+  const q = quiz.questions[idx];
+  const c = document.getElementById('q-content');
+  c.innerHTML = `
+    <div class="q-num">Savol ${idx+1} / ${quiz.questions.length}</div>
+    <div class="q-text">${esc(q.text)}</div>
+    <div class="opts">
+      ${['A','B','C','D'].map(L => `
+        <div class="opt ${answers[q.id]===L?'sel':''}" data-l="${L}">
+          <div class="opt-letter">${L}</div>
+          <div class="opt-text">${esc(q['option_'+L.toLowerCase()])}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  c.querySelectorAll('.opt').forEach(el => {
+    el.onclick = () => {
+      MK.haptic('light');
+      answers[q.id] = el.dataset.l;
+      c.querySelectorAll('.opt').forEach(o => o.classList.toggle('sel', o === el));
+      updateProgress();
+    };
+  });
+  document.getElementById('prog-txt').textContent = `Savol ${idx+1} / ${quiz.questions.length}`;
+  document.getElementById('prog-fill').style.width = `${((idx+1)/quiz.questions.length)*100}%`;
+  updateProgress();
+  const isLast = idx === quiz.questions.length - 1;
+  document.getElementById('btn-next').textContent = isLast ? 'Tugatish' : 'Keyingi';
+  document.getElementById('btn-prev').disabled = idx === 0;
+}
+
+function updateProgress(){
+  document.getElementById('prog-answered').textContent = Object.keys(answers).length;
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('#btn-prev') && idx > 0) { idx--; render(); }
+  if (e.target.closest('#btn-next')) {
+    if (idx < quiz.questions.length - 1) { idx++; render(); }
+    else finish();
+  }
+});
+
+async function finish(){
+  if (Object.keys(answers).length < quiz.questions.length) {
+    if (!confirm(`${quiz.questions.length - Object.keys(answers).length} ta savolga javob berilmadi. Baribir yakunlaymizmi?`)) return;
+  }
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true;
+  btn.textContent = 'Yuborilmoqda…';
+  const timeTaken = Math.round((Date.now() - startedAt) / 1000);
+  try {
+    const r = await fetch(`/api/v1/generated-quiz/${QUIZ_ID}/submit`, {
+      method: 'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, MK.authHeaders()),
+      body: JSON.stringify({ answers, time_taken_seconds: timeTaken }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Xato');
+    showResults(data);
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Tugatish';
+  }
+}
+
+function showResults(data){
+  const c = document.getElementById('q-content');
+  document.getElementById('foot').style.display = 'none';
+  const items = data.results.map((r, i) => {
+    const q = quiz.questions.find(x => x.id === r.id);
+    const cls = r.is_correct ? 'st-ready' : 'st-failed';
+    const emoji = r.is_correct ? '✅' : '❌';
+    return `
+      <div class="mat-card" style="background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px">
+        <div style="font-weight:700;margin-bottom:6px">${emoji} Savol ${i+1}</div>
+        <div style="font-size:.88rem;margin-bottom:8px">${esc(q ? q.text : '')}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Sizning javob: <b>${esc(r.user_option || '—')}</b> · To'g'ri javob: <b>${esc(r.correct_option)}</b></div>
+        ${r.explanation ? `<div style="margin-top:8px;font-size:.82rem;background:#F8F1E3;padding:8px 10px;border-radius:8px;color:#333">${esc(r.explanation)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  c.innerHTML = `
+    <div style="text-align:center;margin:20px 0 24px">
+      <div style="font-size:2.4rem;font-weight:800;color:var(--green)">${data.score} / ${data.total}</div>
+      <div style="color:var(--muted);font-size:.9rem">${data.percentage}%</div>
+    </div>
+    ${items}
+    <a href="/materials" class="btn btn-primary" style="text-decoration:none;margin-top:20px;display:block">Materiallarga qaytish</a>
+  `;
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+init();
+</script>
+{% endblock %}

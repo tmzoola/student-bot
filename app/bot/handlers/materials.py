@@ -265,3 +265,49 @@ async def _process_material(
         f"✅ Tayyor! {quiz.num_questions} ta savol yaratildi.",
         kb=_open_generated_quiz_kb(material_id, quiz.id),
     )
+
+
+async def _process_material_no_chat(material_id: int) -> None:
+    """WebApp upload uchun — extract + generatsiya, progress bot chatga
+    yubormaydi (foydalanuvchi WebApp'da status polling qiladi)."""
+    from services.materials.chunk import chunk_text
+    from services.materials.generate import generate_quiz_for_material
+
+    try:
+        async with db_session.session_factory() as s:
+            material = await s.get(Material, material_id)
+            if material is None:
+                return
+            material.status = MaterialStatus.extracting
+            await s.commit()
+            path = material.storage_path
+            mime = material.mime
+
+        text = await asyncio.to_thread(extract_text, path, mime)
+        if not text or not text.strip():
+            raise ExtractError("Matn topilmadi (bo'sh yoki skanlangan PDF)")
+
+        chunks = chunk_text(text, max_chars=2000)
+        async with db_session.session_factory() as s:
+            m = await s.get(Material, material_id)
+            m.extracted_text_length = len(text)
+            for i, chunk_str in enumerate(chunks):
+                s.add(MaterialChunk(material_id=material_id, order=i, text=chunk_str))
+            await s.commit()
+    except Exception as exc:
+        logger.exception("WebApp extraction xatosi (material_id=%s)", material_id)
+        async with db_session.session_factory() as s:
+            m = await s.get(Material, material_id)
+            if m is not None:
+                m.status = MaterialStatus.failed
+                m.error_message = str(exc)[:500]
+                await s.commit()
+        return
+
+    try:
+        await generate_quiz_for_material(
+            material_id=material_id, num_questions=10, difficulty="medium"
+        )
+    except Exception:
+        logger.exception("WebApp AI generatsiya xatosi (material_id=%s)", material_id)
+        # generate_quiz_for_material o'zi status = failed qiladi

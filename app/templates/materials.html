@@ -1,0 +1,169 @@
+{% extends "_base.html" %}
+{% block title %}Materiallar — Student Bot{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+.hdr{padding:14px 18px}
+.upload-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:var(--shadow);border:2px dashed #d5dbd0}
+.upload-box.dragover{border-color:var(--green);background:#F0FAF3}
+.upload-title{font-size:1rem;font-weight:700;margin-bottom:4px}
+.upload-sub{font-size:.78rem;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.upload-btn{display:inline-block;background:var(--green);color:#fff;padding:11px 22px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer}
+.upload-btn:active{transform:scale(.97)}
+input[type=file]{display:none}
+
+.mat-list{display:flex;flex-direction:column;gap:12px}
+.mat-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.mat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.mat-title{font-size:.92rem;font-weight:700;color:#111;flex:1;word-break:break-word}
+.mat-meta{font-size:.72rem;color:var(--muted);margin-top:4px}
+.mat-status{font-size:.72rem;padding:4px 10px;border-radius:12px;font-weight:700;white-space:nowrap}
+.st-uploaded,.st-extracting,.st-generating{background:#FEF3C7;color:#92400E}
+.st-ready{background:#DCFCE7;color:#166534}
+.st-failed{background:#FEE2E2;color:#991B1B}
+
+.mat-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.mat-btn{background:var(--green);color:#fff;padding:8px 14px;border-radius:10px;font-size:.78rem;font-weight:700;cursor:pointer}
+.mat-btn:active{transform:scale(.97)}
+.mat-err{margin-top:8px;font-size:.75rem;color:#991B1B;background:#FEE2E2;padding:8px 10px;border-radius:8px}
+
+.loader{text-align:center;padding:40px;color:var(--muted)}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/subjects" class="hdr-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </a>
+  <div class="hdr-title" style="flex:1;padding:0 12px">📄 AI Materiallar</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="upload-box" id="drop">
+  <div class="upload-title">Material yuklash</div>
+  <div class="upload-sub">PDF, DOCX yoki TXT (max 20 MB)<br>AI 10 ta test savol yaratadi</div>
+  <label class="upload-btn" for="file-input">Fayl tanlash</label>
+  <input id="file-input" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+  <div id="upload-status" style="margin-top:12px;font-size:.82rem;color:var(--muted)"></div>
+</div>
+
+<div class="section-t big">Materiallarim</div>
+<div id="list"><div class="loader">Yuklanmoqda…</div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+const STATUS_LABEL = {
+  uploaded: 'Yuklandi',
+  extracting: 'Matn ajratilmoqda',
+  generating: 'Test yaratilmoqda',
+  ready: 'Tayyor',
+  failed: 'Xato',
+};
+
+async function loadList(){
+  const r = await fetch('/api/v1/materials', { headers: MK.authHeaders() });
+  if (!r.ok) {
+    document.getElementById('list').innerHTML = '<div class="loader">Ruxsat yo\'q yoki xato.</div>';
+    return null;
+  }
+  const items = await r.json();
+  render(items);
+  return items;
+}
+
+function render(items){
+  const c = document.getElementById('list');
+  if (!items.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-ic">📄</div><div class="empty-t">Hozircha materiallar yo\'q</div><div class="empty-d">Yuqoridagi tugma orqali birinchi materialingizni yuklang.</div></div>';
+    return;
+  }
+  c.innerHTML = '<div class="mat-list">' + items.map(m => {
+    const stCls = 'st-' + m.status;
+    const label = STATUS_LABEL[m.status] || m.status;
+    const size = (m.size_bytes/1024/1024).toFixed(2);
+    const date = new Date(m.created_at).toLocaleString('uz-UZ');
+    let actions = '';
+    if (m.status === 'ready' && m.quizzes_count > 0) {
+      actions = `<div class="mat-actions"><a class="mat-btn" href="#" data-mid="${m.id}">🧠 Testni ochish</a></div>`;
+    }
+    let err = m.error_message ? `<div class="mat-err">⚠️ ${esc(m.error_message)}</div>` : '';
+    return `
+      <div class="mat-card">
+        <div class="mat-top">
+          <div>
+            <div class="mat-title">${esc(m.title)}</div>
+            <div class="mat-meta">${size} MB · ${date}</div>
+          </div>
+          <div class="mat-status ${stCls}">${label}</div>
+        </div>
+        ${err}
+        ${actions}
+      </div>
+    `;
+  }).join('') + '</div>';
+
+  c.querySelectorAll('a[data-mid]').forEach(el => {
+    el.onclick = async (ev) => {
+      ev.preventDefault();
+      const mid = el.dataset.mid;
+      const d = await fetch(`/api/v1/materials/${mid}`, { headers: MK.authHeaders() });
+      if (!d.ok) return alert('Xato');
+      const detail = await d.json();
+      const q = detail.generated_quizzes[0];
+      if (q) location.href = `/materials/${mid}/quiz/${q.id}` + (location.hash || '');
+    };
+  });
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// Upload
+const input = document.getElementById('file-input');
+const status = document.getElementById('upload-status');
+const drop = document.getElementById('drop');
+
+async function upload(file){
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) { alert('Fayl 20 MB dan katta'); return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  status.textContent = 'Yuklanmoqda…';
+  try {
+    const r = await fetch('/api/v1/materials/upload', {
+      method: 'POST',
+      headers: MK.authHeaders(),
+      body: fd,
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Xato');
+    status.textContent = '✅ Yuklandi. AI test yaratmoqda…';
+    input.value = '';
+    await loadList();
+  } catch (e) {
+    status.textContent = '❌ ' + e.message;
+  }
+}
+
+input.onchange = () => upload(input.files[0]);
+
+;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add('dragover');
+}));
+;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('dragover');
+}));
+drop.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f) upload(f);
+});
+
+// Polling — 5 sek
+loadList();
+setInterval(loadList, 5000);
+</script>
+{% endblock %}
