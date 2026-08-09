@@ -360,14 +360,14 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-510 · Bosqich 5 testlari
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-509
 - **Acceptance:**
-  - [ ] `tests/test_extraction.py` — PDF, DOCX, TXT extract
-  - [ ] `tests/test_ai_provider.py` — Claude provider mock qilinib schema validation
-  - [ ] `tests/test_generate_quiz.py` — end-to-end mock (material → AI mock → DB rows)
-  - [ ] `tests/test_generated_submit.py` — javob score to'g'ri hisoblanishi
-  - [ ] `pytest -q` yashil
+  - [x] `tests/test_extraction.py` — PDF, DOCX, TXT extract (T-502 da tayyor)
+  - [x] `tests/test_ai_provider.py` — Claude provider mock (4 test: valid parse, no tool_use, invalid schema, empty key)
+  - [x] `tests/test_generate_quiz.py` — end-to-end mock (T-504 da 3 test)
+  - [x] `tests/test_generated_submit.py` — score, correct_option yashirilishi, begona profil 403
+  - [x] `pytest -q` yashil (24 passed)
 
 ## Bosqich 4 — Deploy va CI/CD
 
