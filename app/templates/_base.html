@@ -263,13 +263,6 @@ img,svg{display:block}
             return this.user;
         },
 
-        authHeaders(){
-            const h = {};
-            if (this.initData) h['X-Init-Data'] = this.initData;
-            if (this.user?.telegram_id) h['X-Telegram-Id'] = String(this.user.telegram_id);
-            return h;
-        },
-
         showBlocked(){
             document.body.innerHTML =
                 '<div style="position:fixed;inset:0;display:flex;flex-direction:column;'
