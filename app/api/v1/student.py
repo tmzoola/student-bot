@@ -182,13 +182,13 @@ class AttemptOut(BaseModel):
 
 @pages.get("/subjects", response_class=HTMLResponse)
 async def subjects_page(request: Request):
-    return templates.TemplateResponse("subjects.html", {"request": request})
+    return templates.TemplateResponse("subjects.html", {"request": request, "nav_active": "subjects"})
 
 
 @pages.get("/subjects/{subject_id}", response_class=HTMLResponse)
 async def subject_detail_page(request: Request, subject_id: int):
     return templates.TemplateResponse(
-        "subject_detail.html", {"request": request, "subject_id": subject_id}
+        "subject_detail.html", {"request": request, "subject_id": subject_id, "nav_active": "subjects"}
     )
 
 
@@ -199,17 +199,17 @@ async def quiz_page(request: Request, quiz_id: int):
 
 @pages.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
-    return templates.TemplateResponse("profile.html", {"request": request})
+    return templates.TemplateResponse("profile.html", {"request": request, "nav_active": "profile"})
 
 
 @pages.get("/materials", response_class=HTMLResponse)
 async def materials_page(request: Request):
-    return templates.TemplateResponse("materials.html", {"request": request})
+    return templates.TemplateResponse("materials.html", {"request": request, "nav_active": "materials"})
 
 
 @pages.get("/insights", response_class=HTMLResponse)
 async def insights_page(request: Request):
-    return templates.TemplateResponse("insights.html", {"request": request})
+    return templates.TemplateResponse("insights.html", {"request": request, "nav_active": "insights"})
 
 
 @pages.get("/materials/{material_id}/quiz/{quiz_id}", response_class=HTMLResponse)

@@ -44,20 +44,8 @@ def _inline_webapp_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=BTN_SUBJECTS,
+                    text="📱 Ilovani ochish",
                     web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/subjects"),
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📄 Material yuklash",
-                    web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/materials"),
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🧠 Tahlilim",
-                    web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/insights"),
                 )
             ],
         ]
@@ -70,7 +58,7 @@ async def send_main_menu(msg: Message, profile: StudentProfile) -> None:
         reply_markup=_main_kb(),
     )
     await msg.answer(
-        "Fanlar ro'yxatini ochish uchun quyidagi tugmani bosing:",
+        "Barcha imkoniyatlar bitta ilovada — quyidagi tugmani bosing:",
         reply_markup=_inline_webapp_kb(),
     )
 
@@ -85,7 +73,7 @@ async def send_main_menu_by_id(telegram_id: int) -> None:
     )
     await bot.send_message(
         telegram_id,
-        "Fanlar ro'yxatini ochish uchun quyidagi tugmani bosing:",
+        "Barcha imkoniyatlar bitta ilovada — quyidagi tugmani bosing:",
         reply_markup=_inline_webapp_kb(),
     )
 

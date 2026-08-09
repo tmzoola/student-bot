@@ -1,6 +1,5 @@
 {% extends "_base.html" %}
 {% block title %}Materiallar — Student Bot{% endblock %}
-{% block bottom_nav %}{% endblock %}
 
 {% block head %}
 <style>
@@ -34,11 +33,9 @@ input[type=file]{display:none}
 
 {% block header %}
 <header class="hdr">
-  <a href="/subjects" class="hdr-back">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-  </a>
-  <div class="hdr-title" style="flex:1;padding:0 12px">📄 AI Materiallar</div>
-  <div class="hdr-right"></div>
+  <div class="hdr-logo">
+    <div class="hdr-logo-tx">📄 Materiallar</div>
+  </div>
 </header>
 {% endblock %}
 
