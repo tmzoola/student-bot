@@ -5,6 +5,8 @@ import logging
 
 from aiogram import F, Router
 from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     KeyboardButton,
     Message,
     ReplyKeyboardMarkup,
@@ -38,10 +40,27 @@ def _main_kb() -> ReplyKeyboardMarkup:
     )
 
 
+def _inline_webapp_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📚 Fanlarni ochish",
+                    web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/subjects"),
+                )
+            ]
+        ]
+    )
+
+
 async def send_main_menu(msg: Message, profile: StudentProfile) -> None:
     await msg.answer(
         f"Assalomu alaykum, <b>{profile.full_name}</b>! Nima qilamiz?",
         reply_markup=_main_kb(),
+    )
+    await msg.answer(
+        "Yoki quyidagi tugma orqali oching:",
+        reply_markup=_inline_webapp_kb(),
     )
 
 
@@ -52,6 +71,11 @@ async def send_main_menu_by_id(telegram_id: int) -> None:
         telegram_id,
         "Asosiy menyu:",
         reply_markup=_main_kb(),
+    )
+    await bot.send_message(
+        telegram_id,
+        "Yoki quyidagi tugma orqali oching:",
+        reply_markup=_inline_webapp_kb(),
     )
 
 
