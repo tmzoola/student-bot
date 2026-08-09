@@ -1,0 +1,243 @@
+{% extends "_base.html" %}
+{% block title %}Natijalar — Student Bot{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block head %}
+<style>
+body{padding-bottom:0}
+
+.result-hero{background:var(--card);border-radius:20px;padding:28px 20px 24px;text-align:center;box-shadow:var(--shadow-md);margin-bottom:20px}
+.result-emoji{font-size:3rem;margin-bottom:10px;animation:pop .4s ease}
+.result-title{font-size:1.25rem;font-weight:800;color:var(--text);margin-bottom:18px}
+
+.stat-badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat-badge{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg);border-radius:14px;padding:12px 16px;min-width:80px}
+.stat-badge .sv{font-size:1.2rem;font-weight:800;color:var(--text)}
+.stat-badge .sl{font-size:.7rem;color:var(--muted);font-weight:600}
+.stat-badge.correct .sv{color:var(--green-dark)}
+.stat-badge.wrong .sv{color:var(--red)}
+
+.q-review{background:var(--card);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
+.q-review-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:12px;-webkit-user-select:none;user-select:none}
+.q-review-header:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.q-review-label{font-size:.8rem;font-weight:700;color:var(--muted)}
+.q-review-status{flex-shrink:0}
+.q-review-arrow{color:var(--muted-lt);transition:transform .2s;flex-shrink:0}
+.q-review.open .q-review-arrow{transform:rotate(90deg)}
+.q-review-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border-lt)}
+.q-review.open .q-review-body{display:block}
+.q-review-text{font-size:.9rem;font-weight:600;color:var(--text);padding:12px 0 12px;line-height:1.4;white-space:pre-line}
+.q-review-img{max-width:100%;border-radius:10px;margin-bottom:10px}
+
+.q-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;border:1.5px solid var(--border);font-size:.88rem;color:var(--text)}
+.q-opt.correct{background:var(--green-lt);border-color:var(--green);color:var(--green-dark)}
+.q-opt.wrong{background:var(--red-lt);border-color:var(--red);color:var(--red)}
+.q-opt-letter{width:32px;height:32px;border-radius:50%;background:var(--border-lt);font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.q-opt.correct .q-opt-letter{background:var(--green);color:#fff}
+.q-opt.wrong .q-opt-letter{background:var(--red);color:#fff}
+
+.actions{display:flex;flex-direction:column;gap:10px;padding:0 0 24px}
+.btn-purple{background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.3)}
+.btn-purple:active{transform:scale(.98)}
+.btn-purple:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+
+.loader{text-align:center;padding:60px 20px;color:var(--muted);font-size:.9rem}
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="hdr">
+  <a href="/subjects" class="hdr-back" aria-label="Fanlar ro'yxatiga qaytish">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="hdr-title">Natijalar</div>
+  <div class="hdr-right"></div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div id="root"><div class="loader">Yuklanmoqda…</div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+const ATTEMPT_ID = {{ attempt_id }};
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function fmtTime(s){
+    const m = Math.floor(s/60), r = s%60;
+    return `${m}:${String(r).padStart(2,'0')}`;
+}
+
+function resultMeta(pct){
+    if (pct >= 90) return { emoji: '🏆', title: 'Ajoyib!' };
+    if (pct >= 70) return { emoji: '🎉', title: 'Yaxshi natija!' };
+    if (pct >= 60) return { emoji: '👍', title: 'Yaxshi urinish!' };
+    return { emoji: '💪', title: 'Yana urinib ko\'ring!' };
+}
+
+function buildScoreCircle(pct, good){
+    const r = 70, c = 2 * Math.PI * r;
+    const filled = c - (pct/100) * c;
+    const color = good ? 'var(--green)' : 'var(--red)';
+    return `
+      <div class="score-circle" role="img" aria-label="Ball: ${pct}%">
+        <svg viewBox="0 0 160 160" aria-hidden="true">
+          <circle class="track" cx="80" cy="80" r="${r}"/>
+          <circle class="fill" id="score-fill" cx="80" cy="80" r="${r}"
+            stroke="${color}"
+            stroke-dasharray="${c.toFixed(2)}"
+            stroke-dashoffset="${c.toFixed(2)}"/>
+        </svg>
+        <div class="inner">
+          <div class="pct" style="color:${color}">${pct}%</div>
+          <div class="lbl">Ball</div>
+        </div>
+      </div>
+    `;
+}
+
+function buildQuestion(q, i){
+    const letters = ['A','B','C','D'];
+    const opts = letters.map(L => {
+        const text = q['option_'+L.toLowerCase()];
+        if (!text) return '';
+        let cls = '';
+        if (L === q.correct_option) cls = 'correct';
+        else if (L === q.user_option && !q.is_correct) cls = 'wrong';
+        return `<div class="q-opt ${cls}">
+          <div class="q-opt-letter">${L}</div>
+          <div>${esc(text)}</div>
+        </div>`;
+    }).join('');
+
+    const statusBadge = q.is_correct
+        ? '<span class="badge-green" aria-label="To\'g\'ri">&#10003; To\'g\'ri</span>'
+        : '<span class="badge-red" aria-label="Noto\'g\'ri">&#10007; Noto\'g\'ri</span>';
+
+    return `
+      <div class="q-review" data-idx="${i}">
+        <div class="q-review-header" role="button" tabindex="0" aria-expanded="false" aria-controls="qbody-${i}">
+          <div>
+            <div class="q-review-label">Savol ${q.order || i+1}</div>
+          </div>
+          <div class="q-review-status">${statusBadge}</div>
+          <svg class="q-review-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="q-review-body" id="qbody-${i}">
+          ${q.image_url ? `<img class="q-review-img" src="${esc(q.image_url)}" alt="Savol rasmi">` : ''}
+          <div class="q-review-text">${esc(q.text)}</div>
+          ${opts}
+        </div>
+      </div>
+    `;
+}
+
+let allQuestions = [];
+let activeFilter = 'all';
+
+function renderQuestions(){
+    const box = document.getElementById('q-list');
+    if (!box) return;
+    let items = allQuestions;
+    if (activeFilter === 'correct') items = items.filter(q => q.is_correct);
+    if (activeFilter === 'wrong') items = items.filter(q => !q.is_correct);
+    if (!items.length) {
+        box.innerHTML = '<div class="empty"><div class="empty-t">Bu filtrdagi savollar yo\'q</div></div>';
+        return;
+    }
+    box.innerHTML = items.map((q, i) => buildQuestion(q, i)).join('');
+    box.querySelectorAll('.q-review-header').forEach(h => {
+        const toggle = () => {
+            const card = h.closest('.q-review');
+            const open = card.classList.toggle('open');
+            h.setAttribute('aria-expanded', open);
+        };
+        h.addEventListener('click', toggle);
+        h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    });
+}
+
+async function load(){
+    const root = document.getElementById('root');
+    const r = await fetch(`/api/v1/quiz/attempt/${ATTEMPT_ID}`, { headers: MK.authHeaders() });
+    if (r.status === 403 || r.status === 401) {
+        root.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div><div class="empty-d">Profilingiz tasdiqlanmagan.</div></div>';
+        return;
+    }
+    if (!r.ok) {
+        root.innerHTML = '<div class="empty"><div class="empty-t">Natija topilmadi</div><div class="empty-d">Sahifani yangilang yoki keyinroq urinib ko\'ring.</div></div>';
+        return;
+    }
+    const data = await r.json();
+    allQuestions = data.questions || [];
+    const pct = data.percentage || 0;
+    const good = pct >= 60;
+    const meta = resultMeta(pct);
+    const wrong = (data.total || 0) - (data.score || 0);
+
+    root.innerHTML = `
+      <div class="result-hero">
+        <div class="result-emoji">${meta.emoji}</div>
+        <div class="result-title">${meta.title}</div>
+        ${buildScoreCircle(pct, good)}
+        <div class="stat-badges">
+          <div class="stat-badge correct">
+            <div class="sv">${data.score}</div>
+            <div class="sl">To'g'ri</div>
+          </div>
+          <div class="stat-badge wrong">
+            <div class="sv">${wrong}</div>
+            <div class="sl">Noto'g'ri</div>
+          </div>
+          <div class="stat-badge">
+            <div class="sv">${fmtTime(data.time_taken_seconds || 0)}</div>
+            <div class="sl">Vaqt</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label">Savollar sharhi</div>
+      <div class="tab-row" role="tablist" aria-label="Savollar filtri">
+        <div class="tab active" data-f="all" role="tab" tabindex="0" aria-selected="true">Barchasi</div>
+        <div class="tab" data-f="correct" role="tab" tabindex="0" aria-selected="false">To'g'ri</div>
+        <div class="tab" data-f="wrong" role="tab" tabindex="0" aria-selected="false">Noto'g'ri</div>
+      </div>
+      <div id="q-list"></div>
+
+      <div class="actions">
+        <a href="/quiz/${data.quiz_id}" class="btn btn-purple">Yana urinib ko'rish</a>
+        <a href="/subjects" class="btn btn-secondary">Fanlar ro'yxatiga</a>
+      </div>
+    `;
+
+    renderQuestions();
+
+    // Animate score circle
+    requestAnimationFrame(() => {
+        const fill = document.getElementById('score-fill');
+        if (!fill) return;
+        const r2 = 70, c2 = 2 * Math.PI * r2;
+        fill.style.strokeDashoffset = String(c2 - (pct/100)*c2);
+    });
+
+    // Filter tabs
+    root.querySelectorAll('.tab').forEach(tab => {
+        const activate = () => {
+            root.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            activeFilter = tab.dataset.f;
+            renderQuestions();
+        };
+        tab.addEventListener('click', activate);
+        tab.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+    });
+}
+
+load();
+</script>
+{% endblock %}

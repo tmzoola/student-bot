@@ -154,6 +154,31 @@ class SubmitOut(BaseModel):
     percentage: int
 
 
+class QuestionReviewOut(BaseModel):
+    id: int
+    order: int
+    text: str | None
+    image_url: str | None
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    correct_option: str
+    user_option: str | None
+    is_correct: bool
+
+
+class AttemptDetailOut(BaseModel):
+    attempt_id: int
+    quiz_id: int
+    quiz_title: str
+    score: int
+    total: int
+    percentage: int
+    time_taken_seconds: int
+    questions: list[QuestionReviewOut]
+
+
 class ProfileOut(BaseModel):
     id: int
     student_id_number: str
@@ -190,6 +215,11 @@ async def subject_detail_page(request: Request, subject_id: int):
     return templates.TemplateResponse(
         "subject_detail.html", {"request": request, "subject_id": subject_id, "nav_active": "subjects"}
     )
+
+
+@pages.get("/quiz/attempt/{attempt_id}", response_class=HTMLResponse)
+async def attempt_page(request: Request, attempt_id: int):
+    return templates.TemplateResponse("attempt.html", {"request": request, "attempt_id": attempt_id})
 
 
 @pages.get("/quiz/{quiz_id}", response_class=HTMLResponse)
@@ -334,6 +364,50 @@ async def _load_quiz_for_profile(
     ):
         raise HTTPException(status_code=403, detail="Bu test sizga tegishli emas")
     return quiz
+
+
+@api.get("/quiz/attempt/{attempt_id}", response_model=AttemptDetailOut)
+async def get_attempt_detail(
+    attempt_id: int,
+    profile: StudentProfile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> AttemptDetailOut:
+    attempt = await db.scalar(
+        select(QuizAttempt)
+        .options(
+            selectinload(QuizAttempt.quiz).selectinload(Quiz.questions)
+        )
+        .where(QuizAttempt.id == attempt_id, QuizAttempt.student_profile_id == profile.id)
+    )
+    if attempt is None:
+        raise HTTPException(status_code=404, detail="Urinish topilmadi")
+    answers: dict = attempt.answers or {}
+    questions = sorted(attempt.quiz.questions, key=lambda q: q.order)
+    return AttemptDetailOut(
+        attempt_id=attempt.id,
+        quiz_id=attempt.quiz_id,
+        quiz_title=attempt.quiz.title,
+        score=attempt.score,
+        total=attempt.total,
+        percentage=attempt.percentage,
+        time_taken_seconds=attempt.time_taken_seconds,
+        questions=[
+            QuestionReviewOut(
+                id=q.id,
+                order=q.order,
+                text=q.text,
+                image_url=q.image_url,
+                option_a=q.option_a,
+                option_b=q.option_b,
+                option_c=q.option_c,
+                option_d=q.option_d,
+                correct_option=q.correct_option.value,
+                user_option=answers.get(str(q.id)),
+                is_correct=answers.get(str(q.id)) == q.correct_option.value,
+            )
+            for q in questions
+        ],
+    )
 
 
 @api.get("/quiz/{quiz_id}", response_model=QuizOut)

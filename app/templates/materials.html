@@ -3,31 +3,43 @@
 
 {% block head %}
 <style>
-.hdr{padding:14px 18px}
-.upload-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:var(--shadow);border:2px dashed #d5dbd0}
-.upload-box.dragover{border-color:var(--green);background:#F0FAF3}
-.upload-title{font-size:1rem;font-weight:700;margin-bottom:4px}
-.upload-sub{font-size:.78rem;color:var(--muted);margin-bottom:14px;line-height:1.4}
-.upload-btn{display:inline-block;background:var(--green);color:#fff;padding:11px 22px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer}
+.upload-card{background:var(--card);border-radius:20px;padding:28px 20px;margin-bottom:20px;text-align:center;box-shadow:var(--shadow-md);border:2px dashed var(--border)}
+.upload-card.dragover{border-color:var(--purple);background:var(--purple-lt)}
+.upload-icon{width:64px;height:64px;background:var(--purple-lt);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--purple)}
+.upload-title{font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:6px}
+.upload-sub{font-size:.8rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.upload-btn{display:inline-block;background:var(--purple);color:#fff;padding:12px 24px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.15s;border:none;font-family:inherit}
 .upload-btn:active{transform:scale(.97)}
+.upload-btn:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 input[type=file]{display:none}
+#upload-status{margin-top:14px;font-size:.82rem;color:var(--muted);min-height:20px}
 
-.mat-list{display:flex;flex-direction:column;gap:12px}
-.mat-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
-.mat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.mat-title{font-size:.92rem;font-weight:700;color:#111;flex:1;word-break:break-word}
-.mat-meta{font-size:.72rem;color:var(--muted);margin-top:4px}
-.mat-status{font-size:.72rem;padding:4px 10px;border-radius:12px;font-weight:700;white-space:nowrap}
-.st-uploaded,.st-extracting,.st-generating{background:#FEF3C7;color:#92400E}
-.st-ready{background:#DCFCE7;color:#166534}
-.st-failed{background:#FEE2E2;color:#991B1B}
+.ai-steps-card{background:var(--card);border-radius:16px;padding:16px 18px;margin-bottom:20px;box-shadow:var(--shadow)}
+.ai-steps-title{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px}
+
+.mat-list{display:flex;flex-direction:column;gap:10px}
+.mat-card{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.mat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;font-weight:700}
+.mat-icon-pdf{background:#FEF2F2;color:#EF4444}
+.mat-icon-docx{background:#EEF2FF;color:#4A6CF7}
+.mat-icon-txt{background:#F0FDF4;color:#22C55E}
+.mat-icon-default{background:var(--border-lt);color:var(--muted)}
+.mat-info{flex:1;min-width:0}
+.mat-title{font-size:.9rem;font-weight:700;color:var(--text);word-break:break-word;margin-bottom:3px}
+.mat-meta{font-size:.72rem;color:var(--muted)}
+.mat-status{font-size:.72rem;padding:4px 10px;border-radius:20px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.st-uploaded,.st-extracting,.st-generating{background:var(--amber-lt);color:#92400E}
+.st-ready{background:var(--green-lt);color:var(--green-dark)}
+.st-failed{background:var(--red-lt);color:var(--red)}
 
 .mat-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-.mat-btn{background:var(--green);color:#fff;padding:8px 14px;border-radius:10px;font-size:.78rem;font-weight:700;cursor:pointer}
+.mat-btn{background:var(--primary);color:#fff;padding:9px 16px;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:.15s}
 .mat-btn:active{transform:scale(.97)}
-.mat-err{margin-top:8px;font-size:.75rem;color:#991B1B;background:#FEE2E2;padding:8px 10px;border-radius:8px}
+.mat-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.mat-err{margin-top:8px;font-size:.75rem;color:var(--red);background:var(--red-lt);padding:8px 10px;border-radius:8px}
 
-.loader{text-align:center;padding:40px;color:var(--muted)}
+.loader{text-align:center;padding:40px;color:var(--muted);font-size:.9rem}
 </style>
 {% endblock %}
 
@@ -40,15 +52,45 @@ input[type=file]{display:none}
 {% endblock %}
 
 {% block content %}
-<div class="upload-box" id="drop">
+<div class="upload-card" id="drop">
+  <div class="upload-icon" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  </div>
   <div class="upload-title">Material yuklash</div>
-  <div class="upload-sub">PDF, DOCX yoki TXT (max 20 MB)<br>AI 10 ta test savol yaratadi</div>
-  <label class="upload-btn" for="file-input">Fayl tanlash</label>
-  <input id="file-input" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
-  <div id="upload-status" style="margin-top:12px;font-size:.82rem;color:var(--muted)"></div>
+  <div class="upload-sub">PDF, DOCX yoki TXT (max 20 MB)</div>
+  <label class="upload-btn" for="file-input" role="button" tabindex="0">Fayl tanlash</label>
+  <input id="file-input" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" aria-label="Fayl tanlash">
+  <div id="upload-status" role="status" aria-live="polite"></div>
 </div>
 
-<div class="section-t big">Materiallarim</div>
+<div class="ai-steps-card">
+  <div class="ai-steps-title">🤖 AI jarayoni</div>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Fayl yuklang</div>
+        <div class="step-sub">PDF, DOCX yoki TXT formatda</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Claude AI matnni tahlil qiladi</div>
+        <div class="step-sub">Asosiy mavzular ajratiladi</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">10 ta MCQ test yaratiladi</div>
+        <div class="step-sub">Darhol yechishga tayyor</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec-label">Materiallarim</div>
 <div id="list"><div class="loader">Yuklanmoqda…</div></div>
 {% endblock %}
 
@@ -61,6 +103,16 @@ const STATUS_LABEL = {
   ready: 'Tayyor',
   failed: 'Xato',
 };
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function fileIcon(name){
+    const ext = (name||'').split('.').pop().toLowerCase();
+    if (ext === 'pdf') return '<div class="mat-icon mat-icon-pdf">PDF</div>';
+    if (ext === 'docx' || ext === 'doc') return '<div class="mat-icon mat-icon-docx">DOC</div>';
+    if (ext === 'txt') return '<div class="mat-icon mat-icon-txt">TXT</div>';
+    return '<div class="mat-icon mat-icon-default">📄</div>';
+}
 
 async function loadList(){
   const r = await fetch('/api/v1/materials', { headers: MK.authHeaders() });
@@ -76,7 +128,11 @@ async function loadList(){
 function render(items){
   const c = document.getElementById('list');
   if (!items.length) {
-    c.innerHTML = '<div class="empty"><div class="empty-ic">📄</div><div class="empty-t">Hozircha materiallar yo\'q</div><div class="empty-d">Yuqoridagi tugma orqali birinchi materialingizni yuklang.</div></div>';
+    c.innerHTML = '<div class="empty">'
+      + '<div class="empty-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+      + '<div class="empty-t">Hozircha materiallar yo\'q</div>'
+      + '<div class="empty-d">Yuqoridagi tugma orqali birinchi materialingizni yuklang.</div>'
+      + '</div>';
     return;
   }
   c.innerHTML = '<div class="mat-list">' + items.map(m => {
@@ -86,13 +142,14 @@ function render(items){
     const date = new Date(m.created_at).toLocaleString('uz-UZ');
     let actions = '';
     if (m.status === 'ready' && m.quizzes_count > 0) {
-      actions = `<div class="mat-actions"><a class="mat-btn" href="#" data-mid="${m.id}">🧠 Testni ochish</a></div>`;
+      actions = `<div class="mat-actions"><button class="mat-btn" data-mid="${m.id}">🧠 Testni ochish</button></div>`;
     }
-    let err = m.error_message ? `<div class="mat-err">⚠️ ${esc(m.error_message)}</div>` : '';
+    let err = m.error_message ? `<div class="mat-err">&#9888; ${esc(m.error_message)}</div>` : '';
     return `
       <div class="mat-card">
         <div class="mat-top">
-          <div>
+          ${fileIcon(m.title)}
+          <div class="mat-info">
             <div class="mat-title">${esc(m.title)}</div>
             <div class="mat-meta">${size} MB · ${date}</div>
           </div>
@@ -104,32 +161,44 @@ function render(items){
     `;
   }).join('') + '</div>';
 
-  c.querySelectorAll('a[data-mid]').forEach(el => {
-    el.onclick = async (ev) => {
-      ev.preventDefault();
+  c.querySelectorAll('button[data-mid]').forEach(el => {
+    el.addEventListener('click', async () => {
       const mid = el.dataset.mid;
+      el.disabled = true;
+      el.textContent = 'Yuklanmoqda…';
       const d = await fetch(`/api/v1/materials/${mid}`, { headers: MK.authHeaders() });
-      if (!d.ok) return alert('Xato');
+      if (!d.ok) {
+        el.disabled = false;
+        el.textContent = '🧠 Testni ochish';
+        const tg = window.Telegram?.WebApp;
+        if (tg?.showAlert) tg.showAlert('Xato yuz berdi');
+        else alert('Xato yuz berdi');
+        return;
+      }
       const detail = await d.json();
       const q = detail.generated_quizzes[0];
       if (q) location.href = `/materials/${mid}/quiz/${q.id}` + (location.hash || '');
-    };
+    });
   });
 }
-
-function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // Upload
 const input = document.getElementById('file-input');
 const status = document.getElementById('upload-status');
 const drop = document.getElementById('drop');
+const tg = window.Telegram?.WebApp;
 
 async function upload(file){
   if (!file) return;
-  if (file.size > 20 * 1024 * 1024) { alert('Fayl 20 MB dan katta'); return; }
+  if (file.size > 20 * 1024 * 1024) {
+    if (tg?.showAlert) tg.showAlert('Fayl 20 MB dan katta');
+    else alert('Fayl 20 MB dan katta');
+    return;
+  }
   const fd = new FormData();
   fd.append('file', file);
   status.textContent = 'Yuklanmoqda…';
+  drop.classList.remove('dragover');
   try {
     const r = await fetch('/api/v1/materials/upload', {
       method: 'POST',
@@ -139,19 +208,21 @@ async function upload(file){
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || 'Xato');
     status.textContent = '✅ Yuklandi. AI test yaratmoqda…';
+    MK.haptic('success');
     input.value = '';
     await loadList();
   } catch (e) {
+    MK.haptic('error');
     status.textContent = '❌ ' + e.message;
   }
 }
 
 input.onchange = () => upload(input.files[0]);
 
-;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
   e.preventDefault(); drop.classList.add('dragover');
 }));
-;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
   e.preventDefault(); drop.classList.remove('dragover');
 }));
 drop.addEventListener('drop', e => {

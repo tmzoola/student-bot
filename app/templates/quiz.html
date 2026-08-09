@@ -5,60 +5,65 @@
 {% block head %}
 <style>
 body{padding-bottom:0}
-.hdr{padding:12px 16px}
-.hdr-title{font-size:.95rem}
-.timer{background:#111;color:#fff;padding:7px 14px;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+
+.hdr{padding:0 16px;gap:10px}
+.hdr-title{font-size:.9rem;font-weight:700}
+.timer{background:#1E293B;color:#fff;padding:7px 13px;border-radius:20px;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;flex-shrink:0}
 .timer svg{width:14px;height:14px}
-.timer.warn{background:#B5812E}
-.timer.danger{background:#dc2626;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.timer.warn{background:var(--amber)}
+.timer.danger{background:var(--red);animation:tpulse 1s infinite}
+@keyframes tpulse{0%,100%{opacity:1}50%{opacity:.65}}
+@media (prefers-reduced-motion:reduce){.timer.danger{animation:none}}
 
-.progress-wrap{background:#fff;padding:0 20px 12px}
-.progress-info{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px}
-.progress-info b{color:var(--green)}
-.progress-bar{background:#EEF3EA;height:6px;border-radius:4px;overflow:hidden}
-.progress-fill{background:var(--green);height:100%;border-radius:4px;transition:width .3s}
+.progress-wrap{background:var(--card);padding:0 0 10px}
+.progress-bar-full{background:var(--border-lt);height:6px;width:100%}
+.progress-fill-top{background:var(--primary);height:100%;transition:width .3s}
+.progress-info{display:flex;justify-content:space-between;align-items:center;padding:8px 20px 0;font-size:.75rem;color:var(--muted);font-weight:600}
+.progress-info strong{color:var(--primary)}
 
-.q-content{padding:24px 20px 100px}
-.q-num{font-size:.75rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.02em}
-.q-text{font-size:1.15rem;font-weight:700;line-height:1.4;color:#111;margin-bottom:24px;animation:fadeUp .25s ease;white-space:pre-line}
-.q-img{display:block;max-width:100%;max-height:280px;border-radius:14px;margin-bottom:18px;animation:fadeUp .25s ease}
+.q-content{padding:20px 20px 110px}
+.q-num{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px}
+.q-text{font-size:1.05rem;font-weight:700;line-height:1.45;color:var(--text);margin-bottom:22px;animation:fadeUp .25s ease;white-space:pre-line}
+.q-img{display:block;max-width:100%;max-height:260px;border-radius:14px;margin-bottom:18px;animation:fadeUp .25s ease;object-fit:cover}
 
 .opts{display:flex;flex-direction:column;gap:10px;animation:fadeUp .28s ease}
-.opt{background:#fff;border:2px solid transparent;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
+.opt{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
 .opt:active{transform:scale(.99)}
-.opt.sel{border-color:var(--green);background:#F0FAF3}
-.opt-letter{width:34px;height:34px;border-radius:10px;background:#f4f5f2;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;transition:.15s}
-.opt.sel .opt-letter{background:var(--green);color:#fff}
-.opt-text{flex:1;font-size:.92rem;color:#111;line-height:1.35;white-space:pre-line}
+.opt.sel{border-color:var(--primary);background:var(--primary-lt)}
+.opt:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.opt-letter{width:40px;height:40px;border-radius:50%;background:var(--border-lt);color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;transition:.15s}
+.opt.sel .opt-letter{background:var(--primary);color:#fff}
+.opt-text{flex:1;font-size:.92rem;color:var(--text);line-height:1.35;white-space:pre-line}
 
-.foot{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -2px 12px rgba(0,0,0,.05)}
+.foot{position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -1px 0 var(--border)}
 .foot .btn{padding:14px 18px;flex:1}
-.btn-prev{background:#f4f5f2;color:#333}
-.btn-prev:disabled{opacity:.4}
+.btn-prev{background:var(--border-lt);color:var(--muted);border-radius:14px;font-size:.95rem;font-weight:700;transition:.15s}
+.btn-prev:disabled{opacity:.4;cursor:not-allowed}
+.btn-prev:not(:disabled):active{transform:scale(.98)}
+.btn-prev:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
-.loader{text-align:center;padding:60px 20px;color:var(--muted)}
+.loader{text-align:center;padding:60px 20px;color:var(--muted);font-size:.9rem}
 </style>
 {% endblock %}
 
 {% block header %}
-<header class="hdr">
-  <a href="javascript:if(confirm('Testni tark etmoqchimisiz?')) history.back()" class="hdr-back">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-  </a>
-  <div class="hdr-title" id="quiz-title" style="flex:1;padding:0 12px">…</div>
-  <div class="timer" id="timer">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+<header class="hdr" role="banner">
+  <button class="hdr-back" id="btn-close" aria-label="Testni yopish">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="hdr-title" id="quiz-title">…</div>
+  <div class="timer" id="timer" role="timer" aria-label="Vaqt">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span id="timer-t">--:--</span>
   </div>
 </header>
 
-<div class="progress-wrap">
+<div class="progress-wrap" role="progressbar" aria-label="Test jarayoni" aria-valuemin="0" aria-valuemax="100" id="prog-bar-wrap">
+  <div class="progress-bar-full"><div class="progress-fill-top" id="prog-fill" style="width:0%"></div></div>
   <div class="progress-info">
     <span id="prog-txt">Savol 0 / 0</span>
-    <span><b id="prog-answered">0</b> / <span id="prog-total">0</span> javob berildi</span>
+    <span><strong id="prog-answered">0</strong> / <span id="prog-total">0</span> javob berildi</span>
   </div>
-  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
 </div>
 {% endblock %}
 
@@ -68,14 +73,15 @@ body{padding-bottom:0}
 </div>
 
 <div class="foot" id="foot" style="display:none">
-  <button class="btn btn-prev" id="btn-prev">Oldingi</button>
-  <button class="btn btn-primary" id="btn-next">Keyingi</button>
+  <button class="btn btn-prev" id="btn-prev" aria-label="Oldingi savol">Oldingi</button>
+  <button class="btn btn-primary" id="btn-next" aria-label="Keyingi savol">Keyingi</button>
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
 const QUIZ_ID = {{ quiz_id }};
+const tg = window.Telegram?.WebApp;
 let quiz = null;
 let idx = 0;
 let answers = {};
@@ -83,10 +89,12 @@ let startedAt = 0;
 let timeLeft = 0;
 let timerHandle = null;
 
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
 async function init(){
-    const r = await fetch(`/api/v1/quiz/${QUIZ_ID}`, { headers: MK.authHeaders()});
+    const r = await fetch(`/api/v1/quiz/${QUIZ_ID}`, { headers: MK.authHeaders() });
     if (!r.ok) {
-        document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi yoki ruxsat yo\'q</div>';
+        document.getElementById('q-content').innerHTML = '<div class="loader">Test topilmadi yoki ruxsat yo\'q. <a href="/subjects" style="color:var(--primary)">Orqaga qaytish</a></div>';
         return;
     }
     quiz = await r.json();
@@ -104,12 +112,12 @@ function render(){
     const c = document.getElementById('q-content');
     c.innerHTML = `
         <div class="q-num">Savol ${idx+1} / ${quiz.questions.length}</div>
-        ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="savol rasmi">` : ''}
+        ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="Savol rasmi">` : ''}
         ${q.text ? `<div class="q-text">${esc(q.text)}</div>` : ''}
-        <div class="opts">
+        <div class="opts" role="group" aria-label="Javob variantlari">
             ${['A','B','C','D'].map(L => `
-                <div class="opt ${answers[q.id]===L?'sel':''}" data-l="${L}">
-                    <div class="opt-letter">${L}</div>
+                <div class="opt ${answers[q.id]===L?'sel':''}" data-l="${L}" role="radio" aria-checked="${answers[q.id]===L}" tabindex="0">
+                    <div class="opt-letter" aria-hidden="true">${L}</div>
                     <div class="opt-text">${esc(q['option_'+L.toLowerCase()])}</div>
                 </div>
             `).join('')}
@@ -117,23 +125,29 @@ function render(){
     `;
 
     c.querySelectorAll('.opt').forEach(el => {
-        el.onclick = () => {
+        const select = () => {
             MK.haptic('light');
             answers[q.id] = el.dataset.l;
-            // toggle in place — re-render would replay the fade animation
-            c.querySelectorAll('.opt').forEach(o => o.classList.toggle('sel', o === el));
+            c.querySelectorAll('.opt').forEach(o => {
+                const sel = o === el;
+                o.classList.toggle('sel', sel);
+                o.setAttribute('aria-checked', sel);
+            });
             updateProgress();
         };
+        el.onclick = select;
+        el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); } };
     });
 
-    // Update progress
     document.getElementById('prog-txt').textContent = `Savol ${idx+1} / ${quiz.questions.length}`;
     document.getElementById('prog-fill').style.width = `${((idx+1)/quiz.questions.length)*100}%`;
+    document.getElementById('prog-bar-wrap').setAttribute('aria-valuenow', Math.round(((idx+1)/quiz.questions.length)*100));
     updateProgress();
 
     const isLast = idx === quiz.questions.length - 1;
     const btnNext = document.getElementById('btn-next');
     btnNext.textContent = isLast ? 'Tugatish' : 'Keyingi';
+    btnNext.setAttribute('aria-label', isLast ? 'Testni yakunlash' : 'Keyingi savol');
 
     document.getElementById('btn-prev').disabled = idx === 0;
 }
@@ -141,6 +155,18 @@ function render(){
 function updateProgress(){
     document.getElementById('prog-answered').textContent = Object.keys(answers).length;
 }
+
+document.getElementById('btn-close').addEventListener('click', () => {
+    const unanswered = quiz ? quiz.questions.length - Object.keys(answers).length : 0;
+    const msg = unanswered > 0
+        ? `${unanswered} ta savolga javob berilmadi. Testni tark etmoqchimisiz?`
+        : 'Testni tark etmoqchimisiz?';
+    if (tg?.showConfirm) {
+        tg.showConfirm(msg, ok => { if (ok) history.back(); });
+    } else if (confirm(msg)) {
+        history.back();
+    }
+});
 
 document.addEventListener('click', e => {
     if (e.target.closest('#btn-prev') && idx > 0) { idx--; render(); }
@@ -169,8 +195,19 @@ function updateTimer(){
 
 async function finish(auto=false){
     if (!auto && Object.keys(answers).length < quiz.questions.length) {
-        if (!confirm(`${quiz.questions.length - Object.keys(answers).length} ta savolga javob berilmadi. Baribir yakunlaymizmi?`)) return;
+        const remaining = quiz.questions.length - Object.keys(answers).length;
+        const msg = `${remaining} ta savolga javob berilmadi. Baribir yakunlaymizmi?`;
+        if (tg?.showConfirm) {
+            tg.showConfirm(msg, ok => { if (ok) doSubmit(); });
+            return;
+        } else if (!confirm(msg)) {
+            return;
+        }
     }
+    doSubmit();
+}
+
+async function doSubmit(){
     clearInterval(timerHandle);
     const btn = document.getElementById('btn-next');
     btn.disabled = true;
@@ -184,16 +221,19 @@ async function finish(auto=false){
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || 'Xatolik');
-        alert(`Natija: ${data.score} / ${data.total} (${data.percentage}%)`);
-        window.location.replace(`/profile`);
+        MK.haptic('success');
+        window.location.replace('/quiz/attempt/' + data.attempt_id);
     } catch (e) {
-        alert(e.message);
+        MK.haptic('error');
+        if (tg?.showAlert) {
+            tg.showAlert('Xatolik: ' + e.message);
+        } else {
+            alert('Xatolik: ' + e.message);
+        }
         btn.disabled = false;
         btn.textContent = 'Tugatish';
     }
 }
-
-function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 init();
 </script>

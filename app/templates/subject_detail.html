@@ -1,14 +1,19 @@
 {% extends "_base.html" %}
-{% block title %}Fan{% endblock %}
+{% block title %}Fan — Student Bot{% endblock %}
 
 {% block header %}
 <header class="hdr">
-  <a href="/subjects" class="hdr-back">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  <a href="/subjects" class="hdr-back" aria-label="Orqaga">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
   </a>
-  <div class="hdr-title" id="title" style="flex:1;padding:0 12px">…</div>
+  <div class="hdr-title" id="title">…</div>
   <div class="hdr-right"></div>
 </header>
+<nav class="breadcrumb" aria-label="Yo'nalish">
+  <a href="/subjects">Fanlar</a>
+  <span aria-hidden="true">›</span>
+  <span id="bc-name" style="color:var(--text);font-weight:600">…</span>
+</nav>
 {% endblock %}
 
 {% block content %}
@@ -21,36 +26,46 @@ const SUBJECT_ID = {{ subject_id }};
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 async function load(){
-    const r = await fetch(`/api/v1/subjects/${SUBJECT_ID}`, { headers: MK.authHeaders()});
+    const r = await fetch(`/api/v1/subjects/${SUBJECT_ID}`, { headers: MK.authHeaders() });
     const box = document.getElementById('topics');
     if (r.status === 403 || r.status === 401) {
-        box.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div></div>';
+        box.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div><div class="empty-d">Profilingiz tasdiqlanmagan.</div></div>';
         return;
     }
     if (!r.ok) {
-        box.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        box.innerHTML = '<div class="empty"><div class="empty-t">Xatolik yuz berdi</div><div class="empty-d">Sahifani yangilang yoki keyinroq urinib ko\'ring.</div></div>';
         return;
     }
     const data = await r.json();
     document.getElementById('title').textContent = data.name;
-    if (!data.topics.length) {
-        box.innerHTML = '<div class="empty"><div class="empty-t">Mavzu topilmadi</div></div>';
+    document.getElementById('bc-name').textContent = data.name;
+
+    if (!data.topics || !data.topics.length) {
+        box.innerHTML = '<div class="empty">'
+            + '<div class="empty-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg></div>'
+            + '<div class="empty-t">Mavzu topilmadi</div>'
+            + '<div class="empty-d">Bu fanga hali mavzu va testlar qo\'shilmagan.</div>'
+            + '</div>';
         return;
     }
+
     box.innerHTML = data.topics.map(t => `
-        <div style="margin-bottom:18px">
-          <div class="section-t big">${esc(t.title)}</div>
-          ${t.description ? `<div class="card-sub" style="margin:-8px 4px 10px">${esc(t.description)}</div>` : ''}
-          ${t.quizzes.length === 0 ? '<div class="card-sub" style="padding:8px 4px">Testlar yo\'q</div>' :
-            t.quizzes.map(q => `
-              <a href="/quiz/${q.id}" class="card" style="margin-bottom:8px">
+        <div style="margin-bottom:22px">
+          <div class="sec-label">${esc(t.title)}</div>
+          ${t.description ? `<p style="font-size:.82rem;color:var(--muted);padding:0 18px;margin-bottom:10px;line-height:1.5">${esc(t.description)}</p>` : ''}
+          ${t.quizzes.length === 0
+            ? '<div style="padding:0 18px 8px;font-size:.83rem;color:var(--muted-lt)">Bu mavzu uchun testlar yo\'q</div>'
+            : t.quizzes.map(q => `
+              <a href="/quiz/${q.id}" class="card" style="margin-bottom:8px" aria-label="${esc(q.title)}">
                 <div class="card-row">
-                  <div class="card-ic" style="background:var(--green);color:#fff">✎</div>
+                  <div class="card-ic" style="background:var(--green-lt);color:var(--green-dark)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
                   <div class="card-body">
                     <div class="card-title">${esc(q.title)}</div>
-                    <div class="card-sub">${q.questions_count} savol · ${Math.round(q.time_limit_seconds/60)} daq</div>
+                    <div class="card-sub">${q.questions_count} savol · ${Math.round(q.time_limit_seconds/60)} daqiqa</div>
                   </div>
-                  <div class="card-arrow">›</div>
+                  <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
               </a>
             `).join('')}

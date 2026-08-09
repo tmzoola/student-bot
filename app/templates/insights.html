@@ -1,36 +1,37 @@
 {% extends "_base.html" %}
-{% block title %}Tahlilim{% endblock %}
+{% block title %}Tahlil — Student Bot{% endblock %}
 
 {% block header %}
 <header class="hdr">
   <div class="hdr-logo">
-    <div class="hdr-logo-tx">🧠 Tahlilim</div>
+    <div class="hdr-logo-tx">🧠 Tahlil</div>
   </div>
 </header>
 {% endblock %}
 
 {% block head %}
 <style>
-.i-card{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-.i-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f0f0f0;font-size:.88rem}
-.i-row:first-of-type{border-top:none}
-.i-row .k{color:var(--muted);min-width:0;flex:1;padding-right:8px}
-.i-row .v{font-weight:700}
-.i-row .v.good{color:var(--green)}
-.i-row .v.bad{color:var(--pink)}
-.i-tip{background:#fff;border-left:3px solid var(--pink);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem;line-height:1.4}
-.i-tip .t{font-weight:700;color:var(--pink);margin-bottom:3px;font-size:.8rem}
-.i-strong{background:#fff;border-left:3px solid var(--green);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem}
+.ai-card{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px;border-left:4px solid var(--purple)}
+.ai-card .lbl{font-size:.7rem;color:var(--purple);font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.ai-card .body{font-size:.88rem;color:var(--text);line-height:1.55}
+
+.i-tip{background:var(--red-lt);border-left:3px solid var(--red);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem;line-height:1.4;color:var(--text)}
+.i-tip .t{font-weight:700;color:var(--red);margin-bottom:3px;font-size:.8rem}
+.i-strong{background:var(--green-lt);border-left:3px solid var(--green);padding:10px 12px;border-radius:8px;margin:6px 0;font-size:.85rem;color:var(--text)}
 .i-strong .t{font-weight:700;color:var(--green-dark);margin-bottom:2px;font-size:.8rem}
-.i-rec{background:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:.88rem;line-height:1.4;box-shadow:var(--shadow)}
+.i-rec{background:var(--card);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:.88rem;line-height:1.4;box-shadow:var(--shadow);color:var(--text)}
 .i-rec::before{content:"✓ ";color:var(--green);font-weight:800}
-.svg-trend{background:#fff;border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:14px}
-.svg-trend svg{width:100%;height:80px;display:block}
-.summary{background:linear-gradient(135deg,#EEE7FE,#E3EBF8);padding:14px;border-radius:14px;font-size:.9rem;line-height:1.5;margin-bottom:14px;color:#222}
-.summary .lbl{font-size:.7rem;color:var(--purple);font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
-.btn-ai{margin-top:8px;background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.35)}
+
+.btn-ai{background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.3);margin-top:4px}
+.btn-ai:active{transform:scale(.98)}
 .btn-ai:disabled{opacity:.6}
-.week-label{font-size:.65rem;color:var(--muted)}
+.btn-ai:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+
+.week-label{font-size:.65rem;fill:var(--muted)}
+.svg-trend{background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.svg-trend svg{width:100%;height:80px;display:block}
+
+.topic-section{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:14px}
 </style>
 {% endblock %}
 
@@ -41,6 +42,12 @@
 {% block script %}
 <script>
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function barColor(pct){
+    if (pct > 70) return 'var(--green)';
+    if (pct >= 40) return 'var(--amber)';
+    return 'var(--red)';
+}
 
 function renderTrend(points){
     if (!points || !points.length) return '';
@@ -56,17 +63,17 @@ function renderTrend(points){
     const dots = points.map((p, i) => {
         const x = pad + i*step;
         const y = h - pad - (p.accuracy_pct/max) * (h - pad*2);
-        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#3A6DB5"/>`;
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--primary)"/>`;
     }).join('');
     const labels = points.map((p, i) => {
         const x = pad + i*step;
-        const short = p.week_start.slice(5); // MM-DD
-        return `<text x="${x.toFixed(1)}" y="${h - 1}" text-anchor="middle" class="week-label" font-size="8">${short}</text>`;
+        const short = p.week_start.slice(5);
+        return `<text x="${x.toFixed(1)}" y="${h-1}" text-anchor="middle" class="week-label" font-size="8">${short}</text>`;
     }).join('');
-    return `<div class="section-t big">So'nggi 4 hafta</div>
+    return `<div class="section-t big" style="margin-bottom:8px">So'nggi 4 hafta</div>
       <div class="svg-trend">
-        <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-          <path d="${d}" stroke="#3A6DB5" stroke-width="2" fill="none"/>
+        <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Haftalik natijalar grafigi">
+          <path d="${d}" stroke="var(--primary)" stroke-width="2" fill="none"/>
           ${dots}
           ${labels}
         </svg>
@@ -75,34 +82,44 @@ function renderTrend(points){
 
 function renderStats(data){
     return `
-      <div class="stats">
-        <div class="stat-c stat-green"><div class="v">${data.attempts_total}</div><div class="l">Urinishlar</div></div>
-        <div class="stat-c stat-blue"><div class="v">${data.overall_accuracy_pct}%</div><div class="l">Aniqlik</div></div>
-        <div class="stat-c stat-amber"><div class="v">${data.top_weaknesses.length}</div><div class="l">Zaif mavzu</div></div>
+      <div class="stats" style="margin-bottom:18px">
+        <div class="stat-c stat-green"><div class="v">${data.attempts_total}</div><div class="l">Jami urinishlar</div></div>
+        <div class="stat-c stat-blue"><div class="v">${data.overall_accuracy_pct}%</div><div class="l">O'rtacha ball</div></div>
       </div>
     `;
 }
 
 function renderTopics(data){
-    const w = data.top_weaknesses.map(t => `
-        <div class="i-row">
-          <span class="k">${esc(t.topic_title)} <span style="color:var(--muted-lt);font-size:.75rem">· ${esc(t.subject_name)}</span></span>
-          <span class="v bad">${t.accuracy_pct}%</span>
+    const weakHtml = (data.top_weaknesses || []).map(t => `
+        <div class="hbar-wrap">
+          <div class="hbar-label">
+            <div class="name">${esc(t.topic_title)}<span style="color:var(--muted-lt);font-size:.72rem;font-weight:400"> · ${esc(t.subject_name)}</span></div>
+            <div class="pct" style="color:${barColor(t.accuracy_pct)}">${t.accuracy_pct}%</div>
+          </div>
+          <div class="hbar"><div class="hbar-fill" style="width:${t.accuracy_pct}%;background:${barColor(t.accuracy_pct)}"></div></div>
         </div>
-    `).join('') || '<div class="card-sub">— (yetarli ma\'lumot yo\'q)</div>';
+    `).join('') || '<div style="font-size:.83rem;color:var(--muted-lt);padding:4px 0">— (yetarli ma\'lumot yo\'q)</div>';
 
-    const s = data.top_strengths.map(t => `
-        <div class="i-row">
-          <span class="k">${esc(t.topic_title)} <span style="color:var(--muted-lt);font-size:.75rem">· ${esc(t.subject_name)}</span></span>
-          <span class="v good">${t.accuracy_pct}%</span>
+    const strongHtml = (data.top_strengths || []).map(t => `
+        <div class="hbar-wrap">
+          <div class="hbar-label">
+            <div class="name">${esc(t.topic_title)}<span style="color:var(--muted-lt);font-size:.72rem;font-weight:400"> · ${esc(t.subject_name)}</span></div>
+            <div class="pct" style="color:${barColor(t.accuracy_pct)}">${t.accuracy_pct}%</div>
+          </div>
+          <div class="hbar"><div class="hbar-fill" style="width:${t.accuracy_pct}%;background:${barColor(t.accuracy_pct)}"></div></div>
         </div>
-    `).join('') || '<div class="card-sub">— (yetarli ma\'lumot yo\'q)</div>';
+    `).join('') || '<div style="font-size:.83rem;color:var(--muted-lt);padding:4px 0">— (yetarli ma\'lumot yo\'q)</div>';
 
     return `
-      <div class="section-t big">Zaif mavzular</div>
-      <div class="i-card">${w}</div>
-      <div class="section-t big">Kuchli mavzular</div>
-      <div class="i-card">${s}</div>
+      <div class="sec-label">Kuchli va zaif topiklar</div>
+      <div class="topic-section" style="margin-bottom:10px">
+        <div style="font-size:.82rem;font-weight:700;color:var(--red);margin-bottom:10px">Zaif mavzular</div>
+        ${weakHtml}
+      </div>
+      <div class="topic-section">
+        <div style="font-size:.82rem;font-weight:700;color:var(--green-dark);margin-bottom:10px">Kuchli mavzular</div>
+        ${strongHtml}
+      </div>
     `;
 }
 
@@ -118,13 +135,13 @@ function renderAI(ins){
         <div class="i-rec">${esc(r)}</div>
     `).join('');
     return `
-      <div class="summary">
+      <div class="ai-card">
         <div class="lbl">🧠 AI xulosa</div>
-        ${esc(ins.summary)}
+        <div class="body">${esc(ins.summary)}</div>
       </div>
-      ${w ? `<div class="section-t big">Zaif tomonlar</div>${w}` : ''}
-      ${s ? `<div class="section-t big">Kuchli tomonlar</div>${s}` : ''}
-      ${rec ? `<div class="section-t big">Tavsiyalar</div>${rec}` : ''}
+      ${w ? `<div class="sec-label">Zaif tomonlar</div>${w}` : ''}
+      ${s ? `<div class="sec-label">Kuchli tomonlar</div>${s}` : ''}
+      ${rec ? `<div class="sec-label">Tavsiyalar</div>${rec}` : ''}
     `;
 }
 
@@ -135,28 +152,35 @@ async function requestAI(){
     _busy = true;
     const btn = document.getElementById('btnAI');
     if (btn){ btn.disabled = true; btn.textContent = 'AI o\'ylayapti…'; }
+    const tg = window.Telegram?.WebApp;
     try {
         const r = await fetch('/api/v1/insights/generate', {
             method: 'POST',
             headers: MK.authHeaders(),
         });
         if (r.status === 429) {
-            alert("Bugungi AI limit tugadi. Ertaga urinib ko'ring.");
+            MK.haptic('warning');
+            const msg = "Bugungi AI limit tugadi. Ertaga urinib ko'ring.";
+            if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
             return;
         }
         if (r.status === 400) {
             const b = await r.json();
-            alert(b.detail || "Yetarli ma'lumot yo'q");
+            const msg = b.detail || "Yetarli ma'lumot yo'q";
+            if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
             return;
         }
         if (!r.ok) {
-            alert('AI xatosi. Keyinroq urinib ko\'ring.');
+            const msg = 'AI xatosi. Keyinroq urinib ko\'ring.';
+            if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
             return;
         }
         const data = await r.json();
+        MK.haptic('success');
         render(data);
     } catch(e){
-        alert('Tarmoq xatosi: ' + e);
+        const msg = 'Tarmoq xatosi: ' + e;
+        if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
     } finally {
         _busy = false;
         if (btn){ btn.disabled = false; btn.textContent = '🔄 Qayta so\'rash'; }
@@ -196,7 +220,7 @@ async function load(){
         return;
     }
     if (!r.ok) {
-        root.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
+        root.innerHTML = '<div class="empty"><div class="empty-t">Xatolik yuz berdi</div><div class="empty-d">Sahifani yangilang yoki keyinroq urinib ko\'ring.</div></div>';
         return;
     }
     render(await r.json());

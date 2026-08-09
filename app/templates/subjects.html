@@ -1,5 +1,5 @@
 {% extends "_base.html" %}
-{% block title %}Fanlar{% endblock %}
+{% block title %}Fanlar — Student Bot{% endblock %}
 
 {% block header %}
 <header class="hdr">
@@ -7,9 +7,17 @@
     <div class="hdr-logo-tx">📚 Fanlar</div>
   </div>
 </header>
+<div class="search-wrap">
+  <label class="search-bar" for="search-input">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input id="search-input" type="search" placeholder="Fan qidirish…" autocomplete="off" aria-label="Fan qidirish">
+  </label>
+</div>
+<div class="chip-row" id="chip-row" aria-label="Talaba ma'lumotlari"></div>
 {% endblock %}
 
 {% block content %}
+<div class="sec-label">Fanlar ro'yxati</div>
 <div id="list"><div class="empty"><div class="empty-t">Yuklanmoqda…</div></div></div>
 {% endblock %}
 
@@ -17,38 +25,81 @@
 <script>
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-async function load(){
-    const r = await fetch('/api/v1/subjects', { headers: MK.authHeaders() });
+let allItems = [];
+
+function renderList(items){
     const list = document.getElementById('list');
-    if (r.status === 403 || r.status === 401) {
-        list.innerHTML = '<div class="empty"><div class="empty-t">Ruxsat yo\'q</div>'
-            + '<div class="empty-d">Profilingiz tasdiqlanmagan yoki topilmadi.</div></div>';
-        return;
-    }
-    if (!r.ok) {
-        list.innerHTML = '<div class="empty"><div class="empty-t">Xatolik</div></div>';
-        return;
-    }
-    const items = await r.json();
     if (!items.length) {
         list.innerHTML = '<div class="empty">'
+            + '<div class="empty-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></div>'
             + '<div class="empty-t">Fan topilmadi</div>'
-            + '<div class="empty-d">Sizning fakultet/kurs/semestringiz uchun hali fanlar qo\'shilmagan.</div></div>';
+            + '<div class="empty-d">Qidiruv so\'zini o\'zgartiring yoki administrator bilan bog\'laning.</div>'
+            + '</div>';
         return;
     }
     list.innerHTML = items.map(s => `
-        <a href="/subjects/${s.id}" class="card" style="margin-bottom:10px">
+        <a href="/subjects/${s.id}" class="card" style="margin-bottom:10px" aria-label="${esc(s.name)}">
           <div class="card-row">
-            <div class="card-ic" style="background:var(--blue-lt);color:var(--blue)">📖</div>
+            <div class="card-ic" style="background:var(--primary-lt);color:var(--primary)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg>
+            </div>
             <div class="card-body">
               <div class="card-title">${esc(s.name)}</div>
               <div class="card-sub">${s.topics_count} mavzu · ${s.quizzes_count} test</div>
             </div>
-            <div class="card-arrow">›</div>
+            <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
           </div>
         </a>
     `).join('');
 }
+
+async function load(){
+    const r = await fetch('/api/v1/subjects', { headers: MK.authHeaders() });
+    const list = document.getElementById('list');
+    if (r.status === 403 || r.status === 401) {
+        list.innerHTML = '<div class="empty">'
+            + '<div class="empty-t">Ruxsat yo\'q</div>'
+            + '<div class="empty-d">Profilingiz tasdiqlanmagan yoki topilmadi. Adminstratorga murojaat qiling.</div>'
+            + '</div>';
+        return;
+    }
+    if (!r.ok) {
+        list.innerHTML = '<div class="empty">'
+            + '<div class="empty-t">Xatolik yuz berdi</div>'
+            + '<div class="empty-d">Sahifani yangilang yoki keyinroq urinib ko\'ring.</div>'
+            + '</div>';
+        return;
+    }
+    const items = await r.json();
+    allItems = items;
+
+    // Show student info chips if available
+    const user = MK.user;
+    if (user) {
+        const chipRow = document.getElementById('chip-row');
+        const chips = [];
+        if (user.course_number) chips.push(`<div class="chip active">${user.course_number}-kurs</div>`);
+        if (user.semester) chips.push(`<div class="chip active">${user.semester}-semestr</div>`);
+        if (chips.length) chipRow.innerHTML = chips.join('');
+    }
+
+    if (!items.length) {
+        list.innerHTML = '<div class="empty">'
+            + '<div class="empty-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></div>'
+            + '<div class="empty-t">Fan topilmadi</div>'
+            + '<div class="empty-d">Sizning fakultet/kurs/semestringiz uchun hali fanlar qo\'shilmagan.</div>'
+            + '</div>';
+        return;
+    }
+    renderList(items);
+}
+
+document.getElementById('search-input').addEventListener('input', function(){
+    const q = this.value.trim().toLowerCase();
+    if (!q) { renderList(allItems); return; }
+    renderList(allItems.filter(s => s.name.toLowerCase().includes(q)));
+});
+
 load();
 </script>
 {% endblock %}
