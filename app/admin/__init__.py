@@ -3,6 +3,8 @@ from pathlib import Path
 from admin.auth import AdminAuth
 from admin.i18n_uz import install_uzbek
 from admin.views.faculty import FacultyAdminView
+from admin.views.generated_quiz import GeneratedQuestionAdminView, GeneratedQuizAdminView
+from admin.views.material import MaterialAdminView
 from admin.views.question import QuestionAdminView
 from admin.views.quiz import QuizAdminView
 from admin.views.student_profile import StudentProfileAdminView
@@ -12,6 +14,9 @@ from admin.views.topic import TopicAdminView
 from db.session import engine
 from fastapi import FastAPI
 from models.faculty import Faculty
+from models.generated_question import GeneratedQuestion
+from models.generated_quiz import GeneratedQuiz
+from models.material import Material
 from models.question import Question
 from models.quiz import Quiz
 from models.student_profile import StudentProfile
@@ -62,6 +67,16 @@ def setup_admin(app: FastAPI) -> None:
         views=[
             StudentProfileAdminView(StudentProfile, identity="talaba-profili"),
             TelegramUserAdminView(TelegramUser, identity="foydalanuvchi"),
+        ],
+    ))
+
+    admin.add_view(DropDown(
+        label="AI Materiallar",
+        icon="fa fa-robot",
+        views=[
+            MaterialAdminView(Material, identity="material"),
+            GeneratedQuizAdminView(GeneratedQuiz, identity="ai-test"),
+            GeneratedQuestionAdminView(GeneratedQuestion, identity="ai-savol"),
         ],
     ))
 

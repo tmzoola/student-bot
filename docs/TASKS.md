@@ -340,12 +340,12 @@ Talaba urinishlari asosida kuchli/zaif tomonlarni aniqlash, mavzular bo'yicha ta
 
 ### T-508 · Admin panelda audit view'lari
 - **Owner:** solutions-architect
-- **Status:** todo
+- **Status:** done
 - **Depends on:** T-507
 - **Acceptance:**
-  - [ ] `MaterialAdminView` — kim yukladi, hajm, status, xato sabab
-  - [ ] `GeneratedQuizAdminView` — savollar preview
-  - [ ] Admin panel yangi bo'limda ("AI Materiallar")
+  - [x] `MaterialAdminView` — talaba, hajm, status, xato sabab
+  - [x] `GeneratedQuizAdminView` + `GeneratedQuestionAdminView` — sarlavha, qiyinlik, savol matni, to'g'ri variant
+  - [x] "AI Materiallar" DropDown qo'shildi
 
 ### T-509 · Rate limiting + cost logging
 - **Owner:** solutions-architect
