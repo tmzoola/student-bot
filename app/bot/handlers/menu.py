@@ -33,7 +33,6 @@ BTN_STATS = "📊 Statistika"
 def _main_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=BTN_SUBJECTS, web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/subjects"))],
             [KeyboardButton(text=BTN_PROFILE), KeyboardButton(text=BTN_STATS)],
         ],
         resize_keyboard=True,
@@ -45,7 +44,7 @@ def _inline_webapp_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="📚 Fanlarni ochish",
+                    text=BTN_SUBJECTS,
                     web_app=WebAppInfo(url=f"{settings.WEBAPP_URL}/subjects"),
                 )
             ]
@@ -55,11 +54,11 @@ def _inline_webapp_kb() -> InlineKeyboardMarkup:
 
 async def send_main_menu(msg: Message, profile: StudentProfile) -> None:
     await msg.answer(
-        f"Assalomu alaykum, <b>{profile.full_name}</b>! Nima qilamiz?",
+        f"Assalomu alaykum, <b>{profile.full_name}</b>!",
         reply_markup=_main_kb(),
     )
     await msg.answer(
-        "Yoki quyidagi tugma orqali oching:",
+        "Fanlar ro'yxatini ochish uchun quyidagi tugmani bosing:",
         reply_markup=_inline_webapp_kb(),
     )
 
@@ -74,7 +73,7 @@ async def send_main_menu_by_id(telegram_id: int) -> None:
     )
     await bot.send_message(
         telegram_id,
-        "Yoki quyidagi tugma orqali oching:",
+        "Fanlar ro'yxatini ochish uchun quyidagi tugmani bosing:",
         reply_markup=_inline_webapp_kb(),
     )
 
