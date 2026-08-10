@@ -28,12 +28,14 @@ router = Router(name="menu")
 BTN_SUBJECTS = "📚 Fanlar"
 BTN_PROFILE = "👤 Profil"
 BTN_STATS = "📊 Statistika"
+BTN_CALENDAR = "📅 Kalendar"
 
 
 def _main_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=BTN_PROFILE), KeyboardButton(text=BTN_STATS)],
+            [KeyboardButton(text=BTN_CALENDAR)],
         ],
         resize_keyboard=True,
     )

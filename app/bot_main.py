@@ -56,12 +56,15 @@ async def main() -> None:
 
     logger.info("▶ Bot polling + workers starting")
 
+    from services.deadline_notifier import run_deadline_checker
+
     tasks = [
         asyncio.create_task(
             dp.start_polling(bot, skip_updates=True, allowed_updates=ALLOWED_UPDATES),
             name="polling",
         ),
         asyncio.create_task(_reengagement_loop(), name="reengagement"),
+        asyncio.create_task(run_deadline_checker(bot), name="deadline_checker"),
     ]
 
     try:

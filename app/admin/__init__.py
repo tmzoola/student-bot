@@ -2,6 +2,7 @@ from pathlib import Path
 
 from admin.auth import AdminAuth
 from admin.i18n_uz import install_uzbek
+from admin.views.deadline import DeadlineAdminView
 from admin.views.faculty import FacultyAdminView
 from admin.views.generated_quiz import GeneratedQuestionAdminView, GeneratedQuizAdminView
 from admin.views.material import MaterialAdminView
@@ -13,6 +14,7 @@ from admin.views.telegram_user import TelegramUserAdminView
 from admin.views.topic import TopicAdminView
 from db.session import engine
 from fastapi import FastAPI
+from models.deadline import Deadline
 from models.faculty import Faculty
 from models.generated_question import GeneratedQuestion
 from models.generated_quiz import GeneratedQuiz
@@ -79,6 +81,8 @@ def setup_admin(app: FastAPI) -> None:
             GeneratedQuestionAdminView(GeneratedQuestion, identity="ai-savol"),
         ],
     ))
+
+    admin.add_view(DeadlineAdminView(Deadline, identity="deadline"))
 
     admin.add_view(Link(
         label="Analitika",

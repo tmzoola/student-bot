@@ -1,5 +1,6 @@
 from models.attempt import QuizAttempt
 from models.base import Base
+from models.deadline import Deadline, DeadlineSent, PersonalDeadline
 from models.faculty import Faculty
 from models.generated_attempt import GeneratedQuizAttempt
 from models.generated_question import GeneratedQuestion
@@ -31,4 +32,7 @@ __all__ = [
     "QuizDifficulty",
     "GeneratedQuestion",
     "GeneratedQuizAttempt",
+    "Deadline",
+    "DeadlineSent",
+    "PersonalDeadline",
 ]
