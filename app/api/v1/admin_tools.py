@@ -1,20 +1,37 @@
-"""Admin panel yordamchi endpoint'lari.
-
-Refaktor bosqichi: T-102 doirasida kitob/do'kon/broadcast/quote/menu bilan
-bog'liq legacy endpoint'lar olib tashlandi. Faqat leaderboard va quiz-import
-kabi asosiy sahifalar qoldi. Student-bot uchun admin qismini keyingi
-bosqichlarda qayta yozamiz.
-"""
+"""Admin panel yordamchi endpoint'lari."""
 import logging
 
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin-tools", tags=["admin-tools"])
 templates = Jinja2Templates(directory="templates")
+
+
+@router.get("/analytics", response_class=HTMLResponse)
+async def admin_analytics_page(request: Request):
+    return templates.TemplateResponse("admin_analytics.html", {"request": request})
+
+
+@router.get("/analytics/data")
+async def admin_analytics_data(refresh: bool = Query(default=False)):
+    """Analitika JSON-i (Redis'da 1 soat keshlanadi).
+
+    ?refresh=true qo'shilsa keshni o'chirib qayta hisoblaydi.
+    """
+    from db.session import session_factory
+    from services.analytics import compute_analytics, invalidate_analytics_cache
+
+    if refresh:
+        await invalidate_analytics_cache()
+
+    async with session_factory() as session:
+        data = await compute_analytics(session, force=refresh)
+
+    return JSONResponse(content=data)
 
 
 @router.get("/leaderboard", response_class=HTMLResponse)

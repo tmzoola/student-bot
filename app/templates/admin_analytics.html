@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analitika — Student Bot Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+.topbar{background:#1e293b;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{color:#fff;font-size:1.1rem;font-weight:700}
+.topbar a{color:#94a3b8;font-size:.85rem;text-decoration:none}
+.topbar a:hover{color:#fff}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.btn-refresh{background:#3b82f6;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer}
+.btn-refresh:hover{background:#2563eb}
+.btn-refresh:disabled{opacity:.6;cursor:not-allowed}
+
+.container{max-width:1200px;margin:0 auto;padding:24px}
+
+/* KPI cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.kpi{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.kpi-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+.kpi-value{font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px}
+.kpi-sub{font-size:.75rem;color:#94a3b8}
+.kpi-green .kpi-value{color:#16a34a}
+.kpi-blue  .kpi-value{color:#2563eb}
+.kpi-amber .kpi-value{color:#d97706}
+.kpi-purple .kpi-value{color:#7c3aed}
+.kpi-slate .kpi-value{color:#475569}
+.kpi-teal .kpi-value{color:#0d9488}
+
+/* Charts grid */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+
+.chart-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.chart-card.wide{grid-column:1/-1}
+.chart-title{font-size:.9rem;font-weight:700;color:#1e293b;margin-bottom:16px}
+.chart-wrap{position:relative;height:220px}
+
+/* Tables */
+.tables-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+@media(max-width:768px){.tables-grid{grid-template-columns:1fr}}
+
+.table-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.table-card h3{font-size:.9rem;font-weight:700;color:#1e293b;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{text-align:left;font-weight:700;color:#64748b;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;padding:0 8px 10px 0;border-bottom:1px solid #e2e8f0}
+td{padding:9px 8px 9px 0;border-bottom:1px solid #f1f5f9;color:#334155}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-amber{background:#fef3c7;color:#92400e}
+.bar-mini{height:6px;border-radius:3px;background:#e2e8f0;margin-top:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:#3b82f6}
+.bar-fill.red{background:#ef4444}
+.bar-fill.amber{background:#f59e0b}
+.bar-fill.green{background:#22c55e}
+
+/* AI block */
+.ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+@media(max-width:600px){.ai-grid{grid-template-columns:1fr 1fr}}
+.ai-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid #7c3aed}
+.ai-ic{font-size:1.6rem;margin-bottom:8px}
+.ai-v{font-size:1.6rem;font-weight:800;color:#7c3aed;line-height:1}
+.ai-l{font-size:.75rem;color:#64748b;margin-top:3px}
+
+/* Loader / error */
+.loading{text-align:center;padding:60px 20px;color:#94a3b8;font-size:.95rem}
+.error-box{background:#fee2e2;border-radius:12px;padding:16px 20px;color:#991b1b;font-size:.85rem;margin-bottom:20px}
+
+.updated-at{font-size:.72rem;color:#94a3b8;margin-bottom:20px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📊 Analitika</h1>
+  <div class="topbar-right">
+    <a href="/admin/">← Admin panelga</a>
+    <button class="btn-refresh" id="btn-refresh" onclick="load(true)">🔄 Yangilash</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="error-box" class="error-box" style="display:none"></div>
+  <div id="updated-at" class="updated-at"></div>
+  <div id="dashboard"><div class="loading">Ma'lumotlar yuklanmoqda…</div></div>
+</div>
+
+<script>
+let charts = {};
+
+function fmt(n){return Number(n||0).toLocaleString('uz-UZ')}
+function pct(n){return (n||0).toFixed(1)+'%'}
+
+function colorForPct(p){
+  if(p>=70) return {bar:'green',badge:'badge-green'};
+  if(p>=40) return {bar:'amber',badge:'badge-amber'};
+  return {bar:'red',badge:'badge-red'};
+}
+
+function destroyCharts(){
+  Object.values(charts).forEach(c=>c.destroy());
+  charts={};
+}
+
+function renderKpis(s){
+  return `
+    <div class="kpi-grid">
+      <div class="kpi kpi-blue">
+        <div class="kpi-label">Jami talabalar</div>
+        <div class="kpi-value">${fmt(s.total_students)}</div>
+        <div class="kpi-sub">Tasdiqlangan: ${fmt(s.approved_students)} · Kutmoqda: ${fmt(s.pending_students)}</div>
+      </div>
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Bugungi faol (DAU)</div>
+        <div class="kpi-value">${fmt(s.dau)}</div>
+        <div class="kpi-sub">So'nggi 24 soat ichida test yechgan</div>
+      </div>
+      <div class="kpi kpi-teal">
+        <div class="kpi-label">Haftalik faol (WAU)</div>
+        <div class="kpi-value">${fmt(s.wau)}</div>
+        <div class="kpi-sub">So'nggi 7 kun ichida test yechgan</div>
+      </div>
+      <div class="kpi kpi-slate">
+        <div class="kpi-label">Jami urinishlar</div>
+        <div class="kpi-value">${fmt(s.total_attempts)}</div>
+        <div class="kpi-sub">O'rtacha ball: ${pct(s.avg_percentage)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAiStats(ai){
+  return `
+    <div class="ai-grid">
+      <div class="ai-card">
+        <div class="ai-ic">📄</div>
+        <div class="ai-v">${fmt(ai.material_uploads)}</div>
+        <div class="ai-l">Material yuklashlar (jami)</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-ic">🧠</div>
+        <div class="ai-v">${fmt(ai.quizzes_generated)}</div>
+        <div class="ai-l">AI test yaratildi (jami)</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-ic">📝</div>
+        <div class="ai-v">${fmt(ai.gen_attempts)}</div>
+        <div class="ai-l">AI test urinishlari (jami)</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFaculties(rows){
+  if(!rows||!rows.length) return '<div class="loading">Ma\'lumot yo\'q</div>';
+  const maxA = rows[0].attempts;
+  return `<table>
+    <thead><tr><th>Fakultet</th><th>Urinishlar</th></tr></thead>
+    <tbody>
+    ${rows.map(r=>`
+      <tr>
+        <td>${r.faculty}</td>
+        <td>
+          ${fmt(r.attempts)}
+          <div class="bar-mini"><div class="bar-fill" style="width:${Math.round(r.attempts/maxA*100)}%"></div></div>
+        </td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderSubjects(rows){
+  if(!rows||!rows.length) return '<div class="loading">Ma\'lumot yo\'q</div>';
+  return `<table>
+    <thead><tr><th>Fan</th><th>Fakultet</th><th style="text-align:right">Urinish</th></tr></thead>
+    <tbody>
+    ${rows.map(r=>`
+      <tr>
+        <td>${r.subject}</td>
+        <td style="color:#94a3b8">${r.faculty}</td>
+        <td style="text-align:right;font-weight:700">${fmt(r.attempts)}</td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderWeakTopics(rows){
+  if(!rows||!rows.length) return '<div class="loading">Yetarli ma\'lumot yo\'q (har bir mavzuda min 3 urinish kerak)</div>';
+  return `<table>
+    <thead><tr><th>Mavzu</th><th>Fan</th><th>O'rtacha</th><th style="text-align:right">Urinish</th></tr></thead>
+    <tbody>
+    ${rows.map(r=>{
+      const c=colorForPct(r.avg_pct);
+      return `<tr>
+        <td>${r.topic}</td>
+        <td style="color:#94a3b8">${r.subject}</td>
+        <td><span class="badge ${c.badge}">${pct(r.avg_pct)}</span></td>
+        <td style="text-align:right;color:#94a3b8">${r.attempts}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderCharts(data){
+  // Fill missing dates
+  function fillDates(rows, key='date', val='count'){
+    const map={};
+    rows.forEach(r=>map[r[key]]=r[val]);
+    const dates=[];
+    const vals=[];
+    if(rows.length){
+      const start=new Date(rows[0][key]);
+      const end=new Date(rows[rows.length-1][key]);
+      for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+        const s=d.toISOString().slice(0,10);
+        dates.push(s.slice(5)); // MM-DD
+        vals.push(map[s]||0);
+      }
+    }
+    return {dates,vals};
+  }
+
+  const reg=fillDates(data.registrations||[]);
+  const att=fillDates(data.daily_attempts||[]);
+
+  setTimeout(()=>{
+    const ctxReg=document.getElementById('chart-reg');
+    const ctxAtt=document.getElementById('chart-att');
+    const ctxFac=document.getElementById('chart-fac');
+
+    if(ctxReg && reg.dates.length){
+      charts.reg=new Chart(ctxReg,{
+        type:'bar',
+        data:{
+          labels:reg.dates,
+          datasets:[{
+            label:"Yangi ro'yxatdan o'tishlar",
+            data:reg.vals,
+            backgroundColor:'rgba(59,130,246,.7)',
+            borderRadius:4,
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}
+      });
+    }
+
+    if(ctxAtt && att.dates.length){
+      charts.att=new Chart(ctxAtt,{
+        type:'line',
+        data:{
+          labels:att.dates,
+          datasets:[{
+            label:'Urinishlar',
+            data:att.vals,
+            borderColor:'#22c55e',
+            backgroundColor:'rgba(34,197,94,.1)',
+            tension:.3,
+            fill:true,
+            pointRadius:2,
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}
+      });
+    }
+
+    if(ctxFac && (data.top_faculties||[]).length){
+      const facs=data.top_faculties;
+      charts.fac=new Chart(ctxFac,{
+        type:'doughnut',
+        data:{
+          labels:facs.map(f=>f.faculty),
+          datasets:[{
+            data:facs.map(f=>f.attempts),
+            backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#ec4899'],
+            borderWidth:2,
+            borderColor:'#fff',
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
+      });
+    }
+  }, 50);
+}
+
+function render(data){
+  destroyCharts();
+  const d=document.getElementById('dashboard');
+  const s=data.summary||{};
+
+  d.innerHTML=`
+    ${renderKpis(s)}
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">📈 Yangi ro'yxatdan o'tishlar (oxirgi 30 kun)</div>
+        <div class="chart-wrap"><canvas id="chart-reg"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">✅ Kunlik urinishlar (oxirgi 30 kun)</div>
+        <div class="chart-wrap"><canvas id="chart-att"></canvas></div>
+      </div>
+    </div>
+
+    <h2 style="font-size:.88rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px">🤖 AI Xususiyatlar</h2>
+    ${renderAiStats(data.ai_stats||{})}
+
+    <div class="tables-grid">
+      <div class="table-card">
+        <h3>🏛 Fakultetlar (urinish bo'yicha)</h3>
+        <div class="chart-wrap" style="height:260px"><canvas id="chart-fac"></canvas></div>
+      </div>
+      <div class="table-card">
+        <h3>📚 Top fanlar (urinish bo'yicha)</h3>
+        ${renderSubjects(data.top_subjects)}
+      </div>
+    </div>
+
+    <div class="table-card" style="margin-bottom:28px">
+      <h3>⚠️ Zaif mavzular — qayerda talabalar qiynalyapti</h3>
+      <p style="font-size:.78rem;color:#94a3b8;margin-bottom:14px">Universitetga taqdim etish uchun qimmatli ma'lumot</p>
+      ${renderWeakTopics(data.weak_topics)}
+    </div>
+
+    <div class="table-card">
+      <h3>🏛 Barcha fakultetlar</h3>
+      ${renderFaculties(data.top_faculties)}
+    </div>
+  `;
+
+  renderCharts(data);
+
+  if(data.generated_at){
+    document.getElementById('updated-at').textContent =
+      'Ma\'lumotlar sanasi: ' + new Date(data.generated_at).toLocaleString('uz-UZ') +
+      ' (1 soat keshlanadi)';
+  }
+}
+
+async function load(force=false){
+  const btn=document.getElementById('btn-refresh');
+  btn.disabled=true;
+  btn.textContent='Yuklanmoqda…';
+  document.getElementById('error-box').style.display='none';
+  try{
+    const url='/admin-tools/analytics/data' + (force?'?refresh=true':'');
+    const r=await fetch(url,{credentials:'include'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    render(await r.json());
+  }catch(e){
+    document.getElementById('error-box').style.display='';
+    document.getElementById('error-box').textContent='Xatolik: '+e.message;
+  }finally{
+    btn.disabled=false;
+    btn.textContent='🔄 Yangilash';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

@@ -23,7 +23,7 @@ from models.student_profile import StudentProfile
 from models.subject import Subject
 from models.telegram_user import TelegramUser
 from models.topic import Topic
-from starlette_admin import DropDown
+from starlette_admin import DropDown, Link
 from starlette_admin.contrib.sqla import Admin
 from starlette_admin.i18n import I18nConfig
 
@@ -78,6 +78,12 @@ def setup_admin(app: FastAPI) -> None:
             GeneratedQuizAdminView(GeneratedQuiz, identity="ai-test"),
             GeneratedQuestionAdminView(GeneratedQuestion, identity="ai-savol"),
         ],
+    ))
+
+    admin.add_view(Link(
+        label="Analitika",
+        icon="fa fa-chart-bar",
+        url="/admin-tools/analytics",
     ))
 
     admin.mount_to(app)
